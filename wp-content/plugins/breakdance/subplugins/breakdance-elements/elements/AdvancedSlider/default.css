@@ -1,0 +1,13 @@
+.breakdance .bde-advancedslider {
+  --bde-advanced-slider-height: auto;
+  position: relative;
+  max-width: 100%;
+  width: 100%;
+  height: var(--bde-advanced-slider-height);
+}
+
+.bde-advancedslider .advanced-slider__slide,
+.bde-advancedslider .breakdance-swiper-wrapper,
+.bde-advancedslider .swiper {
+  height: 100%;
+}

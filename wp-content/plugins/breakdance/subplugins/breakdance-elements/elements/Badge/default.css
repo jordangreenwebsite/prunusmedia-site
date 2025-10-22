@@ -1,0 +1,11 @@
+.breakdance .bde-badge {
+  --badgeRadius: .25em;
+  --badgePadding: .33em .66em;
+  font-size: 1em;
+  border-radius: var(--badgeRadius);
+  padding: var(--badgePadding);
+  color: #118833;
+  background-color: #CCFFDD;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
