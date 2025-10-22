@@ -1,0 +1,35 @@
+.bde-pulse-dot {
+  position: relative;
+  display: inline-flex;
+  width: var(--bdePulseDotSize, 12px);
+  height: var(--bdePulseDotSize, 12px);
+}
+
+.bde-pulse-dot__ping {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--bdePulseDotRadius, 50%);
+  background-color: var(--bdePulseDotColor, var(--bde-brand-primary-color));
+  opacity: 0.75;
+  animation: bde_pulse_dot_ping var(--bdePulseDotPingDuration, 2s) infinite;
+}
+
+.bde-pulse-dot__core {
+  position: relative;
+  width: 100%;
+  border-radius: var(--bdePulseDotRadius, 50%);
+  background-color: var(--bdePulseDotColor, var(--bde-brand-primary-color));
+  z-index: 1;
+}
+
+@keyframes bde_pulse_dot_ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  75%, 100% {
+    transform: scale(var(--bdePulseDotPingScale, 2));
+    opacity: 0;
+  }
+}
