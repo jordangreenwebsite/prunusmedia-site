@@ -1,0 +1,16 @@
+.breakdance .bde-menu-custom-area {
+  text-align: left;
+  max-width: 100%;
+}
+
+.breakdance .bde-custom-area-link {
+  --link-alignment: flex-start;
+}
+
+.bde-menu-custom-area.bde-menu-custom-area-hide-in-desktop-menu {
+  display: var(--menu-hide-on-desktop, block);
+}
+
+.bde-menu-custom-area.bde-menu-custom-area-hide-in-mobile-menu {
+  display: var(--menu-hide-on-mobile, block);
+}
