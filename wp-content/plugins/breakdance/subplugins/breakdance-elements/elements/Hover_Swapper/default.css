@@ -1,0 +1,72 @@
+.breakdance .bde-hover-swapper {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    --hoverSwapperTransitionDuration: var(--bde-transition-duration, 300ms);
+}
+
+.breakdance .bde-hover-swapper > *:nth-child(1) {
+    position: relative;
+    transition: all var(--hoverSwapperTransitionDuration) ease-in-out;
+}
+
+.breakdance .bde-hover-swapper > *:nth-child(2) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transition: all var(--hoverSwapperTransitionDuration) ease-in-out;
+}
+
+
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="fade"] > *:nth-child(2) {
+    opacity: 0;
+}
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="fade"]:hover > *:nth-child(2) {
+    opacity: 1;
+}
+
+
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-up"] > *:nth-child(2) {
+    transform: translateY(100%);
+}
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-up"]:hover > *:nth-child(1) {
+    transform: translateY(-100%);
+}
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-up"]:hover > *:nth-child(2) {
+    transform: translateY(0);
+}
+
+
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-down"] > *:nth-child(2) {
+    transform: translateY(-100%);
+}
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-down"]:hover > *:nth-child(1) {
+    transform: translateY(100%);
+}
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-down"]:hover > *:nth-child(2) {
+    transform: translateY(0);
+}
+
+
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-right"] > *:nth-child(2) {
+    transform: translateX(-100%);
+}
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-right"]:hover > *:nth-child(1) {
+    transform: translateX(100%);
+}
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-right"]:hover > *:nth-child(2) {
+    transform: translateX(0);
+}
+
+
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-left"] > *:nth-child(2) {
+    transform: translateX(100%);
+}
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-left"]:hover > *:nth-child(1) {
+    transform: translateX(-100%);
+}
+.breakdance .bde-hover-swapper[data-hover-swapper-effect="slide-left"]:hover > *:nth-child(2) {
+    transform: translateX(0);
+}

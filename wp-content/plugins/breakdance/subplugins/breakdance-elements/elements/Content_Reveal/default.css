@@ -1,0 +1,54 @@
+.breakdance .bde-content-reveal {
+  width: 100%;
+  --bde-content-reveal-duration: var(--bde-transition-duration);
+  --bde-content-reveal-height: 250px;
+  --bde-content-reveal-button-space: 1rem;
+  --bde-content-reveal-alignment: center;
+}
+
+.breakdance .bde-content-reveal__container {
+  display: flex;
+  flex-direction: column;
+}
+
+.breakdance .bde-content-reveal__content {
+  position: relative;
+}
+
+.breakdance :where(.is-hidden, .is-transitioning) .bde-content-reveal__content {
+  overflow-y: hidden;
+  max-height: var(--bde-content-reveal-height);
+}
+
+.breakdance .is-transitioning .bde-content-reveal__content {
+  will-change: max-height;
+  transition: var(--bde-content-reveal-duration) max-height ease-in-out;
+}
+
+@supports (overflow-x: clip) {
+  .breakdance :where(.is-hidden, .is-transitioning) .bde-content-reveal__content {
+    overflow-y: clip;
+  }
+}
+
+.breakdance .bde-content-reveal__content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bde-content-reveal-gradient);
+  pointer-events: none;
+  transition: var(--bde-content-reveal-duration) opacity ease-in-out;
+}
+
+
+.breakdance .hide-overlay .bde-content-reveal__content::after {
+  opacity: 0;
+}
+
+.breakdance .bde-content-reveal .bde-content-reveal__button {
+  align-self: var(--bde-content-reveal-alignment);
+  margin-top: var(--bde-content-reveal-button-space);
+}
