@@ -1,0 +1,101 @@
+body {
+    font-family: sans-serif;
+    padding: 20px;
+}
+
+/*========== Custom html tags ==========*/
+
+wc-before-product-summary,
+wp-before-main-content,
+wc-product-summary,
+wp-loop,
+acpt-loop,
+acpt-tax-loop,
+acpt-field-loop,
+acpt-block-loop {
+    position: relative;
+}
+
+acpt-loop:before,
+acpt-loop:after,
+acpt-tax-loop:before,
+acpt-tax-loop:after,
+acpt-field-loop:before,
+acpt-field-loop:after,
+acpt-block-loop:before,
+acpt-block-loop:after {
+    font-family: 'Monaco', monospace;
+    border-radius: 2px;
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    display: block;
+    background: #dfe8ef;
+    border: 1px solid #d9eeff;
+    color: #2271b1;
+}
+
+acpt-loop:before,
+acpt-tax-loop:before,
+acpt-field-loop:before,
+acpt-block-loop:before {
+    content: "{{acpt_loop_start}}";
+}
+
+acpt-loop:after,
+acpt-tax-loop:after,
+acpt-field-loop:after,
+acpt-block-loop:after {
+    content: "{{acpt_loop_end}}";
+}
+
+wc-after-product-summary:before,
+wc-after-product-summary:after,
+wc-product-summary:before,
+wc-product-summary:after,
+wc-before-product-summary:before,
+wc-before-product-summary:after,
+wp-before-main-content:before,
+wp-before-main-content:after {
+    font-family: 'Monaco', monospace;
+    background: #eae3f2;
+    border: 1px solid #d9c9eb;
+    border-radius: 2px;
+    padding: 10px;
+    color: #8155b0;
+    text-align: center;
+    font-size: 14px;
+    display: block;
+}
+
+wc-after-product-summary:before {
+    content: "{{wp_after_product_summary_start}}";
+}
+
+wc-after-product-summary:after {
+    content: "{{wp_after_product_summary_end}}";
+}
+
+wc-product-summary:before {
+    content: "{{wp_product_summary_start}}";
+}
+
+wc-product-summary:after {
+    content: "{{wp_product_summary_end}}";
+}
+
+wc-before-product-summary:before {
+    content: "{{wp_before_product_summary_start}}";
+}
+
+wc-before-product-summary:after {
+    content: "{{wp_before_product_summary_end}}";
+}
+
+wp-before-main-content:before {
+    content: "{{wp_before_main_content_start}}";
+}
+
+wp-before-main-content:after {
+    content: "{{wp_before_main_content_end}}";
+}

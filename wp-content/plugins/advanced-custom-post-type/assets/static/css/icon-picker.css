@@ -1,0 +1,127 @@
+/*========== ICON PICKER ==========*/
+
+.acpt-icon-picker-bg {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,.7);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.acpt-icon-picker-bg.hidden {
+    display: none !important;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker {
+    background: #fff;
+    border-radius: 4px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    max-width: 600px;
+    z-index: 1111;
+    padding: 15px;
+}
+
+.is-sidebar-opened .acpt-icon-picker-bg .acpt-icon-picker {
+    left: calc(50% - 140px);
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 15px;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-header h3 {
+    margin: 0;
+    padding: 0;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results {
+    flex-wrap: wrap;
+    margin-top: 15px;
+    display: flex;
+    gap: 15px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 500px;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results .acpt-icon-picker-providers {
+    width: 100%;
+    flex-wrap: wrap;
+    display: flex;
+    gap: 5px;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results .acpt-icon-picker-providers .acpt-icon-picker-provider {
+    border: 1px solid #007cba;
+    color: #007cba;
+    border-radius: 4px;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results .acpt-icon-picker-providers .acpt-icon-picker-provider.active {
+    color: #fff;
+    background: #007cba;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker input {
+    width: 100%;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results .acpt-icon-picker-icon {
+    border: 1px solid #aaa;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    padding: 5px;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results .acpt-icon-picker-icon.hidden {
+    display: none;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results .acpt-icon-picker-icon img {
+    width: 32px;
+    height: 32px;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results .acpt-icon-picker-icon:hover {
+    border: 1px solid #007cba;
+}
+
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results .acpt-icon-picker-icon:hover img,
+.acpt-icon-picker-bg .acpt-icon-picker .acpt-icon-picker-results .acpt-icon-picker-icon:hover svg {
+    fill: #007cba;
+}
+
+.acpt-icon-picker-wrapper {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.acpt-icon-picker-wrapper .acpt-icon-picker-preview img,
+.acpt-icon-picker-wrapper .acpt-icon-picker-preview svg {
+    width: 32px;
+    height: 32px;
+}
+
+.acpt-icon-picker-wrapper .acpt-icon-picker-buttons {
+    display: flex;
+    gap: 5px;
+}

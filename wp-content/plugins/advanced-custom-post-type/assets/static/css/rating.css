@@ -1,0 +1,49 @@
+@import url(//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css);
+
+/*========== RATING SYSTEM ==========*/
+
+.acpt-rating {
+    display: inline-block;
+    border: 0;
+}
+
+.acpt-rating > input {
+    display: none;
+}
+
+.acpt-rating > label {
+    float: right;
+}
+
+.acpt-rating > label:before {
+    display: inline-block;
+    font-size: 2rem;
+    padding: .3rem .2rem;
+    margin: 0;
+    cursor: pointer;
+    font-family: FontAwesome;
+    content: "\f005 ";
+}
+
+.acpt-rating .half:before {
+    content: "\f089 ";
+    position: absolute;
+    padding-right: 0;
+}
+
+.acpt-rating input:checked ~ label,
+.acpt-rating label:hover,
+.acpt-rating label:hover ~ label {
+    color: #FFD700;
+}
+
+.acpt-rating input:checked + label:hover,
+.acpt-rating input:checked ~ label:hover,
+.acpt-rating input:checked ~ label:hover ~ label,
+.acpt-rating label:hover ~ input:checked ~ label  {
+    color: #D1B000;
+}
+
+.acpt-rating input[type=radio]:checked+label:before {
+    color: inherit;
+}
