@@ -1,0 +1,427 @@
+@import url(//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css);
+
+/**
+ *******************************************
+ FORM ELEMENTS
+ *******************************************
+ */
+
+.acpt-form-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.acpt-form-messages .acpt-message {
+    border-radius: 4px;
+    padding: 10px 14px;
+}
+
+.acpt-form-messages .acpt-message.acpt-success-message {
+    color: #fff;
+    background: #02c39a;
+}
+
+.acpt-form-messages .acpt-message.acpt-error-message {
+    color: #fff;
+    background: #c62d2d;
+}
+
+.acpt-form .actp-form-element {
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.acpt-form .actp-form-block {
+    width: 100%;
+}
+
+.acpt-form .actp-form-inline {
+    display: flex;
+    align-items: center;
+    align-content: center;
+    gap: 8px;
+}
+
+.acpt-form .actp-form-label {
+    display: block;
+}
+
+.acpt-form .actp-form-label .acpt-required {
+    color: #c62d2d;
+}
+
+.acpt-form .actp-form-block .actp-form-label {
+    margin-bottom: 8px;
+}
+
+.acpt-form .actp-form-control {
+    padding: 10px 14px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    width: 100%;
+    max-width: 100%;
+    font-family: inherit;
+    font-size: inherit;
+    border: 1px solid #777;
+}
+
+.acpt-form .actp-form-control[type=file]::file-selector-button {
+     margin-right: 8px;
+     border: none;
+     background: #ddd;
+     padding: 7px 14px;
+     border-radius: 4px;
+     color: #777;
+     cursor: pointer;
+     transition: background .2s ease-in-out;
+ }
+
+.acpt-form .actp-form-control[type=file]::file-selector-button:hover {
+    color: #777;
+    background: #ccc;
+ }
+
+.acpt-form .actp-form-control.has-errors,
+.acpt-form .actp-form-control.has-errors:hover,
+.acpt-form .actp-form-control.has-errors:focus {
+    color: #c62d2d;
+    border-color: #c62d2d;
+}
+
+.acpt-form input[type=color].actp-form-control {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 42px;
+    background: none;
+    border: none;
+    outline: none;
+    border-radius: 100%;
+    width: 63px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.acpt-form input[type=color].actp-form-control::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+.acpt-form input[type=color].actp-form-control::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+.acpt-form input[type=number].actp-form-control {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    margin: 0;
+}
+
+.acpt-form select.form-control {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.acpt-form-description {
+    margin-top: 8px;
+}
+
+.acpt-form .acpt-form-button {
+    cursor: pointer;
+    border: none;
+    padding: 10px 14px;
+    color: #fff;
+    outline: 0;
+    background: #007cba;
+    border-radius: 4px;
+}
+
+.acpt-form .acpt-form-button:focus,
+.acpt-form .acpt-form-button:hover {
+    background: #006191;
+}
+
+.acpt-form .acpt-form-button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.acpt-form .acpt-error-list {
+    color: #c62d2d;
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/**
+ *******************************************
+ GRID
+ *******************************************
+ */
+.acpt-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+@media screen and (max-width: 960px){
+    .acpt-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.acpt-container .col-1 {
+    width: 8.33333333333%;
+}
+
+.acpt-container .col-2 {
+    width: 16.66666667%;
+}
+
+.acpt-container .col-3 {
+    width: 25%;
+}
+
+.acpt-container .col-4 {
+    width: 33.33333333%;
+}
+
+.acpt-container .col-5 {
+    width: 41.66666667%;
+}
+
+.acpt-container .col-6 {
+    width: 50%;
+}
+
+.acpt-container .col-7 {
+    width: 58.3333333333%;
+}
+
+.acpt-container .col-8 {
+    width: 66.666666666%;
+}
+
+.acpt-container .col-9 {
+    width: 75%;
+}
+
+.acpt-container .col-10 {
+    width: 83.333333333%;
+}
+
+.acpt-container .col-11 {
+    width: 91.6666666667%;
+}
+
+.acpt-container .col-12 {
+    width: 100%;
+}
+
+@media screen and (max-width: 960px){
+    .acpt-container .col-1,
+    .acpt-container .col-2,
+    .acpt-container .col-3,
+    .acpt-container .col-4,
+    .acpt-container .col-5,
+    .acpt-container .col-6,
+    .acpt-container .col-7,
+    .acpt-container .col-8,
+    .acpt-container .col-9,
+    .acpt-container .col-10,
+    .acpt-container .col-11,
+    .acpt-container .col-12 {
+        width: 100%;
+    }
+}
+
+/**
+ *******************************************
+ EXTERNAL PLUGINS
+ *******************************************
+ */
+
+/* CodeMirror */
+.acpt-form .CodeMirror {
+    border: 1px solid;
+    border-color: inherit;
+    border-radius: 4px;
+}
+
+/*Toggle*/
+.acpt-form .toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.acpt-form .toggle-group .toggle {
+    display: inline-block;
+    height: 29px;
+    position: relative;
+    width: 50px;
+}
+.acpt-form .toggle-group .toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.acpt-form .toggle-group .toggle input:disabled {
+    opacity: 0;
+}
+.acpt-form .toggle-group .toggle input:disabled + .slider {
+    cursor: not-allowed;
+    opacity: 0.3;
+}
+.acpt-form .toggle-group .toggle input:checked + .slider {
+    background-color: #007cba;
+}
+.acpt-form .toggle-group .toggle input:focus + .slider {
+    box-shadow: 0 0 1px #007cba;
+}
+.acpt-form .toggle-group .toggle input:checked + .slider:before {
+    -webkit-transform: translateX(16px);
+    -ms-transform: translateX(16px);
+    transform: translateX(16px);
+    left: 6px;
+}
+.acpt-form .toggle-group .toggle .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ddd;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+}
+.acpt-form .toggle-group .toggle .slider.round {
+    border-radius: 4px;
+}
+.acpt-form .toggle-group .toggle .slider.round:before {
+    border-radius: 4px;
+}
+.acpt-form .toggle-group .toggle .slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+}
+
+/*Icon picker*/
+
+.acpt-form .acpt-iconpicker-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+.acpt-form .acpt-iconpicker-wrapper .acpt-selected-icon.hidden {
+    display: none;
+}
+
+.acpt-form .acpt-iconpicker-wrapper .acpt-selected-icon {
+    background: #f4f4f4;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    padding: 12px;
+}
+
+.acpt-form .acpt-iconpicker-wrapper .acpt-iconpicker {
+    width: 100%;
+}
+
+.icon-picker-modal__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.icon-picker-modal__header h2 {
+    font-family: inherit;
+}
+
+.icon-picker-modal__content {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: max-content;
+    grid-gap: 8px;
+    overflow-y: scroll;
+    max-height: 340px;
+}
+
+.icon-picker-modal__search {
+    margin-top: 12px;
+    padding: 8px;
+    border-radius: 4px;
+    width: 90%;
+    font-family: Sans-serif;
+}
+
+/*Rating*/
+.acpt-form .acpt-rating {
+    display: inline-block;
+    border: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.acpt-form .acpt-rating > input {
+    display: none;
+}
+
+.acpt-form .acpt-rating > label {
+    float: right;
+}
+
+.acpt-form .acpt-rating > label:before {
+    display: inline-block;
+    font-size: 2rem;
+    padding: .3rem .2rem;
+    margin: 0;
+    cursor: pointer;
+    font-family: FontAwesome;
+    content: "\f005 ";
+}
+
+.acpt-form  .acpt-rating .half:before {
+    content: "\f089 ";
+    position: absolute;
+    padding-right: 0;
+}
+
+.acpt-form .acpt-rating input:checked ~ label,
+.acpt-form .acpt-rating label:hover,
+.acpt-form .acpt-rating label:hover ~ label {
+    color: #FFD700;
+}
+
+.acpt-form .acpt-rating input:checked + label:hover,
+.acpt-form .acpt-rating input:checked ~ label:hover,
+.acpt-form .acpt-rating input:checked ~ label:hover ~ label,
+.acpt-form .acpt-rating label:hover ~ input:checked ~ label  {
+    color: #D1B000;
+}
+
+.acpt-form .acpt-rating input[type=radio]:checked+label:before {
+    color: inherit;
+}
+
+/*UOM*/
+
+.acpt-form .acpt-uom {
+    display: flex;
+    gap: 8px;
+}
+
+.acpt-form .acpt-uom select{
+    width: auto;
+}
