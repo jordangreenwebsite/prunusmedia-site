@@ -13,7 +13,3 @@
     display: none;
 }
 
-#wp-link .query-results {
-  position: static!important;
-  width: 100%!important;
-}

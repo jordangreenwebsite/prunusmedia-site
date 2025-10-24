@@ -449,17 +449,6 @@
     });
 
     form.removeEventListener("submit", onSubmit);
-
-    form.bdMask?.destroy();
-  }
-
-  function scrollIntoViewIfNeeded(element) {
-    const rect = element.getBoundingClientRect();
-    const notVisible = rect.top < 0;
-
-    if (notVisible) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
   }
 
   function initConditionalFields(form, attachEventListeners = false) {
@@ -493,7 +482,7 @@
 
         if (attachEventListeners) {
           const useChangeEvent = conditionalField.matches(
-            "input[type=radio], input[type=checkbox], input[type=file], select, input[type=number], input[type=date]"
+            "input[type=radio], input[type=checkbox], input[type=file], select, input[type=number]"
           );
 
           if (useChangeEvent) {
@@ -555,8 +544,6 @@
   }
 
   function shouldShowField(aValue, operand, bValue) {
-    const aValueIsEmpty = aValue === "" || aValue === null;
-    const bValueIsEmpty = bValue === "" || bValue === null;
     if (operand === "equals") {
       return aValue == bValue;
     } else if (operand === "not equals") {
@@ -596,7 +583,7 @@
       }
       return aValueInteger < bValueInteger;
     } else if (operand === "is before date") {
-      if (aValueIsEmpty || bValueIsEmpty) {
+      if (aValue === null || bValue === null) {
         return false;
       }
       const aDateValue = new Date(aValue);
@@ -610,7 +597,7 @@
       }
       return aDateValue < bDateValue;
     } else if (operand === "is after date") {
-      if (aValueIsEmpty || bValueIsEmpty) {
+      if (aValue === null || bValue === null) {
         return false;
       }
       const aDateValue = new Date(aValue);
@@ -624,7 +611,7 @@
       }
       return aDateValue > bDateValue;
     } else if (operand === "is before time") {
-      if (aValueIsEmpty || bValueIsEmpty) {
+      if (aValue === null || bValue === null) {
         return false;
       }
       const todaysDate = new Date().toDateString();
@@ -639,7 +626,7 @@
       }
       return aDateValue < bDateValue;
     } else if (operand === "is after time") {
-      if (aValueIsEmpty || bValueIsEmpty) {
+      if (aValue === null || bValue === null) {
         return false;
       }
       const todaysDate = new Date().toDateString();
@@ -706,20 +693,6 @@
     });
   }
 
-  function getFirstInputInStep(form, step) {
-    const firstFieldInStep = form.querySelector(
-      `.breakdance-form-field[data-form-step="${step}"]:not(.breakdance-form-field--hidden, .breakdance-form-field--html, .breakdance-form-field--condition-hidden)`
-    );
-
-    if (firstFieldInStep) {
-      return firstFieldInStep.querySelector(
-        `input, textarea, select`
-      );
-    }
-
-    return null;
-  }
-
   function nextStep(form, isBuilder) {
     const currentStep = parseInt(form.dataset.currentStep);
     if (!validateStep(form, currentStep) && !isBuilder) {
@@ -729,19 +702,22 @@
     setStep(form, nextStep);
 
     // Set focus on first element in active step
-    const firstInput = getFirstInputInStep(form, nextStep);
-
-    if (firstInput) {
-      firstInput.focus();
+    const firstFieldInStep = form.querySelector(
+      `.breakdance-form-field[data-form-step="${nextStep}"]:not(.breakdance-form-field--hidden, .breakdance-form-field--html, .breakdance-form-field--condition-hidden)`
+    );
+    if (firstFieldInStep) {
+      const firstFocusableInput = firstFieldInStep.querySelector(
+        `input, textarea, select`
+      );
+      if (firstFocusableInput) {
+        firstFocusableInput.focus();
+      }
     }
-
-    scrollIntoViewIfNeeded(form);
   }
 
   function previousStep(form) {
     const currentStep = parseInt(form.dataset.currentStep);
     setStep(form, currentStep - 1);
-    scrollIntoViewIfNeeded(form);
   }
 
   function setStep(form, step) {
@@ -809,28 +785,6 @@
     setStep(form, 1);
   }
 
-  function initMask(form, selector) {
-    if (typeof Maska === "undefined") return;
-
-    const tokens = {
-      'z': {
-        pattern: /[a-z|A-Z]/,
-        multiple: true
-      },
-      'Z': {
-        pattern: /[A-Z]/,
-        multiple: true,
-        transform: (chr) => chr.toLocaleUpperCase(),
-      },
-      0: { pattern: /[0-9]/, optional: true },
-      9: { pattern: /[0-9]/, repeated: true },
-    }
-
-    form.bdMask = new Maska.MaskInput(`${selector} [data-maska]`, {
-      tokens
-    });
-  }
-
   function init(selector) {
     const form = document.querySelector(selector);
 
@@ -842,13 +796,11 @@
     bindEvents(form);
     initConditionalFields(form, true);
     initSteps(form);
-    initMask(form, selector);
   }
 
   window.breakdanceForm = {
     init,
     destroy,
-    initMask,
     initConditionalFields,
     initSteps,
   };

@@ -1,11 +1,11 @@
-/**
+/** 
 custom normalize.css for breakdance.
 based on normalize.css with the following changes.
 if you modify, dont forget to update normalize.min.css. there's no build process.
 */
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: smooth;  
 }
 
 *,
@@ -19,14 +19,7 @@ body {
   /* from modern-normalize/blob/main/modern-normalize.css */
   font-family: system-ui, -apple-system,
     /* Firefox supports this but not yet `system-ui` */ "Segoe UI", Roboto,
-  Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; /* 2 */
-}
-
-img {
-  display: inline-block;
-  max-inline-size: 100%;
-  block-size: auto;
-  vertical-align: middle;
+    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; /* 2 */
 }
 
 code,
@@ -35,7 +28,7 @@ samp,
 pre {
   /* from modern-normalize/blob/main/modern-normalize.css */
   font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo,
-  monospace;
+    monospace;
   font-size: 1em;
 }
 

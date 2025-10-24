@@ -3,19 +3,18 @@
     if (!typeStr) return null;
 
     return typeStr
-      .replace("document", "application")
-      .split(",");
+      .replace('document', 'application')
+      .split(',');
   }
 
   function getMediaOptions() {
     const url = new URL(document.location);
     const params = url.searchParams;
-    const multiple = !!params.get("multiple");
-    const type = getFileTypesFromString(params.get("types"));
-    const postId = params.get("post_id");
-    const selected = params.get("selected")?.split(",");
+    const multiple = !!params.get('multiple');
+    const type = getFileTypesFromString(params.get('types'));
+    const postId = params.get('post_id');
 
-    return { multiple, type, postId, selected };
+    return { multiple, type, postId };
   }
 
   function getMediaFrame() {
@@ -32,7 +31,7 @@
     });
 
     return wp.media({
-      frame: "post",
+      frame: 'post',
       type: options.type,
       multiple: options.multiple,
 
@@ -40,7 +39,7 @@
         text: "Choose",
       },
 
-      state: "gallery",
+      state: 'gallery',
 
       states: [state]
     });
@@ -48,15 +47,15 @@
 
   function removeExtraTabs() {
     const tabsToRemove = [
-      "#menu-item-insert",
-      "#menu-item-gallery",
-      "#menu-item-playlist",
-      "#menu-item-video-playlist"
+      '#menu-item-insert',
+      '#menu-item-gallery',
+      '#menu-item-playlist',
+      '#menu-item-video-playlist'
     ];
 
     tabsToRemove.forEach((tab) => {
       const node = document.querySelector(tab);
-      node.style.display = "none";
+      node.style.display = 'none';
     });
   }
 
@@ -64,7 +63,7 @@
     removeExtraTabs();
 
     // Navigate to main tab
-    frame.el.querySelector("#menu-item-library").click();
+    frame.el.querySelector('#menu-item-library').click();
   }
 
   // Event Dispatcher
@@ -84,10 +83,10 @@
   function formatExternalImage(state) {
     return {
       id: -1,
-      type: "external_image",
-      url: state.props.get("url"),
-      alt: state.props.get("alt") || "",
-      caption: state.props.get("caption") || "",
+      type: 'external_image',
+      url: state.props.get('url'),
+      alt: state.props.get('alt') || "",
+      caption: state.props.get('caption') || "",
     }
   }
 
@@ -97,10 +96,8 @@
   }
 
   function formatAttachmentObject(state) {
-    if (state.get("id") === "embed") {
-      const { multiple } = getMediaOptions();
-      const externalImg = formatExternalImage(state);
-      return multiple ? [externalImg] : externalImg;
+    if (state.get('id') === 'embed') {
+      return formatExternalImage(state);
     }
 
     return formatMedia(state);
@@ -112,7 +109,7 @@
       const attachments = formatAttachmentObject(state);
       const event = createEvent("breakdanceMediaChooserSelect", attachments);
       dispatch(event);
-      console.debug("Media selected", attachments);
+      console.debug('Media selected', attachments);
     }
   }
 
@@ -122,49 +119,18 @@
     }
   }
 
-  function getAttachments(ids) {
-    const options = getMediaOptions();
-
-    return wp.media.query({
-      order: "ASC",
-      orderby: "post__in",
-      post__in: ids,
-      posts_per_page: -1,
-      query: true,
-      type: options.type
-    });
-  }
-
-  function loadAttachments(frame) {
-    const state = frame.state();
-    const selection = state.get("selection");
-    const { selected: ids } = getMediaOptions();
-
-    if (!ids) return;
-
-    ids.forEach((id) => {
-      selection.add(wp.media.attachment(id));
-    });
-
-    const attachments = getAttachments(ids);
-
-    // Once attachments are loaded, set the current selection.
-    attachments.more().done(() => {
-      if (attachments?.models?.length) {
-        selection.add(attachments.models);
-      }
-    });
-  }
-
   function onReady() {
     const frame = getMediaFrame();
+
     frame.on("insert select", onMediaSelected(frame));
     frame.on("close", onMediaClosed(frame));
 
     frame.open();
 
     prettifyMediaLibrary(frame);
-    loadAttachments(frame);
+    // Pre-select image when opening the media library.
+    // const attachment = wp.media.attachment(id).fetch();
+    // selection.add(attachment ? [attachment] : []);
 
     dispatch(new Event("breakdanceMediaChooserReady"));
   }
