@@ -98,13 +98,7 @@
 
     input[action](); // Increment or decrement input
 
-    // Manually trigger change event.
-    const customEvent = new Event("change", {
-      bubbles: true,
-      cancelable: true
-    });
-
-    input.dispatchEvent(customEvent);
+    afterInputChange(input);
   };
 
   const onMaybeInputChange = (event) => {
