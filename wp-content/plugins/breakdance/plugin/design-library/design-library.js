@@ -49,7 +49,7 @@ class BreakdanceDesignLibrary {
       this.dispatch("breakdanceBeforeLeave");
     });
 
-    document.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("DOMContentLoaded", () => {
       this.init();
     });
   }
@@ -127,9 +127,7 @@ class BreakdanceDesignLibrary {
     }
   }
 
-  createCopyButton(container) {
-    const containerPosition = getComputedStyle(container).position;
-
+  createCopyButton() {
     const btn = document.createElement("button");
     btn.classList.add("bd-copy-button");
 
@@ -142,31 +140,21 @@ class BreakdanceDesignLibrary {
       btn.appendChild(text);
     }
 
-    if (containerPosition === "static") {
-      btn.classList.add("bd-copy-button--viewport");
-    }
-
     return btn;
   }
 
   onMouseEnter(element, btn) {
     const rect = btn.getBoundingClientRect();
+    const topMostElement = document.elementsFromPoint(rect.x, rect.y)
+      .filter((el) => !!el.matches("header, section"))
+      .at(0);
+
+    if (element.contains(topMostElement)) return;
+    if (!topMostElement) return;
+
+    const { height } = topMostElement.getBoundingClientRect();
     const offset = 10;
-
-    if (btn.classList.contains("bd-copy-button--viewport")) {
-      const rect = element.getBoundingClientRect();
-      btn.style.top = `${rect.top + offset + window.scrollY}px`;
-    } else {
-      const topMostElement = document.elementsFromPoint(rect.x, rect.y)
-        .filter((el) => !!el.matches("header, section"))
-        .at(0);
-
-      if (element.contains(topMostElement)) return;
-      if (!topMostElement) return;
-
-      const {height} = topMostElement.getBoundingClientRect();
-      btn.style.top = `${height + offset}px`;
-    }
+    btn.style.top = `${height + offset}px`;
   }
 
   addCopyButton(element) {

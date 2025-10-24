@@ -23,7 +23,6 @@
       x: null,
       y: null,
       blur: null,
-      background_color: null,
       advanced: {
         ease: 'linear',
         disable_at: null,
@@ -50,11 +49,6 @@
 
     parseValue(value) {
       if (!value) return value;
-      if (typeof value === 'string' && value.startsWith('var(')) {
-        // CSS variable
-        const cssVar = value.replace(/var\(([^)]+)\)/, '$1');
-        return getComputedStyle(this.element).getPropertyValue(cssVar);
-      }
       // Unit value is an object.
       return typeof value === 'object' ? value.style : value;
     }
@@ -108,16 +102,15 @@
     }
 
     createTween([prop, values]) {
-      const cssProp = prop.replace(/_/g, '-');
       const ease = this.options.advanced.ease;
       const scrollTrigger = this.getScrollTriggerObject(values);
       const startValue = this.parseValue(values.start);
       const middleValue = this.parseValue(values.middle);
       const endValue = this.parseValue(values.end);
 
-      const from = { [cssProp]: startValue, ease };
-      const middle = { [cssProp]: middleValue, ease };
-      const to = { [cssProp]: endValue, ease };
+      const from = { [prop]: startValue, ease };
+      const middle = { [prop]: middleValue, ease };
+      const to = { [prop]: endValue, ease };
 
       const tl = gsap.timeline({ scrollTrigger });
 

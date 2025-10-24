@@ -6,7 +6,7 @@ const { ToggleControl: $0012f20ec2c961dc$var$ToggleControl , TextControl: $0012f
 const $0012f20ec2c961dc$var$Fields = ({ postType: postType , postMeta: postMeta , setPostMeta: setPostMeta  })=>{
     // If you add a new field here, don't forget to add it to the classic editor as well. (classic.php)
     return /*#__PURE__*/ React.createElement($0012f20ec2c961dc$var$PluginDocumentSettingPanel, {
-        title: "Design Library",
+        title: "Breakdance Design Library",
         icon: "share"
     }, /*#__PURE__*/ React.createElement($0012f20ec2c961dc$var$PanelRow, null, /*#__PURE__*/ React.createElement($0012f20ec2c961dc$var$ToggleControl, {
         label: "Hide in Design Set?",
