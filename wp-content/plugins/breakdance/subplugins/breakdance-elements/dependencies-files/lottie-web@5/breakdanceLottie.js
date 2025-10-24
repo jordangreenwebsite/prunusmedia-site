@@ -1,4 +1,4 @@
-(function () {
+(function() {
   function init(selector, options) {
     const { mergeObjects } = BreakdanceFrontend.utils;
 

@@ -1,4 +1,4 @@
-(function () {
+(function() {
   const { mergeObjects, getCurrentBreakpoint } = BreakdanceFrontend.utils;
   window.breakdancePopupInstances = {};
   window.breakdanceHasShownPopup = false;
