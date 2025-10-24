@@ -18,7 +18,6 @@ import BlockChooser from "./chooser";
 const { __ } = wp.i18n; // Import __() from wp.i18n
 const { registerBlockType } = wp.blocks; // Import registerBlockType() from wp.blocks
 const { useCallback, useRef } = wp.element;
-const { builderName, strings } = breakdanceConfig;
 
 /**
  * Register: aa Gutenberg Block.
@@ -35,9 +34,9 @@ const { builderName, strings } = breakdanceConfig;
  */
 registerBlockType("breakdance/global-block", {
 	// Block name. Block names must be string that contains a namespace prefix. Example: my-plugin/my-custom-block.
-	title: __(`${builderName} ${strings.globalBlocks}`), // Block title.
+	title: __("Breakdance Global Block"), // Block title.
 	icon: Logo, // Block icon from Dashicons → https://developer.wordpress.org/resource/dashicons/.
-	description: `Add ${builderName} ${strings.globalBlocks} to your Gutenberg Page`,
+	description: "Add Breakdance Global Blocks to your Gutenberg Page",
 	category: "common", // Block category — Group blocks together based on common traits E.g. common, formatting, layout widgets, embed.
 	attributes: {
 		blockId: {
@@ -98,7 +97,7 @@ registerBlockType("breakdance/global-block", {
 		return (
 			<div className={props.className}>
 				<p>
-					Choose a {strings.globalBlock} from your library or{" "}
+					Choose a Global Block from your library or{" "}
 					<a href={blockPostTypeUrl} target="_blank" rel="noreferrer">
 						create a new one
 					</a>

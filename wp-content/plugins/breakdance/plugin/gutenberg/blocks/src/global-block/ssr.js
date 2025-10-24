@@ -4,7 +4,6 @@ const { Spinner } = wp.components;
 
 export default function BlockSSR( props ) {
 	const { blockPreviewUrl } = breakdanceGlobalBlock;
-	const { strings } = breakdanceConfig;
 	const iframeUrl = blockPreviewUrl.replace( '%%BLOCKID%%', props.blockId );
 
 	const [ isLoading, setIsLoading ] = useState( true );
@@ -30,13 +29,13 @@ export default function BlockSSR( props ) {
 
 	const emptyContent = (
 		<div className="breakdance-global-block-placeholder">
-			The current {strings.globalBlock} is empty.
+			The current block is empty.
 		</div>
 	);
 
 	const loader = (
 		<div className="breakdance-global-block-placeholder">
-			Loading {strings.globalBlock}
+			Loading block
 			<Spinner />
 		</div>
 	);
@@ -53,7 +52,7 @@ export default function BlockSSR( props ) {
 
 			{ isEmpty ? emptyContent : (
 				<iframe
-					title={strings.globalBlock}
+					title="Global Block"
 					className="breakdance-global-block-iframe"
 					src={ iframeUrl }
 					style={ { height: iframeHeight } }

@@ -9,14 +9,13 @@
 //  Import CSS.
 import "./editor.scss";
 import "./style.scss";
-import { useDispatch } from "@wordpress/data";
-import Logo from "../logo";
 
 const { __ } = wp.i18n; // Import __() from wp.i18n
 const { registerBlockType } = wp.blocks; // Import registerBlockType() from wp.blocks
 const { useEffect } = wp.element;
+import { useDispatch } from "@wordpress/data";
+import Logo from "../logo";
 
-const {builderName} = window.breakdanceConfig;
 /**
  * Register: aa Gutenberg Block.
  *
@@ -31,7 +30,7 @@ const {builderName} = window.breakdanceConfig;
  *                             registered; otherwise `undefined`.
  */
 registerBlockType("breakdance/block-breakdance-launcher", {
-	title: __(`${builderName} Launcher`),
+	title: __("Breakdance Launcher"),
 	icon: Logo,
 	category: "common",
 	supports: {
@@ -78,16 +77,14 @@ registerBlockType("breakdance/block-breakdance-launcher", {
 					</p>
 
 					<div className="breakdance-launcher__buttons">
-						{breakdanceConfig.hasEditAccess ? (
-							<button
-								className="breakdance-launcher-button"
-								data-test-id="launcher-edit"
-								type="button"
-								onClick={editWithBreakdance}
-							>
-								{strings.openButton}
-							</button>
-						) : null}
+						<button
+							className="breakdance-launcher-button"
+							data-test-id="launcher-edit"
+							type="button"
+							onClick={editWithBreakdance}
+						>
+							{strings.openButton}
+						</button>
 						{breakdanceConfig.canUseDefaultEditor ? (
 							<button
 								className="breakdance-launcher-link"

@@ -5,7 +5,6 @@ const { PanelBody, Button, Icon } = wp.components;
 export default function Sidebar( props ) {
 	const showEditButton = !! props.blockId;
 	const builderURL = breakdanceConfig.builderLoaderUrl.replace( '%%POSTID%%', props.blockId );
-	const { builderName, strings } = breakdanceConfig;
 
 	const refreshIcon = (
 		<Icon
@@ -20,7 +19,7 @@ export default function Sidebar( props ) {
 	const editButton = (
 		<div className="breakdance-global-block-edit">
 			<Button isSecondary href={ builderURL } target="_blank">
-				Edit {strings.globalBlock} in { builderName }
+				Edit Block with Breakdance
 			</Button>
 
 			<Button icon={ refreshIcon } onClick={ props.onRefreshClick } />
@@ -29,7 +28,7 @@ export default function Sidebar( props ) {
 
 	return (
 		<InspectorControls key="setting">
-			<PanelBody title={builderName} initialOpen={ true }>
+			<PanelBody title="Breakdance" initialOpen={ true }>
 				{ props.children }
 				{ showEditButton ? editButton : null }
 			</PanelBody>

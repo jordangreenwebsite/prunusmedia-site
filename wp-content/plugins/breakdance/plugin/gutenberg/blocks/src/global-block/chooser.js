@@ -1,11 +1,10 @@
 /* global breakdanceGlobalBlock */
 
 const { SelectControl } = wp.components;
-const name = window.breakdanceConfig.strings.globalBlock;
 
 function getBlocks() {
 	const emptyItem = {
-		label: `– Select a ${name} –`,
+		label: '– Select a Block –',
 		value: '',
 	};
 
@@ -24,7 +23,7 @@ export default function BlockChooser( props ) {
 	return (
 		<div className="breakdance-global-block-chooser">
 			<SelectControl
-				label={name}
+				label="Block"
 				onChange={ props.setBlockId }
 				value={ props.blockId }
 				options={ blocks }
