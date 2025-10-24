@@ -1,16 +1,17 @@
 .breakdance .bde-menu-custom-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   text-align: left;
   max-width: 100%;
-}
-
-.breakdance .bde-custom-area-link {
-  --link-alignment: flex-start;
+  position: relative;
+  background-size: cover;
 }
 
 .bde-menu-custom-area.bde-menu-custom-area-hide-in-desktop-menu {
-  display: var(--menu-hide-on-desktop, block);
+  display: var(--menu-hide-on-desktop, flex);
 }
 
 .bde-menu-custom-area.bde-menu-custom-area-hide-in-mobile-menu {
-  display: var(--menu-hide-on-mobile, block);
+  display: var(--menu-hide-on-mobile, flex);
 }
