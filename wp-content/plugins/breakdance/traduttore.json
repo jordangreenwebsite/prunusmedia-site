@@ -1,0 +1,9 @@
+{
+  "mergeWith": "languages/breakdance-builder.pot",
+  "textDomain": "breakdance",
+  "exclude": [
+    "psalm",
+    "builder/dist",
+    "plugin/lib"
+  ]
+}
