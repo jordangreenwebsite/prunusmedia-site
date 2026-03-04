@@ -76,7 +76,7 @@
     static autoload(parent = null) {
       const element = parent ?? document;
       // Autoload link actions from macros
-      const selector = ".breakdance-link[data-type='action']";
+      const selector = ".breakdance-link[data-type='action'], .oxygen-link[data-type='action']";
       const links = element.querySelectorAll(selector);
 
       links.forEach((link) => {

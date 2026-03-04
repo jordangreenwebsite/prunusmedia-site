@@ -42,8 +42,12 @@
   --inactiveBgColor: #ffffff;
 }
 
-.bde-tabs__panel[hidden] {
-  display: none !important;
+.bde-tabs__panel {
+  display: none;
+}
+
+.bde-tabs__panel.is-active {
+  display: block;
 }
 
 .bde-tabs__tabslist {

@@ -10,18 +10,25 @@
       defaultActiveIndex: 0,
       layout: "grid",
       horizontalAt: "breakpoint_phone_landscape",
-      isVertical: false
+      isVertical: false,
+      equalHeight: false
     };
     items = [];
     filterActiveClass = "is-active";
 
     constructor(selector, options) {
       this.onResize = this.onResize.bind(this);
+      this.onImagesLoaded = this.onImagesLoaded.bind(this);
       this.onFilterChange = this.onFilterChange.bind(this);
       this.selector = selector;
       this.options = mergeObjects(this.defaultOptions, options);
 
       this.init();
+    }
+
+    isEqualHeight() {
+      const isMasonry = this.options.layout === "masonry";
+      return this.options.equalHeight && !isMasonry && !this.isSlider();
     }
 
     isSlider() {
@@ -52,6 +59,11 @@
 
     relayout() {
       if (!this.iso) return;
+
+      if (this.isEqualHeight()) {
+        this.equalizeHeights();
+      }
+
       this.iso.layout();
     }
 
@@ -59,12 +71,18 @@
       return Array.from(this.wrapperEl.querySelectorAll(this.options.itemSelector));
     }
 
+    onImagesLoaded() {
+      this.relayout();
+    }
+
     setActiveButton(activeButton) {
       this.filterButtons.forEach((button) => {
         button.classList.remove(this.filterActiveClass);
+        button.setAttribute("aria-selected", "false");
       });
 
       activeButton.classList.add(this.filterActiveClass);
+      activeButton.setAttribute("aria-selected", "true");
     }
 
     // Filters
@@ -147,6 +165,26 @@
       }
     }
 
+    equalizeHeights() {
+      const grid = this.wrapperEl;
+      const items = this.getItemElems()
+        .filter(item => item.style.display !== "none");
+
+      const itemsPerRow = Math.floor(grid.clientWidth / items[0].offsetWidth);
+      let rowHeight = 0;
+
+      // Reset heights
+      items.forEach(item => {
+        item.style.height = "auto";
+      });
+
+      for (let i = 0; i < items.length; i += itemsPerRow) {
+        const rowItems = items.slice(i, i + itemsPerRow);
+        rowHeight = Math.max(...rowItems.map(item => item.offsetHeight));
+        rowItems.forEach(item => item.style.height = `${rowHeight}px`);
+      }
+    }
+
     resizeVertical() {
       if (!this.options.isVertical) return;
       const breakpoint = this.options.horizontalAt;
@@ -184,6 +222,15 @@
       }
 
       this.disconnect();
+
+      // Reset heights
+      this.getItemElems()
+        .filter(item => item.style.display !== "none")
+        .forEach(item => {
+          item.style.removeProperty("height");
+        });
+
+      imagesLoaded(this.element).off("progress", this.onImagesLoaded);
     }
 
     update(options) {
@@ -193,6 +240,8 @@
     }
 
     initIsotope() {
+      const layoutMode = this.isEqualHeight() ? "fitRows" : "masonry";
+
       // Remove display: none from initially hidden items
       this.items.forEach(item => item.style.display = null);
 
@@ -200,6 +249,11 @@
         itemSelector: this.options.itemSelector,
         percentPosition: true,
         isJQueryFiltering: false,
+        layoutMode,
+        fitRows: {
+          columnWidth: this.options.sizerSelector,
+          gutter: this.options.gutterSelector,
+        },
         masonry: {
           columnWidth: this.options.sizerSelector,
           gutter: this.options.gutterSelector,
@@ -214,6 +268,12 @@
         filter: ":not(.initially-hidden)"
       });
 
+      this.iso.on("arrangeComplete", () => {
+        if (this.isEqualHeight()) {
+          this.relayout();
+        }
+      });
+
       this.element.addEventListener("breakdance_infinite_scroll_loaded", (event) => {
         this.iso.appended(event.detail);
         this.iso.layout();
@@ -224,6 +284,8 @@
       this.wrapperEl.querySelectorAll("a, button").forEach((el) => {
         el.addEventListener("click", () => this.iso.layout(), { signal: this.ac.signal });
       });
+
+      imagesLoaded(this.element).on("progress", this.onImagesLoaded);
     }
 
     init() {

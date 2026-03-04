@@ -1,7 +1,7 @@
 // Support for swiper v8
 (function () {
   function BreakdanceSwiper() {
-    const { mergeObjects, matchMedia, getCurrentBreakpoint, is, isBuilder } = BreakdanceFrontend.utils;
+    const { mergeObjects, matchMedia, getCurrentBreakpoint, is, isBuilder, prefersReducedMotion } = BreakdanceFrontend.utils;
 
     function isElementInDom(selector) {
       // An element can be "hidden" (aka not in the DOM) with Hide on breakpoint -> in builder preview
@@ -37,12 +37,9 @@
 
       setBreakpointProperty(swiper, "spaceBetween", spaceBetween);
 
-      // A reloop is necessary when changing `slidesPerView` or `direction`*
-      // when swiper has already been initialized.
-      // *cargo cult addition: when slidesPerGroup was implemented, it was added to the needsReLoop calculation without
-      // taking into consideration whether it is required
+      // A reloop is necessary when changing `slidesPerView`, `slidesPerGroup`, or `direction` when swiper has already been initialized.
       if (needsReLoop && initialized) {
-        // Tip: This logic is different on >= v9.
+        // Tip: When upgrading to swiper >=9 logic below is different.
         // See: https://github.com/nolimits4web/swiper/blob/master/src/core/breakpoints/setBreakpoint.js
         swiper.loopDestroy();
         swiper.loopCreate();
@@ -85,6 +82,11 @@
       return is.obj(value) && "number" in value;
     }
 
+    function syncSliders(sliderA, sliderB) {
+      sliderA.controller.control = sliderB;
+      sliderB.controller.control = sliderA;
+    }
+
     function resetSlideAnimations(slide) {
       const customEvent = new Event("breakdance_reset_animations", { bubbles: true });
       slide.dispatchEvent(customEvent);
@@ -99,11 +101,11 @@
     }
 
     function supportEntranceAnimations(swiper, settings) {
-      let lastVisibleSlides = swiper.visibleSlides;
+      let lastVisibleSlides = swiper.visibleSlides || [];
       const playOn = settings.advanced.play_animations_on || "transition_end";
 
-      const getNewestSlides = () => swiper.visibleSlides.filter(x => !lastVisibleSlides.includes(x));
-      const getHiddenSlides = () => swiper.slides.filter((slide) => !swiper.visibleSlides.includes(slide));
+      const getNewestSlides = () => swiper.visibleSlides?.filter(x => !lastVisibleSlides.includes(x)) || [];
+      const getHiddenSlides = () => swiper.slides?.filter((slide) => !swiper.visibleSlides.includes(slide)) || [];
 
       // This is a workaround for when the user drags the slider before slideChange is triggered.
       swiper.on("sliderFirstMove", () => {
@@ -134,6 +136,35 @@
       ) {
         window.swiperInstances[id].destroy(true, true);
         delete window.swiperInstances[id];
+      }
+    }
+
+    function shouldAutoplay(settings, isBuilder, forceAutoplay) {
+      if (prefersReducedMotion()) return false;
+
+      if (settings.autoplay === "enabled" && (!isBuilder || forceAutoplay)) {
+        return {
+          delay: settings.autoplay_settings.speed.number,
+          pauseOnMouseEnter:
+            !!settings.autoplay_settings.pause_on_hover,
+          disableOnInteraction:
+            !!settings.autoplay_settings.stop_on_interaction,
+          stopOnLastSlide: settings.infinite !== "enabled",
+        };
+      }
+
+      return false;
+    }
+
+    function initSliderSync(slideA, sliderB) {
+      if (!sliderB) return;
+
+      if (sliderB.swiper) {
+        syncSliders(slideA.swiper, sliderB.swiper);
+      } else {
+        sliderB.addEventListener("breakdance_swiper_init", () => {
+          syncSliders(slideA.swiper, sliderB.swiper);
+        });
       }
     }
 
@@ -168,6 +199,7 @@
             slides_per_view: 1,
             slides_per_group: 1,
             initial_slide: 0,
+            slide_to_clicked: false,
           },
           direction: "horizontal",
         },
@@ -218,24 +250,21 @@
         : {};
 
       const forceAutoplay = extras && extras.autoplay === true;
+      const sliderToSyncWith = advancedSettings.sync_with_another_slider ? document.querySelector(`.${advancedSettings.slider_to_sync} .swiper`) : null;
 
+      if (advancedSettings.sync_with_another_slider && advancedSettings.slider_to_sync && !sliderToSyncWith) {
+        console.error("[Breakdance Slider]: The slider to sync with is not found. Please check if the element you selected exists.");
+      }
+
+      const target = document.querySelector(`${selector} > .breakdance-swiper-wrapper > .swiper`);
       const swiperInstance = new Swiper(
-        `${selector} > .breakdance-swiper-wrapper > .swiper`,
+        target,
         {
           ...extras,
           speed: settings.speed.number,
           loop: settings.infinite === "enabled" && !isBuilder,
           autoplay:
-            settings.autoplay === "enabled" && (!isBuilder || forceAutoplay)
-              ? {
-                delay: settings.autoplay_settings.speed.number,
-                pauseOnMouseEnter:
-                  !!settings.autoplay_settings.pause_on_hover,
-                disableOnInteraction:
-                  !!settings.autoplay_settings.stop_on_interaction,
-                stopOnLastSlide: settings.infinite !== "enabled",
-              }
-              : false,
+            shouldAutoplay(settings, isBuilder, forceAutoplay),
 
           effect: settings.effect,
           pagination: {
@@ -275,15 +304,30 @@
           a11y: {
             slideRole: ""
           },
-          initialSlide: settings.advanced.initial_slide,
+          initialSlide: advancedSettings.initial_slide,
+          slideToClickedSlide: advancedSettings.slide_to_clicked,
+          init: false
         });
 
+      // Dispatch an event so that other scripts can hook into it
+      swiperInstance.on("init", () => {
+        const event = new Event("breakdance_swiper_init");
+        target.dispatchEvent(event);
+      });
+
+      // Init the swiper last so that we can dispatch the event
+      swiperInstance.init();
+
+      // Set the breakpoint styles
       setBreakpoint(swiperInstance, settings);
       supportEntranceAnimations(swiperInstance, settings);
 
+      // Reset the breakpoint styles on resize
       swiperInstance.on("resize", () => {
         setBreakpoint(swiperInstance, settings);
       });
+
+      initSliderSync(target, sliderToSyncWith);
 
       window.swiperInstances = {
         ...window.swiperInstances,
@@ -327,6 +371,10 @@
           window.swiperInstances &&
           window.swiperInstances[sliderId]
         ) {
+          if (window.swiperInstances[sliderId].visibleSlides.includes(slideElement)) {
+            return;
+          }
+
           window.swiperInstances[sliderId].slideTo(slideIndex, 0);
         }
       }

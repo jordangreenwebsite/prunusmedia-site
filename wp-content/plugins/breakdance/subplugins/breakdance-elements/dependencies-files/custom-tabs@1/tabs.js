@@ -1,4 +1,4 @@
-(function() {
+(function () {
   const { mergeObjects, matchMedia } = BreakdanceFrontend.utils;
 
   const verticalTabsSelector = "is-vertical";
@@ -192,12 +192,10 @@
           );
         }
 
-        // Remove hidden attribute from tab panel to make it visible
         const panel = document.getElementById(controls);
 
         if (!panel) return;
 
-        panel.removeAttribute("hidden");
         panel.classList.add("is-active");
 
         // Set focus when required
@@ -256,7 +254,6 @@
 
       if (this.panels) {
         this.panels.forEach(panel => {
-          panel.setAttribute("hidden", "hidden");
           panel.classList.remove("is-active");
         });
       }

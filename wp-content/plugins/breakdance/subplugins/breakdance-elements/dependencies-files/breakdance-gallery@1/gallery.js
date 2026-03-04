@@ -5,7 +5,11 @@
     defaultOptions = {
       type: "grid",
       mode: "single",
-      row_height: { number: 300 },
+      row_height: {
+        breakpoint_base: {
+          number: 300
+        }
+      },
       columns: {
         breakpoint_base: 3,
         breakpoint_phone_portrait: 1,
@@ -100,6 +104,14 @@
       const button = this.filterButtons.find((button) => button.id === node.id);
 
       if (button) this.setActiveButton(button);
+
+      const customEvent = new CustomEvent("breakdance_gallery_filtered", {
+        detail: {
+          category,
+        },
+      });
+
+      this.element.dispatchEvent(customEvent);
     }
 
     filterSlider(category) {
@@ -173,9 +185,11 @@
       const config = {
         containerWidth: this.galleryEl.clientWidth,
         containerPadding: 0,
-        boxSpacing: this.getMasonryGap(),
-        targetRowHeight: this.options.row_height.number,
+        boxSpacing: this.getResponsiveUnit("gap"),
+        targetRowHeight: this.getResponsiveUnit("row_height"),
       };
+
+      console.log(config);
 
       const output = justifiedLayout(geometry, config);
 
@@ -198,14 +212,16 @@
       });
     }
 
-    getMasonryGap() {
-      if (!this.options.gap) return 0;
+    getResponsiveUnit(path) {
+      if (this.options[path] === undefined) return 0;
 
-      const currBreakpoint = getCurrentBreakpoint();
+      const availableBreakpoints = Object.keys(this.options[path]);
+      const currBreakpoint = getCurrentBreakpoint(availableBreakpoints);
 
       // version >= 1.1 - backwards compatibility for non-breakpoint values.
-      const gap = this.options.gap[currBreakpoint.id]?.number || this.options.gap.number || 0;
-      return Math.max(gap, 0);
+      const value = this.options[path][currBreakpoint.id]?.number || this.options[path].number || 0;
+
+      return Math.max(value, 0);
     }
 
     getLayoutMode() {

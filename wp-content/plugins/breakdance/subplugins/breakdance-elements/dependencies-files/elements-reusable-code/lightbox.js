@@ -1,6 +1,6 @@
 /* global lightGallery, lgAutoplay, lgFullscreen, lgZoom, lgVideo, lgThumbnail */
 (function () {
-  const { mergeObjects } = BreakdanceFrontend.utils;
+  const { mergeObjects, toArray } = BreakdanceFrontend.utils;
 
   class BreakdanceLightbox {
     defaultOptions = {
@@ -19,20 +19,22 @@
 
     constructor(element, options) {
       this.itemize = this.itemize.bind(this);
+      this.filterByGallery = this.filterByGallery.bind(this);
 
       this.options = mergeObjects(this.defaultOptions, options);
       this.selector = element;
       this.element = this.queryElement(element);
+      this.itemSelector = `${this.options.itemSelector}:not(.swiper-slide-duplicate)`;
 
       this.init();
     }
 
-    createGallery(localOptions) {
-      const options = this.getLibOptions();
+    createGallery(options) {
+      const defaultOptions = this.getLibOptions();
 
       this.lightbox = lightGallery(this.element, {
+        ...defaultOptions,
         ...options,
-        ...localOptions,
       });
 
       this.detectDuplicateSwiperSlides();
@@ -160,7 +162,7 @@
       };
     }
 
-    getItems() {
+    getDynamicItems() {
       return this.options.items.filter(this.filterItems).map(this.itemize);
     }
 
@@ -216,7 +218,7 @@
     }
 
     initDynamic() {
-      const items = this.getItems();
+      const items = this.getDynamicItems();
 
       this.element.addEventListener("click", () => {
         this.createGallery({
@@ -236,6 +238,19 @@
     getItemFromAnchor(el) {
       const src = el.href;
       return this.isVideo(src) ? this.getVideoObject(src) : { src };
+    }
+
+    filterByGallery(event) {
+      const { category } = event.detail;
+
+      const selector = category === "all"
+        ? this.itemSelector
+        : toArray(this.itemSelector).filter(
+          item => item.dataset.category === category
+        );
+
+      this.lightbox.settings.selector = selector;
+      this.lightbox.refresh();
     }
 
     initFromDOM() {
@@ -266,23 +281,25 @@
 
     initDefault() {
       this.createGallery({
-        selector: `${this.options.itemSelector}:not(.swiper-slide-duplicate)`,
+        selector: this.itemSelector,
       });
+
+      this.element.addEventListener("breakdance_gallery_filtered", this.filterByGallery);
     }
 
     init() {
       const { type } = this.options;
 
       if (type === "dynamic") {
-        // Lightbox Gallery Element
+        // Element: Lightbox Gallery
         // Show multiple images from an array
         this.initDynamic();
       } else if (type === "single") {
-        // Text Link & Image Elements
+        // Element: Button, Text Link, and Image (v1)
         // Show an image from a href attribute
         this.initFromDOM();
       } else {
-        // Gallery Element
+        // Element: Gallery
         // Show multiple images from DOM elements with the same css class
         this.initDefault();
       }
@@ -295,7 +312,7 @@
       const element = parent ?? document;
       // Autoload lightboxes from macros
       const selector =
-        ".breakdance-link[data-type='lightbox']:not(.is-lightbox-active)";
+        ".breakdance-link[data-type='lightbox']:not(.is-lightbox-active), .oxygen-link[data-type='lightbox']:not(.is-lightbox-active)";
       const links = element.querySelectorAll(selector);
 
       links.forEach((link) => {
