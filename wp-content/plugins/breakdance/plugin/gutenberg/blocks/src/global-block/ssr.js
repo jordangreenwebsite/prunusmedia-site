@@ -4,6 +4,7 @@ const { Spinner } = wp.components;
 
 export default function BlockSSR( props ) {
 	const { blockPreviewUrl } = breakdanceGlobalBlock;
+	const { strings } = breakdanceConfig;
 	const iframeUrl = blockPreviewUrl.replace( '%%BLOCKID%%', props.blockId );
 
 	const [ isLoading, setIsLoading ] = useState( true );
@@ -17,10 +18,10 @@ export default function BlockSSR( props ) {
 
 	const onLoad = ( event ) => {
 		const iframeDocument = event.target.contentDocument.documentElement;
+		const body = event.target.contentDocument.body;
 		const height = iframeDocument.scrollHeight;
 
-		// Check if a .section-container exists, otherwise show an "empty" message.
-		const hasChildren = iframeDocument.querySelector( '.section-container' );
+		const hasChildren = !body.classList.contains( 'is-breakdance-block-empty' );
 
 		setIframeHeight( height + 'px' );
 		setIsLoading( false );
@@ -29,13 +30,13 @@ export default function BlockSSR( props ) {
 
 	const emptyContent = (
 		<div className="breakdance-global-block-placeholder">
-			The current block is empty.
+			The current {strings.globalBlock.toLowerCase()} is empty.
 		</div>
 	);
 
 	const loader = (
 		<div className="breakdance-global-block-placeholder">
-			Loading block
+			Loading {strings.globalBlock}
 			<Spinner />
 		</div>
 	);
@@ -52,7 +53,7 @@ export default function BlockSSR( props ) {
 
 			{ isEmpty ? emptyContent : (
 				<iframe
-					title="Global Block"
+					title={strings.globalBlock}
 					className="breakdance-global-block-iframe"
 					src={ iframeUrl }
 					style={ { height: iframeHeight } }

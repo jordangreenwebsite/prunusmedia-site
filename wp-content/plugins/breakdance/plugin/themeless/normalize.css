@@ -1,11 +1,11 @@
-/** 
+/**
 custom normalize.css for breakdance.
 based on normalize.css with the following changes.
 if you modify, dont forget to update normalize.min.css. there's no build process.
 */
 
 html {
-  scroll-behavior: smooth;  
+  scroll-behavior: smooth;
 }
 
 *,
@@ -19,7 +19,14 @@ body {
   /* from modern-normalize/blob/main/modern-normalize.css */
   font-family: system-ui, -apple-system,
     /* Firefox supports this but not yet `system-ui` */ "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; /* 2 */
+  Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; /* 2 */
+}
+
+img {
+  display: inline-block;
+  max-inline-size: 100%;
+  block-size: auto;
+  vertical-align: middle;
 }
 
 code,
@@ -28,7 +35,7 @@ samp,
 pre {
   /* from modern-normalize/blob/main/modern-normalize.css */
   font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo,
-    monospace;
+  monospace;
   font-size: 1em;
 }
 
@@ -388,4 +395,46 @@ template {
 
 [hidden] {
   display: none;
+}
+
+/**
+   * Skip Link
+   */
+
+.bde-skip-link,
+.oxy-skip-link {
+  position: absolute;
+  top: var(--bde-skip-link-top, 10px);
+  left: var(--bde-skip-link-left, 10px);
+  width: 1px;
+  height: 1px;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  overflow: hidden;
+  word-wrap: normal;
+}
+
+.bde-skip-link:focus,
+.oxy-skip-link:focus {
+  display: block;
+  z-index: 100000; /* should overlap #wpadminbar. */
+
+  width: auto;
+  height: auto;
+  padding: 15px 20px;
+
+  background: var(--bde-skip-link-background-color, #fff);
+  color: var(--bde-skip-link-text-color, var(--bde-headings-color, #000));
+  font-size: 1em;
+  font-weight: 700;
+  text-decoration: none;
+
+  clip: auto;
+  box-shadow: 0 0 4px 2px rgb(0 0 0 / 40%);
+  border-radius: 10px;
+}
+
+.bde-skip-link:hover,
+.oxy-skip-link:hover {
+  background: var(--bde-skip-link-background-color-hover, var(--bde-skip-link-background-color, #fff));
 }
