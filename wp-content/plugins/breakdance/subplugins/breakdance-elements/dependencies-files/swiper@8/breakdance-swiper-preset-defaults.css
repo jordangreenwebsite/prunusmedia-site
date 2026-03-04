@@ -83,3 +83,10 @@
   width: calc(100% - (var(--swiper-padding-h) * 2));
   left: var(--swiper-padding-h);
 }
+
+/* #8770 */
+@media (prefers-reduced-motion: reduce) {
+  .breakdance-swiper-wrapper .swiper-wrapper {
+    transition: none !important;
+  }
+}

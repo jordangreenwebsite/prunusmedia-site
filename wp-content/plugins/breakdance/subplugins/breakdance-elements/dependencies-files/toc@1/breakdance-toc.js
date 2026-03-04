@@ -28,6 +28,9 @@
         scroll_offset: {
           number: 10,
         },
+        heading_offset: {
+          number: 10,
+        },
       },
       tocSelector: ".js-breakdance-toc",
     };
@@ -145,6 +148,7 @@
         collapseDepth: collapseDepth,
         // Smooth scroll offset.
         scrollSmoothOffset: this.options.design.scroll_offset.number * -1,
+        headingsOffset: this.options.design.heading_offset.number,
         hasInnerContainers: true,
         headingObjectCallback: this.headingObjectCallback.bind(this),
       });
