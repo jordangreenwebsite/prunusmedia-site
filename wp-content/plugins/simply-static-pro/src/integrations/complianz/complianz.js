@@ -7,7 +7,15 @@
 let config_element = document.querySelector("meta[name='ssp-config-path']");
 let config_path = config_element.getAttribute("content");
 let config_url = window.location.origin + config_path;
-let cookie_data_url = config_url + 'complianz-cookie-data.json';
+let version_element = document.querySelector("meta[name='ssp-config-version']");
+let version_suffix = '';
+if (null !== version_element) {
+    let v = version_element.getAttribute('content');
+    if (v) {
+        version_suffix = '?ver=' + encodeURIComponent(v);
+    }
+}
+let cookie_data_url = config_url + 'complianz-cookie-data.json' + version_suffix;
 function loadComplianzData(callback) {
     let xobj = new XMLHttpRequest();
     xobj.overrideMimeType("application/json");
@@ -1479,7 +1487,11 @@ if ( complianz.geoip == 1 && (cmplz_user_data.length == 0 || (cmplz_user_data.ve
     let cmplzUserRegion = cmplz_get_url_parameter(window.location.href, 'cmplz_user_region');
     cmplzUserRegion = cmplzUserRegion ? '&cmplz_user_region=' + cmplzUserRegion : '';
     let banner_url = config_url + 'complianz-banner.json';
-    request.open('GET', banner_url+'?'+complianz.locale+cmplzUserRegion, true);
+    if (version_suffix) {
+        banner_url += version_suffix;
+    }
+    let delimiter = banner_url.indexOf('?') !== -1 ? '&' : '?';
+    request.open('GET', banner_url + delimiter + complianz.locale + cmplzUserRegion, true);
     request.setRequestHeader('Content-type', 'application/json');
     request.send();
     request.onload = function() {

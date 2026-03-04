@@ -1,99 +1,80 @@
 
-.ssp-search .form-row {
+.ssp-search form input {
     width: 100%;
-    display: flex;
-    align-items: center;
-}
-
-.ssp-search .search-input-container {
-    flex: 1;
-}
-
-.ssp-search .search-input {
-    width: 100%;
-    padding: 8px;
-}
-
-.ssp-search .search-submit {
-    padding: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--wp--preset--color--main);
-    border: none;
-    cursor: pointer;
-}
-
-.ssp-search .search-submit svg {
-    width: 24px;
-    height: 24px;
-    fill: var(--wp--preset--color--base);
-}
-
-.ssp-search > .search-form .search-submit {
-    margin: 0;
-}
-
-.ssp-search .search-auto-complete {
-    background: var(--wp--preset--color--base);
-    position: absolute;
-    padding: 4px 0;
-    width: 100%;
-    z-index: 1;
-    top: 45px;
-    max-width: 100%;
-}
-
-.ssp-search .search-auto-complete.show {
-    display: block;
-}
-
-.ssp-search .search-auto-complete ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    transition: none;
-}
-
-.ssp-search .auto-complete-item {
-    padding: 5px 0 5px 10px;
-    margin: 0;
-    font-size: var(--wp--preset--font-size--small);
-}
-
-.ssp-search .auto-complete-item:hover {
-    cursor: pointer;
-    background: var(--wp--preset--color--tertiary);
-}
-
-.ssp-search .auto-complete-item p {
-    margin: 0;
-}
-
-.ssp-search .search-input-container {
-    flex: 1;
-    box-sizing: border-box;
-    display: flex;
-    position: relative;
 }
 
 .ssp-search .search-form {
     width: auto;
 }
 
-.ssp-results {
+.ssp-search .form-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ssp-search .search-input-container {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative; /* anchor for absolute autocomplete dropdown */
+}
+
+.ssp-search .search-input {
+    width: 100%;
+}
+
+.ssp-search .search-submit {
+    white-space: nowrap;
+}
+
+/* Autocomplete dropdown overlays below the input without affecting layout */
+.ssp-search .search-input-container .search-auto-complete {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--wp--preset--color--base);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: none;
+    max-height: 50vh;
+    overflow: auto;
     display: none;
 }
 
-.auto-complete-item {
-    border: none !important;
-    padding: 5px 0 5px 0;
+.ssp-search .search-input-container .search-auto-complete.show {
+    display: block;
 }
 
-.auto-complete-item:hover {
-    background: none;
+@media (max-width: 480px) {
+    .ssp-search .form-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
 }
 
-.auto-complete-item b {
+
+.search-auto-complete ul {
+    padding: 0 15px;
+    font-size: 1rem;
+}
+
+.search-auto-complete ul a {
+    text-decoration: none;
+}
+
+.search-auto-complete ul a:hover {
     text-decoration: underline;
+}
+
+.search-auto-complete li {
+    list-style: none;
+    margin-bottom: 5px;
+}
+
+.ssp-results {
+    /* Previously hidden by default; this prevented Algolia/Fuse results from being visible.
+       Results containers are injected dynamically, so they should be visible when present. */
+    display: block;
 }
