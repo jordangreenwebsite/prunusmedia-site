@@ -206,6 +206,9 @@
   right: 20px;
   cursor: pointer;
   z-index: 11;
+  background-color: transparent;
+  border: 0;
+  padding: 0;
 }
 
 .search-form--full-screen .search-form__field {

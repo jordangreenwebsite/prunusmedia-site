@@ -3,6 +3,7 @@
   display: inline-flex;
   width: var(--bdePulseDotSize, 12px);
   height: var(--bdePulseDotSize, 12px);
+  flex-shrink: 0;
 }
 
 .bde-pulse-dot__ping {
