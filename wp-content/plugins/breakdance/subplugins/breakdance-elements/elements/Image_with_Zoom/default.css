@@ -18,6 +18,7 @@
   width: 100%;
   height: auto;
   transition: opacity ease 100ms;
+  background-color: var(--bde-background-color);
 }
 
 .breakdance .bde-image-with-zoom:hover img {
