@@ -1,0 +1,4 @@
+{
+  "mergeWith": "languages/breakdance-elements-builder.pot",
+  "textDomain": "breakdance-elements"
+}
