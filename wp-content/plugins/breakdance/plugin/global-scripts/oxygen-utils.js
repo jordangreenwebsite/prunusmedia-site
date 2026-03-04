@@ -280,6 +280,12 @@
     }
   }
 
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!document.querySelector("#oxy-main")) {
+      document.querySelector(".oxy-skip-link")?.remove();
+    }
+  });
+
   if (!window.BreakdanceFrontend) {
     window.BreakdanceFrontend = {};
   }

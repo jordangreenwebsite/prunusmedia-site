@@ -280,6 +280,12 @@
     }
   }
 
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!document.querySelector("#bde-main")) {
+      document.querySelector(".bde-skip-link")?.remove();
+    }
+  });
+
   if (!window.BreakdanceFrontend) {
     window.BreakdanceFrontend = {};
   }
