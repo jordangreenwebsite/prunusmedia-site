@@ -1,253 +1,576 @@
-(function(){
-'use strict';
-if (window.__SSP_WEBHOOK_INIT__) { return; }
-window.__SSP_WEBHOOK_INIT__ = true;
+// Stub for Turnstile onload callback – must exist before the async Turnstile
+// script fires; the real implementation is assigned inside the IIFE below.
+if (!window.__sspTurnstileReady) {
+    window.__sspTurnstileReady = function () { window.__sspTurnstileLoaded = true; };
+}
 
-// Get options from JSON file.
-var form_config_element = document.querySelector("meta[name='ssp-config-path']");
+(function () {
+    'use strict';
+    if (window.__SSP_WEBHOOK_INIT__) { return; }
+    window.__SSP_WEBHOOK_INIT__ = true;
 
-if (null !== form_config_element) {
-    let config_path = form_config_element.getAttribute("content");
-    let version_element = document.querySelector("meta[name='ssp-config-version']");
-    let version_suffix = '';
-    if (null !== version_element) {
-        let v = version_element.getAttribute('content');
-        if (v) {
-            version_suffix = '?ver=' + encodeURIComponent(v);
-        }
+    // Detect static environment early (before DOM may be fully loaded)
+    const isStaticSite = () => !!document.querySelector("meta[name='ssp-config-path']") || window.location.pathname.indexOf('/static/') !== -1;
+
+    // Fetch API interception: CF7 5.6+ and other modern form plugins use window.fetch
+    // to submit to WP REST API endpoints (e.g., /wp-json/contact-form-7/v1/contact-forms/{id}/feedback).
+    // On static sites these endpoints don't exist and return 404. We intercept and return
+    // a fake success response so the plugin's JS completes normally, while SSP's own submit
+    // handler (bound in initForms) sends the actual data to the configured webhook.
+    if (!window.__SSP_FETCH_OVERRIDDEN__) {
+        window.__SSP_FETCH_OVERRIDDEN__ = true;
+        const _origFetch = window.fetch;
+
+        window.fetch = function (resource, init) {
+            if (!isStaticSite()) { return _origFetch.apply(this, arguments); }
+
+            const url = (typeof resource === 'string') ? resource : (resource && resource.url ? resource.url : '');
+            const method = (init && init.method) ? init.method.toUpperCase() : 'GET';
+
+            // Intercept CF7 feedback submissions: POST to .../contact-form-7/v1/contact-forms/{id}/feedback
+            var cf7Match = method === 'POST' && url.match(/contact-form-7\/v1\/contact-forms\/(\d+)\/feedback/);
+            if (cf7Match) {
+                var formId = cf7Match[1];
+
+                // Find the CF7 form element and trigger SSP webhook submission
+                var cf7Form = document.querySelector('#wpcf7-f' + formId + ' form') ||
+                    document.querySelector('input[name="_wpcf7"][value="' + formId + '"]')?.closest('form');
+                if (cf7Form && window.__SSP_MANAGE_FORM__) {
+                    var unitTag = cf7Form.querySelector('input[name="_wpcf7_unit_tag"]');
+                    var candidates = [formId];
+                    if (unitTag && unitTag.value) { candidates.push(unitTag.value); }
+                    window.__SSP_MANAGE_FORM__(candidates, cf7Form, (init && init.body) ? init.body : null);
+                }
+
+                // Build the `into` selector CF7 uses to locate its form container
+                // for displaying the success/error message. CF7 6.x expects this to
+                // be a valid CSS selector pointing to the .wpcf7 wrapper element.
+                var cf7Container = cf7Form ? cf7Form.closest('.wpcf7') : null;
+                var intoSelector = (cf7Container && cf7Container.id) ? '#' + cf7Container.id : '.wpcf7';
+                var fakeBody = JSON.stringify({
+                    status: 'mail_sent',
+                    message: 'Thank you for your message. It has been sent.',
+                    posted_data_hash: '',
+                    into: intoSelector,
+                    invalid_fields: []
+                });
+                return Promise.resolve(new Response(fakeBody, {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                }));
+            }
+
+            // Intercept CF7 schema requests (GET before submission) to avoid 404s.
+            var cf7Schema = url.match(/contact-form-7\/v1\/contact-forms\/(\d+)\/feedback\/schema/);
+            if (cf7Schema) {
+                return Promise.resolve(new Response(JSON.stringify({ properties: {} }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                }));
+            }
+
+            // Intercept CF7 refill requests (GET after successful submission) to avoid 404s.
+            var cf7Refill = url.match(/contact-form-7\/v1\/contact-forms\/(\d+)\/refill/);
+            if (cf7Refill) {
+                return Promise.resolve(new Response(JSON.stringify({}), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                }));
+            }
+
+            // Intercept WS Form REST API POST submissions via fetch
+            if (method === 'POST' && url.match(/ws-form\/v1\/submit/)) {
+                var wsFormId = null;
+                if (init && init.body instanceof FormData) {
+                    try { wsFormId = init.body.get('wsf_form_id'); } catch (e) {}
+                }
+                if (!wsFormId) {
+                    var wsFetchEl = document.querySelector('.wsf-form[data-id]') || document.querySelector('[id^="ws-form-"][data-id]');
+                    if (wsFetchEl) { wsFormId = wsFetchEl.getAttribute('data-id'); }
+                }
+                if (wsFormId) {
+                    var wsEl = document.querySelector('#ws-form-' + wsFormId) || document.querySelector('.wsf-form[data-id="' + wsFormId + '"]') || document.querySelector('.wsf-form');
+                    if (wsEl) {
+                        var wsForm = (wsEl.tagName === 'FORM') ? wsEl : wsEl.querySelector('form');
+                        if (wsForm && window.__SSP_MANAGE_FORM__) {
+                            window.__SSP_MANAGE_FORM__([wsFormId, 'ws-form-' + wsFormId, 'wsf-' + wsFormId], wsForm, (init && init.body) ? init.body : null);
+                        }
+                    }
+                }
+                return Promise.resolve(new Response(JSON.stringify({ error: false, data: { js: '' } }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                }));
+            }
+
+            // Intercept Kadence Forms REST API submissions
+            var kadenceMatch = method === 'POST' && url.match(/kadence-form\/v1\/process|kb-form\/v1\/process/);
+            if (kadenceMatch) {
+                if (init && init.body instanceof FormData) {
+                    var kbIdFetch = null;
+                    try { kbIdFetch = init.body.get('_kb_form_id'); } catch (e) {}
+                    if (kbIdFetch) {
+                        var kbInp = document.querySelector('input[name="_kb_form_id"][value="' + kbIdFetch + '"]');
+                        var kbFormFetch = kbInp ? kbInp.closest('form') : document.querySelector('.kb-form');
+                        if (kbFormFetch && window.__SSP_MANAGE_FORM__) {
+                            window.__SSP_MANAGE_FORM__([kbIdFetch], kbFormFetch);
+                        }
+                    }
+                }
+                return Promise.resolve(new Response(JSON.stringify({ success: true }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                }));
+            }
+
+            return _origFetch.apply(this, arguments);
+        };
     }
-    let config_url = window.location.origin + config_path + 'forms.json' + version_suffix;
 
+    // XHR-level interception: This is the lowest-level AJAX primitive and cannot
+    // be bypassed by cached jQuery references, jquery-migrate wrappers, or Backbone.
+    // Ninja Forms goes through: front-end.js → Backbone → jquery-migrate → $.ajax → XHR
+    // Even if $.ajax override fails due to cached closures, this always catches the request.
+    if (!window.__SSP_XHR_OVERRIDDEN__) {
+        window.__SSP_XHR_OVERRIDDEN__ = true;
+        const _origOpen = XMLHttpRequest.prototype.open;
+        const _origSend = XMLHttpRequest.prototype.send;
 
-    function submitForm(url, settings, data, formEl) {
-        // Prepare data for request.
-        let requestData = {
-            method: "POST",
-            body: data
+        XMLHttpRequest.prototype.open = function (method, url) {
+            this.__sspUrl = (typeof url === 'string') ? url : String(url || '');
+            this.__sspMethod = method;
+            return _origOpen.apply(this, arguments);
         };
 
-        // Build headers: merge custom headers and add a safe default for services like Formspree
-        // which return JSON (and proper CORS) when Accept: application/json is sent.
-        let mergedHeaders = new Headers();
+        XMLHttpRequest.prototype.send = function (body) {
+            if (!isStaticSite()) { return _origSend.apply(this, arguments); }
 
-        // Maybe add custom header(s).
-        if (settings.form_custom_headers) {
-            if (settings.form_custom_headers.includes(',')) {
-                // Multiple headers separated by commas
-                let headersData = settings.form_custom_headers.split(',');
-                headersData.forEach((header) => {
-                    if (!header) { return; }
-                    let header_parts = header.split(':');
-                    if (!header_parts || header_parts.length < 2) { return; }
-                    let name = (header_parts[0] || '').trim();
-                    let value = (header_parts.slice(1).join(':') || '').trim();
-                    if (name) { mergedHeaders.set(name, value); }
-                });
-            } else {
-                // Single header
-                let header_parts = settings.form_custom_headers.split(':');
-                let name = (header_parts[0] || '').trim();
-                let value = (header_parts.slice(1).join(':') || '').trim();
-                if (name) { mergedHeaders.set(name, value); }
-            }
-        }
+            const url = this.__sspUrl || '';
+            const isAdminAjax = url.toLowerCase().indexOf('admin-ajax.php') !== -1;
 
-        // Ensure Accept header prefers JSON to avoid redirect-based HTML flows (helps with CORS on Formspree, etc.)
-        if (!mergedHeaders.has('Accept')) {
-            mergedHeaders.set('Accept', 'application/json');
-        }
+            // Intercept WS Form REST API calls via XHR (jQuery AJAX)
+            var wsFormXhrMatch = url.match(/ws-form\/v1\//);
+            if (wsFormXhrMatch) {
+                var wsMethod = (this.__sspMethod || 'GET').toUpperCase();
+                var isWsSubmit = wsMethod === 'POST' && url.match(/ws-form\/v1\/submit/);
 
-        requestData.headers = mergedHeaders;
-
-        // Send data via fetch to URL
-        // Do not auto-follow cross-origin redirects; treat redirect responses as success for webhook-style endpoints.
-        requestData.redirect = 'manual';
-        requestData.mode = 'cors';
-        requestData.credentials = 'omit';
-
-        fetch(url, requestData).then(response => {
-            // Success if:
-            // - 2xx OK
-            // - opaqueredirect (redirect blocked details, typical with manual on cross-origin)
-            // - explicit 3xx status codes we can read
-            const isRedirectLike = response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400);
-            if (response.ok || isRedirectLike) {
-                handleMessage(settings, false, formEl);
-            } else {
-                // Optional: surface status in console for debugging
-                try { console.debug('[SSP] Webhook non-success status', { url: url, status: response.status, type: response.type }); } catch(e) {}
-                handleMessage(settings, true, formEl);
-            }
-        }).catch(error => {
-            // Network-level failures: show error and keep the form visible so users can retry
-            try { console.debug('[SSP] Webhook network error', error); } catch(e) {}
-            handleMessage(settings, true, formEl);
-        });
-    }
-
-    // Cache of forms.json to allow hidden-name lookups across handlers
-    var __SSP_FORMS_CONFIG__ = null;
-
-    function manageForm(config_url, candidateIds, form) {
-        // candidateIds can be a single id or an array of possible ids (strings/numbers)
-        const ids = Array.isArray(candidateIds) ? candidateIds.filter(Boolean) : [candidateIds].filter(Boolean);
-        // If we have a cached config, use it, otherwise load and cache
-        const loadConfig = __SSP_FORMS_CONFIG__ ? Promise.resolve(__SSP_FORMS_CONFIG__) : fetch(config_url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("HTTP error " + response.status);
+                if (isWsSubmit) {
+                    // Actual form submission — extract form ID and trigger SSP webhook
+                    var wsFormIdXhr = null;
+                    if (body instanceof FormData) {
+                        try { wsFormIdXhr = body.get('wsf_form_id'); } catch (e) {}
+                    } else if (typeof body === 'string') {
+                        try { wsFormIdXhr = new URLSearchParams(body).get('wsf_form_id'); } catch (e) {}
+                    }
+                    if (!wsFormIdXhr) {
+                        var wsAnyForm = document.querySelector('.wsf-form[data-id]') || document.querySelector('[id^="ws-form-"][data-id]');
+                        if (wsAnyForm) { wsFormIdXhr = wsAnyForm.getAttribute('data-id'); }
+                    }
+                    if (wsFormIdXhr) {
+                        var wsElXhr = document.querySelector('#ws-form-' + wsFormIdXhr) || document.querySelector('.wsf-form[data-id="' + wsFormIdXhr + '"]') || document.querySelector('.wsf-form');
+                        if (wsElXhr) {
+                            var wsFormXhr = (wsElXhr.tagName === 'FORM') ? wsElXhr : wsElXhr.querySelector('form');
+                            if (wsFormXhr && window.__SSP_MANAGE_FORM__) {
+                                window.__SSP_MANAGE_FORM__([wsFormIdXhr, 'ws-form-' + wsFormIdXhr, 'wsf-' + wsFormIdXhr], wsFormXhr, body);
+                            }
+                        }
+                    }
+                    // Return fake success for POST submit
+                    var selfWsPost = this;
+                    setTimeout(function () {
+                        var wsResp = JSON.stringify({ error: false, data: { js: '' } });
+                        Object.defineProperty(selfWsPost, 'status', { get: function () { return 200; } });
+                        Object.defineProperty(selfWsPost, 'readyState', { get: function () { return 4; } });
+                        Object.defineProperty(selfWsPost, 'responseText', { get: function () { return wsResp; } });
+                        Object.defineProperty(selfWsPost, 'response', { get: function () { return wsResp; } });
+                        if (typeof selfWsPost.onreadystatechange === 'function') { selfWsPost.onreadystatechange(new Event('readystatechange')); }
+                        if (typeof selfWsPost.onload === 'function') { selfWsPost.onload(new Event('load')); }
+                        selfWsPost.dispatchEvent(new Event('readystatechange'));
+                        selfWsPost.dispatchEvent(new Event('load'));
+                        selfWsPost.dispatchEvent(new Event('loadend'));
+                    }, 0);
+                    return;
                 }
-                return response.json();
-            })
-            .then(json => {
-                __SSP_FORMS_CONFIG__ = json;
-                return json;
-            });
 
-        loadConfig.then(json => {
-                let settings = null;
-                if (Array.isArray(json)) {
-                    // Normalization helpers
-                    const norm = (v) => (v == null ? '' : String(v).trim());
-                    const stripHash = (v) => norm(v).replace(/^#/, '');
-                    const cf7Num = (v) => {
-                        // Extract numeric CF7 id from patterns like wpcf7-f107-p123-o1 or unit tags
-                        const s = norm(v);
-                        const m = s.match(/wpcf7-f(\d+)-p/);
-                        if (m && m[1]) return m[1];
-                        // If it's just a number string, return it
-                        if (/^\d+$/.test(s)) return s;
-                        return '';
-                    };
-                    const gfNum = (v) => {
-                        // Extract numeric GF id from patterns like gform_12 or gform_wrapper_12
-                        const s = norm(v);
-                        let m = s.match(/gform(?:_wrapper)?_(\d+)/i);
-                        if (m && m[1]) return m[1];
-                        if (/^\d+$/.test(s)) return s;
-                        return '';
-                    };
-                    const forminatorNum = (v) => {
-                        // Extract numeric Forminator id from patterns like forminator-form-123 or forminator-module-123
-                        const s = norm(v);
-                        let m = s.match(/forminator-(?:form|module)-(\d+)/i);
-                        if (m && m[1]) return m[1];
-                        // Some forms include hidden input name="form_id" which is numeric
-                        if (/^\d+$/.test(s)) return s;
-                        return '';
-                    };
+                // GET requests (set_globals hash lookup, config, etc.): return a 404
+                // so WS Form's jQuery AJAX error callback fires and falls back to
+                // inline form data (wsf_form_json[id]) for rendering.
+                var selfWsGet = this;
+                setTimeout(function () {
+                    Object.defineProperty(selfWsGet, 'status', { get: function () { return 404; } });
+                    Object.defineProperty(selfWsGet, 'readyState', { get: function () { return 4; } });
+                    Object.defineProperty(selfWsGet, 'responseText', { get: function () { return ''; } });
+                    Object.defineProperty(selfWsGet, 'response', { get: function () { return ''; } });
+                    Object.defineProperty(selfWsGet, 'statusText', { get: function () { return 'Not Found'; } });
+                    if (typeof selfWsGet.onreadystatechange === 'function') { selfWsGet.onreadystatechange(new Event('readystatechange')); }
+                    if (typeof selfWsGet.onload === 'function') { selfWsGet.onload(new Event('load')); }
+                    selfWsGet.dispatchEvent(new Event('readystatechange'));
+                    selfWsGet.dispatchEvent(new Event('load'));
+                    selfWsGet.dispatchEvent(new Event('loadend'));
+                }, 0);
+                return;
+            }
 
-                    // Prepare normalized candidates with variants
-                    const normCandidates = [];
+            if (isAdminAjax) {
+                // Detect which form plugin is submitting via admin-ajax.php
+                let actionName = '';
+                let bodyStr = '';
+                if (typeof body === 'string') {
+                    bodyStr = body;
+                    try { actionName = new URLSearchParams(bodyStr).get('action') || ''; } catch (e) {}
+                } else if (body instanceof FormData) {
+                    try { actionName = body.get('action') || ''; } catch (e) {}
+                }
 
-                    // Augment candidates with hidden input values based on configured hidden names (for "Other Plugin" or generic use)
-                    try {
-                        json.forEach(function(cfg){
-                            if (!cfg || !cfg.form_hidden_name) return;
-                            var inp = form.querySelector('input[name="' + cfg.form_hidden_name + '"]');
-                            if (inp && inp.value) {
-                                ids.push(inp.value);
+                // Ninja Forms
+                if (actionName === 'nf_ajax_submit') {
+                    var nfFormId = null;
+                    var nfParsed = null;
+                    try { var fd = (body instanceof FormData) ? body.get('formData') : new URLSearchParams(bodyStr).get('formData'); if (fd) { nfParsed = JSON.parse(fd); nfFormId = nfParsed.id; } } catch (e) {}
+                    if (nfFormId) {
+                        var formEl = document.querySelector('#nf-form-' + nfFormId + '-cont form') ||
+                            document.querySelector('.nf-form-cont form') ||
+                            document.querySelector('.ninja-forms-form-wrap form');
+                        if (formEl && window.__SSP_MANAGE_FORM__) {
+                            // Build FormData from the NF JSON payload so we don't depend on
+                            // DOM form inputs (which NF removes on success before async manageForm resolves).
+                            var nfOrigData = new FormData();
+                            nfOrigData.set('nf_form_id', String(nfFormId));
+                            if (nfParsed && nfParsed.fields) {
+                                try {
+                                    Object.keys(nfParsed.fields).forEach(function (fid) {
+                                        var f = nfParsed.fields[fid];
+                                        var val = (f && f.value != null) ? String(f.value) : '';
+                                        nfOrigData.set('nf-field-' + fid, val);
+                                    });
+                                } catch (e) {}
+                            }
+                            // Extract title from nfForms global (synchronous, before async manageForm)
+                            if (typeof nfForms !== 'undefined' && Array.isArray(nfForms)) {
+                                var nfIdStr = String(nfFormId);
+                                for (var ni = 0; ni < nfForms.length; ni++) {
+                                    if (String(nfForms[ni].id) === nfIdStr && nfForms[ni].settings && nfForms[ni].settings.title) {
+                                        nfOrigData.set('nf_form_title', nfForms[ni].settings.title);
+                                        break;
+                                    }
+                                }
+                            }
+                            window.__SSP_MANAGE_FORM__([nfFormId, 'nf-form-' + nfFormId + '-cont'], formEl, nfOrigData);
+                        }
+                    }
+                    // Return a Ninja Forms-specific fake success response so NF JS
+                    // shows the success message instead of hanging or showing errors.
+                    var selfNf = this;
+                    setTimeout(function () {
+                        var nfResp = JSON.stringify({
+                            data: {
+                                actions: {
+                                    success_message: 'Thanks! Your message has been sent.'
+                                },
+                                form_id: nfFormId || 0
+                            },
+                            errors: []
+                        });
+                        Object.defineProperty(selfNf, 'status', { get: function () { return 200; } });
+                        Object.defineProperty(selfNf, 'readyState', { get: function () { return 4; } });
+                        Object.defineProperty(selfNf, 'responseText', { get: function () { return nfResp; } });
+                        Object.defineProperty(selfNf, 'response', { get: function () { return nfResp; } });
+                        if (typeof selfNf.onreadystatechange === 'function') { selfNf.onreadystatechange(new Event('readystatechange')); }
+                        if (typeof selfNf.onload === 'function') { selfNf.onload(new Event('load')); }
+                        selfNf.dispatchEvent(new Event('readystatechange'));
+                        selfNf.dispatchEvent(new Event('load'));
+                        selfNf.dispatchEvent(new Event('loadend'));
+                    }, 0);
+                    return;
+                }
+
+                // WPForms
+                if (actionName === 'wpforms_submit') {
+                    var wpFormsId = null;
+                    try { wpFormsId = (body instanceof FormData) ? body.get('wpforms[id]') : new URLSearchParams(bodyStr).get('wpforms[id]'); } catch (e) {}
+                    if (wpFormsId) {
+                        var wpFormEl = document.querySelector('#wpforms-form-' + wpFormsId) ||
+                            document.querySelector('#wpforms-' + wpFormsId) ||
+                            document.querySelector('.wpforms-form');
+                        if (wpFormEl && window.__SSP_MANAGE_FORM__) {
+                            window.__SSP_MANAGE_FORM__([wpFormsId, 'wpforms-form-' + wpFormsId, 'wpforms-' + wpFormsId], wpFormEl);
+                        }
+                    }
+                    // Return a WPForms-specific fake success response with confirmation
+                    // so WPForms JS shows the confirmation message instead of doing nothing.
+                    var selfWp = this;
+                    setTimeout(function () {
+                        var wpResp = JSON.stringify({
+                            success: true,
+                            data: {
+                                confirmation: '<div class="wpforms-confirmation-container"><p>Thanks! Your message has been sent.</p></div>'
                             }
                         });
-                    } catch(e) { /* noop */ }
-                    for (let i = 0; i < ids.length; i++) {
-                        const cid = ids[i];
-                        const a = norm(cid);
-                        const b = stripHash(cid);
-                        const nCf7 = cf7Num(cid);
-                        const nGf = gfNum(cid);
-                        const nFo = forminatorNum(cid);
-                        [a, b].forEach(val => { if (val && normCandidates.indexOf(val) === -1) normCandidates.push(val); });
-                        if (nCf7 && normCandidates.indexOf(nCf7) === -1) normCandidates.push(nCf7);
-                        if (nGf && normCandidates.indexOf(nGf) === -1) normCandidates.push(nGf);
-                        if (nFo && normCandidates.indexOf(nFo) === -1) normCandidates.push(nFo);
-                    }
-
-                    // Try to match across all settings
-                    settings = json.find(x => {
-                        const sidRaw = x && x.form_id;
-                        const sid = stripHash(sidRaw);
-                        const sidNumCf7 = cf7Num(sidRaw);
-                        const sidNumGf = gfNum(sidRaw);
-                        const sidNumFo = forminatorNum(sidRaw);
-                        // Exact equals, or substring either direction, or numeric id equals (for CF7/GF)
-                        return normCandidates.some(c => {
-                            const cc = stripHash(c);
-                            return (
-                                sid === cc ||
-                                (sid && cc && (sid.indexOf(cc) !== -1 || cc.indexOf(sid) !== -1)) ||
-                                (sidNumCf7 && cc && sidNumCf7 === cf7Num(cc)) ||
-                                (sidNumGf && cc && sidNumGf === gfNum(cc)) ||
-                                (sidNumFo && cc && sidNumFo === forminatorNum(cc))
-                            );
-                        });
-                    });
+                        Object.defineProperty(selfWp, 'status', { get: function () { return 200; } });
+                        Object.defineProperty(selfWp, 'readyState', { get: function () { return 4; } });
+                        Object.defineProperty(selfWp, 'responseText', { get: function () { return wpResp; } });
+                        Object.defineProperty(selfWp, 'response', { get: function () { return wpResp; } });
+                        if (typeof selfWp.onreadystatechange === 'function') { selfWp.onreadystatechange(new Event('readystatechange')); }
+                        if (typeof selfWp.onload === 'function') { selfWp.onload(new Event('load')); }
+                        selfWp.dispatchEvent(new Event('readystatechange'));
+                        selfWp.dispatchEvent(new Event('load'));
+                        selfWp.dispatchEvent(new Event('loadend'));
+                    }, 0);
+                    return;
                 }
-                if (settings) {
-                    let data = new FormData(form);
 
-                    // If Cloudflare Turnstile is active on this form, route through our WP REST proxy
-                    // using the origin REST base provided in forms.json (not rewritten during export).
-                    var hasTurnstile = !!form.querySelector('.cf-turnstile');
-                    // Check for Google reCAPTCHA v3 (hidden input with class g-recaptcha-response)
-                    var recaptchaInput = form.querySelector('input.g-recaptcha-response[data-sitekey]');
-                    var hasRecaptcha = !!recaptchaInput;
-                    var restBase = '';
-                    // Prefer rest_base from forms.json (origin URL is not rewritten by Simply Static)
-                    if ((hasTurnstile || hasRecaptcha) && settings.rest_base && typeof settings.rest_base === 'string') {
-                        restBase = settings.rest_base;
+                // Forminator
+                if (actionName === 'forminator_submit_form_custom-forms') {
+                    var fmId = null;
+                    try { fmId = (body instanceof FormData) ? body.get('form_id') : new URLSearchParams(bodyStr).get('form_id'); } catch (e) {}
+                    if (fmId) {
+                        var fmEl = document.querySelector('#forminator-module-' + fmId + ' form') ||
+                            document.querySelector('.forminator-custom-form[data-form-id="' + fmId + '"]') ||
+                            document.querySelector('.forminator-custom-form');
+                        if (fmEl && window.__SSP_MANAGE_FORM__) {
+                            window.__SSP_MANAGE_FORM__([fmId, 'forminator-module-' + fmId], fmEl);
+                        }
                     }
-                    var targetUrl = settings.form_webhook;
-
-                    if (hasTurnstile && restBase && typeof targetUrl === 'string' && targetUrl) {
-                        // Ensure restBase ends with a single slash
-                        try {
-                            if (restBase.slice(-1) !== '/') { restBase = restBase + '/'; }
-                        } catch(e) { /* noop */ }
-                        targetUrl = restBase + 'simplystatic/v1/turnstile/submit?forward_to=' + encodeURIComponent(settings.form_webhook);
-                        submitForm(targetUrl, settings, data, form);
-                    } else if (hasRecaptcha && restBase && typeof targetUrl === 'string' && targetUrl && typeof grecaptcha !== 'undefined') {
-                        // Google reCAPTCHA v3: execute and get token before submitting
-                        var siteKey = recaptchaInput.getAttribute('data-sitekey');
-                        try {
-                            if (restBase.slice(-1) !== '/') { restBase = restBase + '/'; }
-                        } catch(e) { /* noop */ }
-                        grecaptcha.ready(function() {
-                            grecaptcha.execute(siteKey, {action: 'submit'}).then(function(token) {
-                                // Set the token in the hidden input and form data
-                                recaptchaInput.value = token;
-                                data.set('g-recaptcha-response', token);
-                                var recaptchaTargetUrl = restBase + 'simplystatic/v1/recaptcha/submit?forward_to=' + encodeURIComponent(settings.form_webhook);
-                                submitForm(recaptchaTargetUrl, settings, data, form);
-                            }).catch(function(err) {
-                                console.error('[SSP] reCAPTCHA execute error:', err);
-                                handleMessage(settings, true, form);
-                            });
+                    // Return a Forminator-specific fake success response so Forminator JS
+                    // shows the thank-you message and hides the form properly.
+                    var selfFm = this;
+                    setTimeout(function () {
+                        var fmResp = JSON.stringify({
+                            success: true,
+                            data: {
+                                success: true,
+                                message: 'Thanks! Your message has been sent.',
+                                behav: 'behaviour-thankyou',
+                                errors: [],
+                                fadeout: false,
+                                fadeout_time: 0
+                            }
                         });
-                    } else {
-                        submitForm(targetUrl, settings, data, form);
-                    }
-                } else {
-                    // If no settings found, show a clear inline message to assist debugging
-                    const fallbackSettings = {
-                        form_success_message: '<strong>Form submitted</strong> (no matching Simply Static Pro form settings found).',
-                        form_error_message: 'Form submission could not be mapped to Simply Static Pro form settings.',
-                        form_plugin: ''
-                    };
-                    handleMessage(fallbackSettings, true, form);
+                        Object.defineProperty(selfFm, 'status', { get: function () { return 200; } });
+                        Object.defineProperty(selfFm, 'readyState', { get: function () { return 4; } });
+                        Object.defineProperty(selfFm, 'responseText', { get: function () { return fmResp; } });
+                        Object.defineProperty(selfFm, 'response', { get: function () { return fmResp; } });
+                        if (typeof selfFm.onreadystatechange === 'function') { selfFm.onreadystatechange(new Event('readystatechange')); }
+                        if (typeof selfFm.onload === 'function') { selfFm.onload(new Event('load')); }
+                        selfFm.dispatchEvent(new Event('readystatechange'));
+                        selfFm.dispatchEvent(new Event('load'));
+                        selfFm.dispatchEvent(new Event('loadend'));
+                    }, 0);
+                    return;
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+
+                // Fluent Forms
+                if (actionName === 'fluentform_submit') {
+                    var ffId = null;
+                    try { ffId = (body instanceof FormData) ? body.get('form_id') : new URLSearchParams(bodyStr).get('form_id'); } catch (e) {}
+                    if (ffId) {
+                        var ffEl = document.querySelector('form.frm-fluent-form[data-form_id="' + ffId + '"]') ||
+                            document.querySelector('.frm-fluent-form');
+                        if (ffEl && window.__SSP_MANAGE_FORM__) {
+                            window.__SSP_MANAGE_FORM__([ffId, 'fluentform_' + ffId], ffEl);
+                        }
+                    }
+                    // Fluent Forms expects a specific response format; return early with a clean response.
+                    // IMPORTANT: Do NOT include `redirectUrl` — Fluent Forms uses `"redirectUrl" in r.data.result`
+                    // (the `in` operator checks key existence, not value), so even an empty string triggers
+                    // `location.href = ''` which reloads the page.
+                    var selfFf = this;
+                    setTimeout(function () {
+                        var ffResp = JSON.stringify({ success: true, data: { result: { message: 'Thanks! Your message has been sent.', action: 'hide_form' } } });
+                        Object.defineProperty(selfFf, 'status', { get: function () { return 200; } });
+                        Object.defineProperty(selfFf, 'readyState', { get: function () { return 4; } });
+                        Object.defineProperty(selfFf, 'responseText', { get: function () { return ffResp; } });
+                        Object.defineProperty(selfFf, 'response', { get: function () { return ffResp; } });
+                        if (typeof selfFf.onreadystatechange === 'function') { selfFf.onreadystatechange(new Event('readystatechange')); }
+                        if (typeof selfFf.onload === 'function') { selfFf.onload(new Event('load')); }
+                        selfFf.dispatchEvent(new Event('readystatechange'));
+                        selfFf.dispatchEvent(new Event('load'));
+                        selfFf.dispatchEvent(new Event('loadend'));
+                        // Hide Fluent Forms error containers that may appear after submission
+                        setTimeout(function () {
+                            document.querySelectorAll('[class*="fluentform_"][class*="_errors"], .ff-errors-in-stack').forEach(function (el) { el.style.display = 'none'; });
+                        }, 100);
+                    }, 0);
+                    return;
+                }
+
+                // Kadence Forms
+                if (actionName === 'kb_process_ajax_submit' || actionName === 'kb_process_advanced_form_submit') {
+                    var kbId = null;
+                    try { kbId = (body instanceof FormData) ? body.get('_kb_form_id') : new URLSearchParams(bodyStr).get('_kb_form_id'); } catch (e) {}
+                    if (kbId) {
+                        var kbEl = document.querySelector('input[name="_kb_form_id"][value="' + kbId + '"]');
+                        kbEl = kbEl ? kbEl.closest('form') : document.querySelector('.kb-form');
+                        if (kbEl && window.__SSP_MANAGE_FORM__) {
+                            window.__SSP_MANAGE_FORM__([kbId], kbEl);
+                        }
+                    }
+                    // Return a Kadence-specific fake success response with HTML confirmation
+                    // so Kadence JS appends the message and clears the form.
+                    var selfKb = this;
+                    setTimeout(function () {
+                        var kbResp = JSON.stringify({
+                            success: true,
+                            html: '<div class="kadence-blocks-form-message kadence-blocks-form-success">Thanks! Your message has been sent.</div>'
+                        });
+                        Object.defineProperty(selfKb, 'status', { get: function () { return 200; } });
+                        Object.defineProperty(selfKb, 'readyState', { get: function () { return 4; } });
+                        Object.defineProperty(selfKb, 'responseText', { get: function () { return kbResp; } });
+                        Object.defineProperty(selfKb, 'response', { get: function () { return kbResp; } });
+                        if (typeof selfKb.onreadystatechange === 'function') { selfKb.onreadystatechange(new Event('readystatechange')); }
+                        if (typeof selfKb.onload === 'function') { selfKb.onload(new Event('load')); }
+                        selfKb.dispatchEvent(new Event('readystatechange'));
+                        selfKb.dispatchEvent(new Event('load'));
+                        selfKb.dispatchEvent(new Event('loadend'));
+                    }, 0);
+                    return;
+                }
+
+                // Elementor Forms
+                if (actionName === 'elementor_pro_forms_send_form') {
+                    var elFormId = null;
+                    try { elFormId = (body instanceof FormData) ? body.get('form_id') : new URLSearchParams(bodyStr).get('form_id'); } catch (e) {}
+                    if (!elFormId) {
+                        try { elFormId = (body instanceof FormData) ? body.get('form_fields[form_id]') : null; } catch (e) {}
+                    }
+                    if (elFormId) {
+                        var elFormEl = document.querySelector('[data-id="' + elFormId + '"] form.elementor-form') ||
+                            document.querySelector('form.elementor-form input[name="form_id"][value="' + elFormId + '"]')?.closest('form') ||
+                            document.querySelector('form.elementor-form');
+                        if (elFormEl && window.__SSP_MANAGE_FORM__) {
+                            var elOrigData = (body instanceof FormData) ? body : null;
+                            window.__SSP_MANAGE_FORM__([elFormId, 'elementor-form-' + elFormId], elFormEl, elOrigData);
+                        }
+                    }
+                    // Return an Elementor-specific fake success response so Elementor JS
+                    // shows a confirmation message and resets the form properly.
+                    var selfEl = this;
+                    setTimeout(function () {
+                        var elResp = JSON.stringify({
+                            success: true,
+                            data: {
+                                message: 'Thanks! Your message has been sent.'
+                            }
+                        });
+                        Object.defineProperty(selfEl, 'status', { get: function () { return 200; } });
+                        Object.defineProperty(selfEl, 'readyState', { get: function () { return 4; } });
+                        Object.defineProperty(selfEl, 'responseText', { get: function () { return elResp; } });
+                        Object.defineProperty(selfEl, 'response', { get: function () { return elResp; } });
+                        if (typeof selfEl.onreadystatechange === 'function') { selfEl.onreadystatechange(new Event('readystatechange')); }
+                        if (typeof selfEl.onload === 'function') { selfEl.onload(new Event('load')); }
+                        selfEl.dispatchEvent(new Event('readystatechange'));
+                        selfEl.dispatchEvent(new Event('load'));
+                        selfEl.dispatchEvent(new Event('loadend'));
+                    }, 0);
+                    return;
+                }
+
+                // Gravity Forms AJAX (GF 2.9+ uses 'gform_submit_form', legacy uses 'gform_submit')
+                if (actionName === 'gform_submit_form' || actionName === 'gform_submit') {
+                    var gfId = null;
+                    try { gfId = (body instanceof FormData) ? (body.get('gform_submit') || body.get('form_id')) : (new URLSearchParams(bodyStr).get('gform_submit') || new URLSearchParams(bodyStr).get('form_id')); } catch (e) {}
+                    if (gfId) {
+                        var gfEl = document.querySelector('#gform_' + gfId) || document.querySelector('#gform_wrapper_' + gfId + ' form');
+                        if (gfEl && window.__SSP_MANAGE_FORM__) {
+                            window.__SSP_MANAGE_FORM__([gfId, 'gform_' + gfId, 'gform_wrapper_' + gfId], gfEl);
+                        }
+                    }
+                    // Return a Gravity Forms-specific fake success response with confirmation_markup
+                    // so GF JS shows the confirmation message and hides the form properly.
+                    var selfGf = this;
+                    setTimeout(function () {
+                        var gfResp = JSON.stringify({
+                            success: true,
+                            data: {
+                                is_valid: true,
+                                page_number: 0,
+                                source_page_number: 0,
+                                confirmation_markup: '<div id="gform_confirmation_wrapper_' + (gfId || '0') + '" class="gform_confirmation_wrapper"><div id="gform_confirmation_message_' + (gfId || '0') + '" class="gform_confirmation_message_' + (gfId || '0') + ' gform_confirmation_message">Thanks! Your message has been sent.</div></div>',
+                                confirmation_type: 'message'
+                            }
+                        });
+                        Object.defineProperty(selfGf, 'status', { get: function () { return 200; } });
+                        Object.defineProperty(selfGf, 'readyState', { get: function () { return 4; } });
+                        Object.defineProperty(selfGf, 'responseText', { get: function () { return gfResp; } });
+                        Object.defineProperty(selfGf, 'response', { get: function () { return gfResp; } });
+                        if (typeof selfGf.onreadystatechange === 'function') { selfGf.onreadystatechange(new Event('readystatechange')); }
+                        if (typeof selfGf.onload === 'function') { selfGf.onload(new Event('load')); }
+                        selfGf.dispatchEvent(new Event('readystatechange'));
+                        selfGf.dispatchEvent(new Event('load'));
+                        selfGf.dispatchEvent(new Event('loadend'));
+                    }, 0);
+                    return;
+                }
+
+                // Bricks Forms
+                if (actionName === 'bricks_form_submit') {
+                    var bxFormId = null;
+                    try { bxFormId = (body instanceof FormData) ? (body.get('formId') || body.get('postId')) : (new URLSearchParams(bodyStr).get('formId') || new URLSearchParams(bodyStr).get('postId')); } catch (e) {}
+                    if (bxFormId) {
+                        var bxEl = document.querySelector('#brxe-' + bxFormId) || document.querySelector('.brxe-form');
+                        var bxForm = bxEl ? ((bxEl.tagName === 'FORM') ? bxEl : bxEl.querySelector('form')) : null;
+                        if (!bxForm) { bxForm = bxEl; }
+                        if (bxForm && window.__SSP_MANAGE_FORM__) {
+                            window.__SSP_MANAGE_FORM__([bxFormId, 'brxe-' + bxFormId], bxForm);
+                        }
+                    }
+                    // Return a Bricks-specific fake success response so Bricks JS
+                    // shows the success message and resets the form.
+                    var selfBx = this;
+                    setTimeout(function () {
+                        var bxResp = JSON.stringify({
+                            success: true,
+                            data: {
+                                type: 'success',
+                                message: 'Thanks! Your message has been sent.'
+                            }
+                        });
+                        Object.defineProperty(selfBx, 'status', { get: function () { return 200; } });
+                        Object.defineProperty(selfBx, 'readyState', { get: function () { return 4; } });
+                        Object.defineProperty(selfBx, 'responseText', { get: function () { return bxResp; } });
+                        Object.defineProperty(selfBx, 'response', { get: function () { return bxResp; } });
+                        if (typeof selfBx.onreadystatechange === 'function') { selfBx.onreadystatechange(new Event('readystatechange')); }
+                        if (typeof selfBx.onload === 'function') { selfBx.onload(new Event('load')); }
+                        selfBx.dispatchEvent(new Event('readystatechange'));
+                        selfBx.dispatchEvent(new Event('load'));
+                        selfBx.dispatchEvent(new Event('loadend'));
+                    }, 0);
+                    return;
+                }
+
+                // Block the XHR request entirely — fire error/load events so callers don't hang
+                var self = this;
+                setTimeout(function () {
+                    var fakeResponse = '{"success":true,"data":{"message":"","data":[]}}';
+                    Object.defineProperty(self, 'status', { get: function () { return 200; } });
+                    Object.defineProperty(self, 'readyState', { get: function () { return 4; } });
+                    Object.defineProperty(self, 'responseText', { get: function () { return fakeResponse; } });
+                    Object.defineProperty(self, 'response', { get: function () { return fakeResponse; } });
+                    if (typeof self.onreadystatechange === 'function') { self.onreadystatechange(new Event('readystatechange')); }
+                    if (typeof self.onload === 'function') { self.onload(new Event('load')); }
+                    self.dispatchEvent(new Event('readystatechange'));
+                    self.dispatchEvent(new Event('load'));
+                    self.dispatchEvent(new Event('loadend'));
+                }, 0);
+                return; // Do NOT call _origSend
+            }
+
+            return _origSend.apply(this, arguments);
+        };
     }
 
-    function handleMessage(settings, error = false, formEl) {
-        // Simple, deterministic UI handling per requested approach:
-        // Use the form_id from forms.json to locate the element to hide, and render the message next to it.
-        // No wrapper detection, no page reload, no redirects.
+    // Get options from JSON file.
+    var form_config_element = document.querySelector("meta[name='ssp-config-path']");
+    var config_path = form_config_element ? form_config_element.getAttribute("content") : '/wp-content/uploads/simply-static/configs/';
+    var version_element = document.querySelector("meta[name='ssp-config-version']");
+    var version_suffix = '';
+    if (version_element) {
+        let v = version_element.getAttribute('content');
+        if (v) { version_suffix = '?ver=' + encodeURIComponent(v); }
+    }
+    var config_url = window.location.origin + config_path + 'forms.json' + version_suffix;
 
-        // Build feedback node
+    function handleMessage(settings, error = false, formEl) {
         var notice = document.createElement('div');
         notice.className = 'ssp-form-response';
         notice.setAttribute('role', 'alert');
@@ -261,355 +584,317 @@ if (null !== form_config_element) {
         message.innerHTML = error ? errorText : successText;
         notice.appendChild(message);
 
-        // Primary target resolution
         var target = null;
         if (settings && settings.form_id) {
-            // Default: element with id === settings.form_id
-            try { target = document.getElementById(String(settings.form_id)); } catch(e) { /* noop */ }
+            try { target = document.getElementById(String(settings.form_id)); } catch (e) { }
         }
-        // Fallback to the actual submitted form element
         if (!target && formEl) { target = formEl; }
+        if (!target) { document.body.appendChild(notice); return; }
 
-        // If still no target, last resort: append to body
-        if (!target) {
-            document.body.appendChild(notice);
-            return;
-        }
-
-        // Success: hide target and show message after it
         if (!error) {
-            try { target.style.display = 'none'; } catch(e) { /* noop */ }
+            try { target.style.display = 'none'; } catch (e) { }
             if (target.parentNode) {
-                if (target.nextSibling) {
-                    target.parentNode.insertBefore(notice, target.nextSibling);
+                if (target.nextSibling) { target.parentNode.insertBefore(notice, target.nextSibling); }
+                else { target.parentNode.appendChild(notice); }
+            } else { document.body.appendChild(notice); }
+        } else {
+            if (target.parentNode) { target.parentNode.insertBefore(notice, target); }
+            else { document.body.appendChild(notice); }
+        }
+    }
+
+    function submitForm(url, settings, data, formEl) {
+        let requestData = { method: "POST", body: data, redirect: 'manual', mode: 'cors', credentials: 'omit' };
+        let mergedHeaders = new Headers();
+        if (settings.form_custom_headers) {
+            settings.form_custom_headers.split(',').forEach(header => {
+                if (!header) return;
+                let parts = header.split(':');
+                if (parts.length >= 2) {
+                    let name = parts[0].trim();
+                    let value = parts.slice(1).join(':').trim();
+                    if (name) mergedHeaders.set(name, value);
+                }
+            });
+        }
+        if (!mergedHeaders.has('Accept')) { mergedHeaders.set('Accept', 'application/json'); }
+        requestData.headers = mergedHeaders;
+
+        fetch(url, requestData).then(response => {
+            const isRedirectLike = response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400);
+            if (response.ok || isRedirectLike) { handleMessage(settings, false, formEl); }
+            else { handleMessage(settings, true, formEl); }
+        }).catch(error => { handleMessage(settings, true, formEl); });
+    }
+
+    var __SSP_FORMS_CONFIG__ = null;
+    function manageForm(candidateIds, form, originalData) {
+        // Prevent double submission: both initForms and XHR/fetch interceptors may call manageForm
+        // for the same form submission. Only the first call proceeds; flag resets after 3 seconds.
+        if (form && form.__sspSubmitting) return;
+        if (form) {
+            form.__sspSubmitting = true;
+            setTimeout(function () { form.__sspSubmitting = false; }, 3000);
+        }
+        const ids = Array.isArray(candidateIds) ? candidateIds.filter(Boolean) : [candidateIds].filter(Boolean);
+        const loadConfig = __SSP_FORMS_CONFIG__ ? Promise.resolve(__SSP_FORMS_CONFIG__) : fetch(config_url)
+            .then(r => r.ok ? r.json() : Promise.reject(r.status))
+            .then(json => { __SSP_FORMS_CONFIG__ = json; return json; });
+
+        loadConfig.then(json => {
+            let settings = null;
+            if (Array.isArray(json)) {
+                const norm = (v) => (v == null ? '' : String(v).trim());
+                const stripHash = (v) => norm(v).replace(/^#/, '');
+                const cf7Num = (v) => { const s = norm(v), m = s.match(/wpcf7-f(\d+)-p/); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+                const gfNum = (v) => { const s = norm(v), m = s.match(/gform(?:_wrapper)?_(\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+                const foNum = (v) => { const s = norm(v), m = s.match(/forminator-(?:form|module)-(\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+                const nfNum = (v) => { const s = norm(v), m = s.match(/nf-form-(\d+)-cont/); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+
+                try {
+                    json.forEach(cfg => {
+                        if (!cfg || !cfg.form_hidden_name) return;
+                        var inp = form.querySelector('input[name="' + cfg.form_hidden_name + '"]');
+                        if (inp && inp.value) { ids.push(inp.value); }
+                    });
+                } catch (e) { }
+
+                const normCandidates = [];
+                ids.forEach(cid => {
+                    const a = norm(cid), b = stripHash(cid), nCf7 = cf7Num(cid), nGf = gfNum(cid), nFo = foNum(cid), nNf = nfNum(cid);
+                    [a, b, nCf7, nGf, nFo, nNf].forEach(v => { if (v && normCandidates.indexOf(v) === -1) normCandidates.push(v); });
+                });
+
+                settings = json.find(x => {
+                    const sidRaw = x && x.form_id, sid = stripHash(sidRaw), sCf7 = cf7Num(sidRaw), sGf = gfNum(sidRaw), sFo = foNum(sidRaw), sNf = nfNum(sidRaw);
+                    return normCandidates.some(c => {
+                        const cc = stripHash(c);
+                        return sid === cc || (sid && cc && (sid.indexOf(cc) !== -1 || cc.indexOf(sid) !== -1)) ||
+                            (sCf7 && cf7Num(cc) === sCf7) || (sGf && gfNum(cc) === sGf) || (sFo && foNum(cc) === sFo) || (sNf && nfNum(cc) === sNf);
+                    });
+                });
+            }
+
+            if (settings) {
+                let data = (originalData instanceof FormData) ? originalData : new FormData(form);
+                if (!data.has('nf_form_id')) {
+                    var nfWrap = form.closest('.ninja-forms-form-wrap') || form.closest('.nf-form-cont');
+                    if (nfWrap && nfWrap.id) {
+                        var m = nfWrap.id.match(/nf-form-(\d+)-cont/);
+                        if (m && m[1]) { data.set('nf_form_id', m[1]); }
+                    }
+                }
+                if (data.has('nf_form_id') && !data.has('nf_form_title') && typeof nfForms !== 'undefined' && Array.isArray(nfForms)) {
+                    var nfIdStr = String(data.get('nf_form_id'));
+                    for (var ni = 0; ni < nfForms.length; ni++) {
+                        if (String(nfForms[ni].id) === nfIdStr && nfForms[ni].settings && nfForms[ni].settings.title) {
+                            data.set('nf_form_title', nfForms[ni].settings.title);
+                            break;
+                        }
+                    }
+                }
+                if (!data.has('elementor_form_id') && form.classList.contains('elementor-form')) {
+                    var elId = data.get('form_id');
+                    if (elId) { data.set('elementor_form_id', elId); }
+                }
+                var hasTurnstile = !!(form.querySelector('.ssp-cf-turnstile') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('.ssp-cf-turnstile')));
+                var recaptchaInput = form.querySelector('input.g-recaptcha-response[data-sitekey]') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('input.g-recaptcha-response[data-sitekey]'));
+                var hasRecaptcha = !!recaptchaInput;
+                var restBase = (settings.rest_base && typeof settings.rest_base === 'string') ? settings.rest_base : '';
+                if (restBase && restBase.slice(-1) !== '/') { restBase += '/'; }
+                var targetUrl = settings.form_webhook;
+
+                if (hasTurnstile && restBase && targetUrl) {
+                    if (!data.has('cf-turnstile-response')) {
+                        var tsContainer = form.querySelector('.ssp-cf-turnstile') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('.ssp-cf-turnstile'));
+                        var tsInp = form.querySelector('input[name="cf-turnstile-response"]') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('input[name="cf-turnstile-response"]'));
+                        if (!tsInp && tsContainer) { tsInp = tsContainer.querySelector('input[name="cf-turnstile-response"]'); }
+                        if (tsInp && tsInp.value) { data.set('cf-turnstile-response', tsInp.value); }
+                    }
+                    submitForm(restBase + 'simplystatic/v1/turnstile/submit?forward_to=' + encodeURIComponent(targetUrl), settings, data, form);
+                } else if (hasRecaptcha && restBase && targetUrl && typeof grecaptcha !== 'undefined') {
+                    grecaptcha.ready(function () {
+                        grecaptcha.execute(recaptchaInput.getAttribute('data-sitekey'), { action: 'submit' }).then(token => {
+                            data.set('g-recaptcha-response', token);
+                            submitForm(restBase + 'simplystatic/v1/recaptcha/submit?forward_to=' + encodeURIComponent(targetUrl), settings, data, form);
+                        }).catch(() => handleMessage(settings, true, form));
+                    });
                 } else {
-                    target.parentNode.appendChild(notice);
+                    submitForm(targetUrl, settings, data, form);
                 }
             } else {
-                document.body.appendChild(notice);
+                handleMessage({ form_success_message: 'Form submitted (fallback).', form_error_message: 'Mapping error.' }, true, form);
             }
-            return;
-        }
-
-        // Error: do not hide the target; render message before it so user can correct inputs
-        if (target.parentNode) {
-            target.parentNode.insertBefore(notice, target);
-        } else {
-            document.body.appendChild(notice);
-        }
+        }).catch(e => console.error('[SSP] Config error', e));
     }
+    window.__SSP_MANAGE_FORM__ = manageForm;
 
-    function modifyFormAttributes(form) {
-        form.removeAttribute("action");
-        form.removeAttribute("method");
-        form.removeAttribute("enctype");
-        form.removeAttribute("target");
-    }
+    // Explicit Turnstile rendering: find all .ssp-cf-turnstile placeholders that
+    // have not been rendered yet and call turnstile.render() on each.
+    // For dynamically rendered forms (Ninja Forms, WS Form) that rebuild the DOM,
+    // inject a fresh placeholder before the submit button if none exists.
+    function renderTurnstileWidgets() {
+        if (typeof turnstile === 'undefined') return;
+        window.__sspTurnstileLoaded = true;
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const isStatic = !!document.querySelector("meta[name='ssp-config-path']");
+        // For each form on the page, ensure it has a Turnstile placeholder and render it
+        var allForms = document.querySelectorAll('form');
+        allForms.forEach(function (form) {
+            var placeholder = form.querySelector('.ssp-cf-turnstile');
 
-        // On static builds, neutralize jQuery AJAX calls to admin-ajax.php to prevent Fluent Forms from attempting WP AJAX
-        if (isStatic && window.jQuery && window.jQuery.ajax) {
-            try {
-                const $ = window.jQuery;
-                const origAjax = $.ajax;
-                $.ajax = function(url, options){
-                    const isString = (typeof url === 'string');
-                    const opts = isString ? (options || {}) : (url || {});
-                    const u = isString ? url : (opts && opts.url);
-                    // Detect admin-ajax or WPForms submit action in data
-                    const data = opts && opts.data;
-                    const hasWPFormsAction = !!(data && (
-                        (typeof data === 'string' && (data.indexOf('wpforms') !== -1 || data.indexOf('action=wpforms') !== -1 || data.indexOf('action=wpforms_submit') !== -1)) ||
-                        (typeof data === 'object' && data.action && (''+data.action).indexOf('wpforms') !== -1)
-                    ));
-                    const isAdminAjax = !!(u && u.indexOf('admin-ajax.php') !== -1);
-                    if (isAdminAjax || hasWPFormsAction) {
-                        // Return a jQuery-compatible rejected Deferred so plugin error handlers don't crash
-                        if ($.Deferred) {
-                            const d = $.Deferred();
-                            const jqXHR = { responseText: '', status: 404, statusText: 'Not Found' };
-                            d.reject(jqXHR, 'error', 'Not Found');
-                            return d.promise();
-                        }
-                        // Fallback to a native Promise rejection with a jqXHR-like object
-                        return Promise.reject({ responseText: '', status: 404, statusText: 'Not Found' });
-                    }
-                    return origAjax.apply(this, arguments);
-                };
-                if ($.post) {
-                    const origPost = $.post;
-                    $.post = function(url){
-                        if (url && url.indexOf('admin-ajax.php') !== -1) {
-                            if ($.Deferred) {
-                                const d = $.Deferred();
-                                const jqXHR = { responseText: '', status: 404, statusText: 'Not Found' };
-                                d.reject(jqXHR, 'error', 'Not Found');
-                                return d.promise();
-                            }
-                            return Promise.reject({ responseText: '', status: 404, statusText: 'Not Found' });
-                        }
-                        return origPost.apply(this, arguments);
-                    };
+            // If no placeholder exists, check if the form's wrapper had one that was
+            // lost during dynamic rendering (Ninja Forms / WS Form)
+            if (!placeholder) {
+                var wrapper = form.closest('.nf-form-cont') || form.closest('.ninja-forms-form-wrap') || form.closest('.wsf-form') || form.closest('.ws-form');
+                if (wrapper) {
+                    placeholder = wrapper.querySelector('.ssp-cf-turnstile');
                 }
-            } catch (e) { /* noop */ }
-        }
+            }
 
-        const allFormRoots = document.querySelectorAll(
-            ".wpcf7 form, .wpcf7-form, .gform_wrapper form, .gform_wrapper, .wpforms-container form, .elementor-form, .wsf-form form, form.wsf-form, .ws-form form, form.ws-form, .frm-fluent-form, .brxe-form, .brxe-brf-pro-forms, .wp-block-kadence-form form, .forminator-custom-form"
-        );
+            // For NF/WS Form: if the wrapper had a placeholder that was destroyed by
+            // dynamic rendering, inject a new one inside the actual <form>
+            if (!placeholder) {
+                var nfWrap = form.closest('.nf-form-cont') || form.closest('.ninja-forms-form-wrap');
+                var wsWrap = form.closest('.wsf-form') || form.closest('.ws-form');
+                if (nfWrap || wsWrap) {
+                    // Resolve sitekey from an existing widget on the page or the global config
+                    var existingWidget = document.querySelector('.ssp-cf-turnstile[data-sitekey]');
+                    var cfg = window.__SSP_TURNSTILE_CFG__ || {};
+                    var sitekey = existingWidget ? existingWidget.getAttribute('data-sitekey') : (cfg.sitekey || '');
+                    var tsTheme = existingWidget ? (existingWidget.getAttribute('data-theme') || 'auto') : (cfg.theme || 'auto');
+                    var tsSize  = existingWidget ? (existingWidget.getAttribute('data-size') || 'normal') : (cfg.size || 'normal');
+
+                    if (sitekey) {
+                        placeholder = document.createElement('div');
+                        placeholder.className = 'ssp-cf-turnstile';
+                        placeholder.setAttribute('data-sitekey', sitekey);
+                        placeholder.style.marginTop = '15px';
+                        placeholder.setAttribute('data-theme', tsTheme);
+                        placeholder.setAttribute('data-size', tsSize);
+
+                        // Place before submit button or append to form
+                        var submitBtn = form.querySelector('input[type="submit"], button[type="submit"]');
+                        if (submitBtn && submitBtn.parentNode) {
+                            submitBtn.parentNode.insertBefore(placeholder, submitBtn);
+                        } else {
+                            form.appendChild(placeholder);
+                        }
+                    }
+                }
+            }
+
+            // Render the widget if it hasn't been rendered yet
+            if (placeholder && !placeholder.dataset.sspRendered) {
+                placeholder.dataset.sspRendered = '1';
+                try {
+                    turnstile.render(placeholder, {
+                        sitekey: placeholder.getAttribute('data-sitekey'),
+                        theme: placeholder.getAttribute('data-theme') || 'auto',
+                        size: placeholder.getAttribute('data-size') || 'normal'
+                    });
+                } catch (e) {
+                    if (typeof console !== 'undefined') {
+                        console.warn('[SSP] Turnstile render error:', e.message || e);
+                    }
+                }
+            }
+        });
+    }
+
+    // Global callback invoked by Turnstile script after API loads (via ?onload= param).
+    // This ensures rendering happens even when the script loads after our initForms() ran.
+    // Replaces the early stub defined above the IIFE.
+    window.__sspTurnstileReady = function () {
+        window.__sspTurnstileLoaded = true;
+        renderTurnstileWidgets();
+    };
+
+    // If Turnstile already loaded before the IIFE ran (async race), render now.
+    if (window.__sspTurnstileLoaded && typeof turnstile !== 'undefined') {
+        renderTurnstileWidgets();
+    }
+
+    function initForms() {
+        const allFormRoots = document.querySelectorAll(".wpcf7 form, .wpcf7-form, .gform_wrapper form, .gform_wrapper, .wpforms-container form, .elementor-form, .wsf-form form, .ws-form form, .frm-fluent-form, .brxe-form, .brxe-brf-pro-forms, .wp-block-kadence-form form, .forminator-custom-form, .ninja-forms-form-wrap form, .nf-form-cont form, .ninja-forms-form-wrap, .nf-form-cont");
 
         allFormRoots.forEach((root) => {
-            // Ensure we have an actual <form> element
-            let form = (root && root.tagName && root.tagName.toLowerCase() === 'form') ? root : (root.querySelector && root.querySelector('form'));
-            if (!form) { return; }
-            if (form.dataset && form.dataset.sspBound === '1') { return; }
-            if (form.dataset) { form.dataset.sspBound = '1'; }
-            modifyFormAttributes(form);
+            let form = (root.tagName === 'FORM') ? root : root.querySelector('form');
+            if (!form || form.dataset.sspBound === '1') return;
+            form.dataset.sspBound = '1';
 
-            // Inputs
-            const inputs = form.querySelectorAll("input");
-            const textareas = form.querySelectorAll("textarea");
-            const selects = form.querySelectorAll("select");
+            // Mark aria-required fields as required for HTML5 validation
+            form.querySelectorAll("input, textarea, select").forEach(el => { if (el.getAttribute("aria-required") === "true") el.required = true; });
 
-            // Add HTML required attribute based on aria-required="true" seen in many plugins
-            inputs.forEach((el) => {
-                if (el.getAttribute("aria-required") === "true") {
-                    el.required = true;
-                }
-            });
-            textareas.forEach((el) => {
-                if (el.getAttribute("aria-required") === "true") {
-                    el.required = true;
-                }
-            });
-            selects.forEach((el) => {
-                if (el.getAttribute("aria-required") === "true") {
-                    el.required = true;
-                }
-            });
-
-
-            // On static builds, for Gravity Forms specifically, intercept submit button clicks early (capture)
-            if (isStatic && (
-                (form.closest && form.closest('.gform_wrapper')) ||
-                (form.className && typeof form.className === 'string' && form.className.includes('gform_wrapper')) ||
-                (form.id && typeof form.id === 'string' && form.id.includes('gform_'))
-            )) {
-                // Gravity Forms often uses onclick attributes on the button itself.
-                // We should also ensure the form doesn't try to submit via its own AJAX.
-                const submitters = form.querySelectorAll('button[type="submit"], input[type="submit"], button#gform_submit_button_' + (form.id ? form.id.replace('gform_', '') : ''));
-                submitters.forEach(btn => {
-                    // Forcefully remove any existing onclick handlers that GF might have attached
-                    if (btn.onclick) {
-                        try { btn.onclick = null; } catch(e) {}
-                    }
-                    btn.addEventListener('click', function(ev){
-                        ev.stopImmediatePropagation();
-                        ev.preventDefault();
-                        // Trigger our managed submit
-                        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                    }, true);
-                });
-                
-                // Block GF's iframe submission method
-                if (form.getAttribute('target')) {
-                    form.removeAttribute('target');
-                }
-                form.onsubmit = function(ev) { 
-                    if (ev && ev.preventDefault) { ev.preventDefault(); }
-                    return false; 
+            // Gravity Forms (non-AJAX mode): GF calls form.submit() programmatically
+            // which does NOT fire the 'submit' event. Override form.submit() to route
+            // through manageForm instead.
+            if (form.closest('.gform_wrapper')) {
+                var gfOrigSubmit = form.submit;
+                form.submit = function () {
+                    var gfId = form.querySelector('input[name="gform_submit"]');
+                    var candidates = [form.id];
+                    if (gfId && gfId.value) { candidates.push(gfId.value, 'gform_' + gfId.value); }
+                    manageForm(candidates, form);
                 };
             }
 
-            // On static builds, for Fluent Forms specifically, intercept submit button clicks early (capture)
-            if (isStatic && (form.classList.contains('frm-fluent-form') || (form.className && form.className.includes('frm-fluent-form')))) {
-                const submitters = form.querySelectorAll('button[type="submit"], input[type="submit"]');
-                submitters.forEach(btn => {
-                    btn.addEventListener('click', function(ev){
-                        ev.stopImmediatePropagation();
-                        ev.preventDefault();
-                        // Trigger our managed submit
-                        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                    }, true);
-                });
+            // WPForms (non-AJAX mode): WPForms calls form.submit() programmatically
+            // which does NOT fire the 'submit' event. Override form.submit() to route
+            // through manageForm instead.
+            if (form.classList.contains('wpforms-form') && !form.classList.contains('wpforms-ajax-form')) {
+                form.submit = function () {
+                    var wpId = form.querySelector('input[name="wpforms[id]"]');
+                    var candidates = [form.id];
+                    if (wpId && wpId.value) { candidates.push(wpId.value, 'wpforms-form-' + wpId.value); }
+                    manageForm(candidates, form);
+                };
             }
 
-            // On static builds, for WPForms specifically, intercept submit button clicks early (capture)
-            if (isStatic && (form.classList.contains('wpforms-form') || (form.className && form.className.includes('wpforms-form')))) {
-                const submitters = form.querySelectorAll('button[type="submit"], input[type="submit"]');
-                submitters.forEach(btn => {
-                    btn.addEventListener('click', function(ev){
-                        ev.stopImmediatePropagation();
-                        ev.preventDefault();
-                        // Trigger our managed submit so our validator runs and we bypass WPForms AJAX handler
-                        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                    }, true);
-                });
-            }
-
-            // On static builds, for WS Form specifically, intercept submit button clicks early (capture)
-            if (isStatic && (
-                form.classList.contains('wsf-form') || (form.className && form.className.includes('wsf-form')) ||
-                form.classList.contains('ws-form') || (form.className && form.className.includes('ws-form')) ||
-                (form.closest && (form.closest('.wsf-form') || form.closest('.ws-form')))
-            )) {
-                const submitters = form.querySelectorAll('button[type="submit"], input[type="submit"]');
-                submitters.forEach(btn => {
-                    btn.addEventListener('click', function(ev){
-                        ev.stopImmediatePropagation();
-                        ev.preventDefault();
-                        // Trigger our managed submit so our validator runs and we bypass WS Form AJAX handler
-                        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                    }, true);
-                });
-            }
-
-            // On static builds, for Kadence Forms specifically, intercept submit button clicks early (capture)
-            if (isStatic && (
-                (form.closest && form.closest('.wp-block-kadence-form')) ||
-                form.querySelector && form.querySelector('input[name="_kb_form_id"]')
-            )) {
-                const submitters = form.querySelectorAll('button[type="submit"], input[type="submit"]');
-                submitters.forEach(btn => {
-                    btn.addEventListener('click', function(ev){
-                        ev.stopImmediatePropagation();
-                        ev.preventDefault();
-                        // Trigger our managed submit so our validator runs and we bypass Kadence AJAX handler
-                        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                    }, true);
-                });
-            }
-
-            // On static builds, for Forminator specifically, intercept submit button clicks early (capture)
-            if (isStatic && (form.classList.contains('forminator-custom-form') || (form.className && form.className.includes('forminator-custom-form')))) {
-                const submitters = form.querySelectorAll('button[type="submit"], input[type="submit"]');
-                submitters.forEach(btn => {
-                    btn.addEventListener('click', function(ev){
-                        ev.stopImmediatePropagation();
-                        ev.preventDefault();
-                        // Trigger our managed submit to bypass Forminator AJAX
-                        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                    }, true);
-                });
-            }
+            // Fallback submit handler: if native plugin JS doesn't trigger an XHR/fetch
+            // (e.g. Elementor forms, or forms whose JS was not loaded), this handler catches
+            // the native submit event and routes it through manageForm.
+            // Skip for forms that have their own AJAX handlers (WPForms, CF7, etc.)
+            // — their XHR/fetch interceptors already call manageForm.
+            // GF is NOT skipped: its non-AJAX mode needs the submit listener as a safety net.
+            var hasNativeAjax = form.classList.contains('wpforms-ajax-form') ||
+                form.closest('.wpcf7') || form.classList.contains('frm-fluent-form') ||
+                form.closest('.forminator-custom-form') || form.closest('.nf-form-cont') ||
+                form.closest('.ninja-forms-form-wrap') || form.querySelector('input[name="wsf_form_id"]');
+            if (hasNativeAjax) return;
 
             form.addEventListener("submit", function (ev) {
-                // Let validation run first (validation listener is in capture phase). We are in bubble.
-                // If the form is invalid per HTML5 constraints, do not proceed; validator shows messages.
-                if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
-                    return;
+                if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;
+                if (form.querySelector('.ssp-field-error')) return;
+                ev.preventDefault(); ev.stopImmediatePropagation();
+                let candidates = [form.id];
+                if (form.closest('.wpcf7')) candidates.push(form.closest('.wpcf7').id, form.querySelector('input[name="_wpcf7_unit_tag"]')?.value, form.querySelector('input[name="_wpcf7"]')?.value);
+                if (form.querySelector('input[name="wpforms[id]"]')) candidates.push(form.querySelector('input[name="wpforms[id]"]').value);
+                if (form.querySelector('input[name="wsf_form_id"]')) candidates.push(form.querySelector('input[name="wsf_form_id"]').value);
+                if (form.querySelector('input[name="gform_submit"]')) candidates.push(form.querySelector('input[name="gform_submit"]').value);
+                if (form.querySelector('input[name="_fluentform_id"]')) candidates.push(form.querySelector('input[name="_fluentform_id"]').value);
+                if (form.querySelector('input[name="form_id"]')) candidates.push(form.querySelector('input[name="form_id"]').value);
+                if (form.querySelector('input[name="_kb_form_id"]')) candidates.push(form.querySelector('input[name="_kb_form_id"]').value);
+                if (form.closest('.nf-form-cont')) {
+                    const nfId = form.closest('.nf-form-cont').id;
+                    candidates.push(nfId, nfId.match(/nf-form-(\d+)-cont/)?.[1]);
                 }
-                // Additionally, if our custom validator previously rendered any error messages, do not proceed.
-                var hasCustomErrors = !!form.querySelector('.ssp-field-error') && Array.prototype.some.call(form.querySelectorAll('.ssp-field-error'), function(n){ return !!(n.textContent && n.textContent.trim()); });
-                if (hasCustomErrors) { return; }
-                
-                // Prevent default submission and stop propagation
-                ev.preventDefault();
-                ev.stopImmediatePropagation();
-
-                // Create a stable placeholder mount before the form so we can replace reliably later
-                try {
-                    if (!form.dataset || !form.dataset.sspMountId) {
-                        var mount = document.createElement('div');
-                        var mid = 'ssp-mount-' + Date.now() + '-' + Math.random().toString(36).slice(2);
-                        mount.id = mid;
-                        if (form.parentNode) {
-                            form.parentNode.insertBefore(mount, form);
-                            if (form.dataset) { form.dataset.sspMountId = mid; }
-                        }
-                    }
-                } catch(e) { /* noop */ }
-
-                // Build candidate ids for settings lookup depending on the plugin
-                let candidates = [];
-
-                if ((form.classList && form.classList.contains('wpcf7-form')) || (form.closest && form.closest('.wpcf7'))) {
-                    // Contact Form 7
-                    // Prefer the wrapper div with classes wpcf7 no-js (e.g., id="wpcf7-f107-p123-o1")
-                    var cf7Wrap = form.closest('.wpcf7');
-                    if (cf7Wrap && cf7Wrap.id) { candidates.push(cf7Wrap.id); }
-                    // Hidden fields provided by CF7
-                    var cf7Unit = form.querySelector('input[name="_wpcf7_unit_tag"]');
-                    if (cf7Unit && cf7Unit.value) { candidates.push(cf7Unit.value); }
-                    var cf7Hidden = form.querySelector('input[name="_wpcf7"]');
-                    if (cf7Hidden && cf7Hidden.value) { candidates.push(cf7Hidden.value); }
-                    // Fall back to the form's own id
-                    if (form.id) { candidates.push(form.id); }
-                } else if (form.className.includes('wpforms-form')) {
-                    // WPForms
-                    var wpfHidden = form.querySelector('input[name="wpforms[id]"]');
-                    if (wpfHidden && wpfHidden.value) { candidates.push(wpfHidden.value); }
-                    if (form.id) { candidates.push(form.id); }
-                } else if (form.className.includes('wsf-form') || (form.closest && (form.closest('.wsf-form') || form.closest('.ws-form')))) {
-                    // WS Form
-                    // Hidden field
-                    var wsfHidden = form.querySelector('input[name="wsf_form_id"]');
-                    if (wsfHidden && wsfHidden.value) { candidates.push(wsfHidden.value); }
-                    // Wrapper attributes
-                    var wsfWrap = form.closest('.wsf-form') || form.closest('.ws-form');
-                    if (wsfWrap) {
-                        var did = wsfWrap.getAttribute('data-form-id') || wsfWrap.getAttribute('data-wsf-form-id');
-                        if (did) { candidates.push(did); }
-                        if (wsfWrap.id) { candidates.push(wsfWrap.id); }
-                    }
-                    // Fallback to form id
-                    if (form.id) { candidates.push(form.id); }
-                } else if ((form.parentNode && form.parentNode.className && form.parentNode.className.includes('gform_wrapper')) || form.className.includes('gform')) {
-                    // Gravity Forms
-                    var gfHidden = form.querySelector('input[name="gform_submit"]');
-                    if (gfHidden && gfHidden.value) { candidates.push(gfHidden.value); }
-                    // Wrapper IDs like gform_wrapper_1 or form IDs like gform_1
-                    var gfWrap = (form.closest && form.closest('.gform_wrapper')) ? form.closest('.gform_wrapper') : null;
-                    if (gfWrap && gfWrap.id) { candidates.push(gfWrap.id); }
-                    if (form.id) { candidates.push(form.id); }
-                    // Hidden identifiers used by GF
-                    var gfUid = form.querySelector('input[name="gform_unique_id"]');
-                    if (gfUid && gfUid.value) { candidates.push(gfUid.value); }
-                    var gfTarget = form.querySelector('input[name^="gform_target_page_number_"]');
-                    if (gfTarget && gfTarget.name) { candidates.push(gfTarget.name); }
-                    var gfSource = form.querySelector('input[name^="gform_source_page_number_"]');
-                    if (gfSource && gfSource.name) { candidates.push(gfSource.name); }
-                } else if (form.className.includes('frm-fluent-form')) {
-                    // Fluent Forms
-                    var ffHidden = form.querySelector('input[name="_fluentform_id"]');
-                    if (ffHidden && ffHidden.value) { candidates.push(ffHidden.value); }
-                    if (form.getAttribute('data-form-id')) { candidates.push(form.getAttribute('data-form-id')); }
-                    if (form.id) { candidates.push(form.id); }
-                } else if (form.className.includes('elementor-form')) {
-                    // Elementor Forms
-                    var elHidden = form.querySelector("[name='form_id']");
-                    if (elHidden && elHidden.value) { candidates.push(elHidden.value); }
-                    if (form.id) { candidates.push(form.id); }
-                } else if (form.classList.contains('forminator-custom-form') || (form.className && form.className.includes('forminator-custom-form'))) {
-                    // Forminator
-                    // Hidden field commonly present
-                    var foHidden = form.querySelector('input[name="form_id"]');
-                    if (foHidden && foHidden.value) { candidates.push(foHidden.value); }
-                    // data-form-id attribute on the <form> element
-                    var foDataId = form.getAttribute('data-form-id');
-                    if (foDataId) { candidates.push(foDataId); }
-                    // Wrapper and form ids like forminator-module-123 / forminator-form-123
-                    if (form.id) { candidates.push(form.id); }
-                    // Look upward for a wrapper whose id starts with forminator-module-
-                    var foWrap = (form.closest && form.closest('[id^="forminator-module-"]'));
-                    if (foWrap && foWrap.id) { candidates.push(foWrap.id); }
-                } else if (form.className.includes('brxe-form') || form.className.includes('brxe-brf-pro-forms')) {
-                    // Bricks
-                    if (form.id) { candidates.push(form.id); }
-                } else if (form.closest && (form.closest('.wp-block-kadence-form') || form.querySelector('input[name="_kb_form_id"]'))) {
-                    // Kadence Forms: use only the hidden field _kb_form_id as the identifier
-                    var kHidden = form.querySelector('input[name="_kb_form_id"]');
-                    if (kHidden && kHidden.value) { candidates.push(kHidden.value); }
-                } else {
-                    if (form.id) { candidates.push(form.id); }
-                }
-
-                // Manage and submit form with the candidate ids.
-                manageForm(config_url, candidates, form);
+                manageForm(candidates, form);
             }, false);
         });
-    });
-}
+    }
+
+    const runAll = () => {
+        if (window.__SSP_WEBHOOK_RUNNING__) return;
+        window.__SSP_WEBHOOK_RUNNING__ = true;
+        initForms();
+        renderTurnstileWidgets();
+        if (typeof MutationObserver !== 'undefined') {
+            new MutationObserver(() => { initForms(); renderTurnstileWidgets(); }).observe(document.body, { childList: true, subtree: true });
+        }
+        // Ninja Forms renders via Backbone after DOMContentLoaded; re-bind when its forms are ready.
+        document.addEventListener('nfFormReady', () => { initForms(); renderTurnstileWidgets(); });
+    };
+
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", runAll); }
+    else { runAll(); }
 })();

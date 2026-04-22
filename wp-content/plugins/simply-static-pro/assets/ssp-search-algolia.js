@@ -174,7 +174,6 @@ function sspAlgoliaRenderExcerpt(item) {
             };
 
             this.handleSearchSubmit = function(event) {
-                // Always redirect to the search results page (no inline results under the form)
                 if (event) event.preventDefault();
                 input = (searchInputNode ? (searchInputNode.value || '') : '').trim();
                 selected = -1;
@@ -184,12 +183,12 @@ function sspAlgoliaRenderExcerpt(item) {
                     return;
                 }
 
-                // If static results page is enabled, prefer the static export endpoint under __qs
-                var useStaticPage = true;
+                // If static results page is enabled, redirect to the static export endpoint under __qs
+                var useStaticPage = false;
                 try { useStaticPage = !!(window.ssp_search && ssp_search.use_static_results_page); } catch(_) {}
 
                 if (useStaticPage) {
-                    // Preferred: redirect to static export query endpoint: <exportBase>__qs/?s=<term>
+                    // Redirect to static export query endpoint: <exportBase>__qs/?s=<term>
                     try {
                         var base = sspGetExportBaseAlgolia();
                         var staticUrl = window.location.origin + base + '__qs/?s=' + encodeURIComponent(input);
@@ -198,14 +197,10 @@ function sspAlgoliaRenderExcerpt(item) {
                     } catch(_) {}
                 }
 
-                // Fallback or when static page disabled: use localized search URL template if available
-                try {
-                    var template = (window.ssp_search && ssp_search.search_url) ? ssp_search.search_url : (window.location.origin + '/?s=SSP_PLACEHOLDER');
-                    var url = template.replace('SSP_PLACEHOLDER', encodeURIComponent(input));
-                    window.location.href = url;
-                } catch(_) {
-                    // Hard fallback
-                    window.location.href = '/?s=' + encodeURIComponent(input);
+                // When static results page is disabled: show inline autocomplete results instead of redirecting
+                if (input.length >= 3) {
+                    showAutoComplete = true;
+                    performSearch(input);
                 }
             };
 
