@@ -275,8 +275,13 @@
       });
 
       this.element.addEventListener("breakdance_infinite_scroll_loaded", (event) => {
-        this.iso.appended(event.detail);
-        this.iso.layout();
+        const appendedElems = Array.from(event.detail || []);
+        if (!appendedElems.length) return;
+
+        this.iso.appended(appendedElems);
+
+        imagesLoaded(appendedElems)
+          .on("always", () => this.relayout());
       }, { signal: this.ac.signal });
 
       // Force Isotope to relayout when clicking on a link or button.

@@ -82,9 +82,30 @@
       return is.obj(value) && "number" in value;
     }
 
-    function syncSliders(sliderA, sliderB) {
-      sliderA.controller.control = sliderB;
-      sliderB.controller.control = sliderA;
+    function syncSliders(sliderA, sliderB, syncMode = "thumbs") {
+      if (!sliderA || !sliderB) return;
+
+      if (syncMode === "controller") {
+        if (!sliderA.controller || !sliderB.controller) return;
+        sliderA.controller.control = sliderB;
+        sliderB.controller.control = sliderA;
+        sliderA.update();
+        sliderB.update();
+        return;
+      }
+
+      if (!sliderA.thumbs) return;
+
+      sliderB.params.freeMode = { enabled: true };
+      sliderB.params.watchSlidesProgress = true;
+      sliderB.params.loop = false;
+      sliderB.params.slideToClickedSlide = true;
+      sliderB.update();
+
+      sliderA.thumbs.swiper = sliderB;
+      sliderA.thumbs.init();
+      sliderA.thumbs.update(true);
+      sliderA.update();
     }
 
     function resetSlideAnimations(slide) {
@@ -156,14 +177,14 @@
       return false;
     }
 
-    function initSliderSync(slideA, sliderB) {
+    function initSliderSync(slideA, sliderB, syncMode) {
       if (!sliderB) return;
 
       if (sliderB.swiper) {
-        syncSliders(slideA.swiper, sliderB.swiper);
+        syncSliders(slideA.swiper, sliderB.swiper, syncMode);
       } else {
         sliderB.addEventListener("breakdance_swiper_init", () => {
-          syncSliders(slideA.swiper, sliderB.swiper);
+          syncSliders(slideA.swiper, sliderB.swiper, syncMode);
         });
       }
     }
@@ -200,6 +221,7 @@
             slides_per_group: 1,
             initial_slide: 0,
             slide_to_clicked: false,
+            sync_mode: "thumbs",
           },
           direction: "horizontal",
         },
@@ -327,7 +349,7 @@
         setBreakpoint(swiperInstance, settings);
       });
 
-      initSliderSync(target, sliderToSyncWith);
+      initSliderSync(target, sliderToSyncWith, advancedSettings.sync_mode);
 
       window.swiperInstances = {
         ...window.swiperInstances,
