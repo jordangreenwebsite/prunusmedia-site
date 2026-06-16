@@ -41,11 +41,6 @@
       this.triggers = this.options.triggers;
       this.storageKey = `breakdance_popup_${id}_count`;
       window.breakdancePopupInstances[id] = this;
-
-      this.triggers.forEach((trigger) => {
-        this.initTrigger(trigger.slug, trigger.options);
-      });
-      this.init();
     }
 
     init() {
@@ -62,6 +57,10 @@
         return false;
       }
 
+      this.triggers.forEach((trigger) => {
+        this.initTrigger(trigger.slug, trigger.options);
+      });
+
       this.initCloseButton();
 
       this.wrapper.addEventListener("breakdance_popup_open", () => {
@@ -75,7 +74,9 @@
     }
 
     setOptions(options) {
-      this.options = { ...this.options, ...options };
+      this.options = mergeObjects(this.defaultOptions, options);
+
+      this.init();
     }
 
     open(forceOpen = false) {
@@ -238,7 +239,7 @@
       }
 
       /*
-      if a disable-popup-autoclose attribute is present on a parent 
+      if a disable-popup-autoclose attribute is present on a parent
       of the event target, don't automatically close the popup
       this feature is experimental and may not be available in future versions of Breakdance
       */
@@ -267,7 +268,7 @@
         this.close();
         return;
       }
-      
+
       const url = new URL(link);
       if (!url.hash) return;
 
@@ -452,7 +453,7 @@
       if (pauseTweenAtEnd) {
         this.exitAnimation.tween.pause(0);
       }
-      
+
       this.wrapper.classList.remove(this.openClass);
       this.exitAnimation.destroy();
 
