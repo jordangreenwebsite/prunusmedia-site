@@ -1,85 +1,138 @@
-// Support for swiper v8
 (function () {
   function BreakdanceSwiper() {
     const { mergeObjects, matchMedia, getCurrentBreakpoint, is, isBuilder, prefersReducedMotion } = BreakdanceFrontend.utils;
 
+    const DEFAULT_SWIPER_OPTIONS = Object.freeze({
+      settings: {
+        effect: "slide",
+        coverflow: {
+          rotate: { number: 50 },
+          depth: { number: 100 },
+          stretch: { number: 0 }
+        },
+        speed: { number: 1000 },
+        autoplay_settings: {
+          speed: { number: 3000 }
+        },
+        advanced: {
+          between_slides: 0,
+          slides_per_view: 1,
+          slides_per_group: 1,
+          initial_slide: 0
+        },
+        direction: "horizontal"
+      },
+      pagination: {
+        type: "bullets"
+      }
+    });
+
     function isElementInDom(selector) {
-      // An element can be "hidden" (aka not in the DOM) with Hide on breakpoint -> in builder preview
-      // and Swiper needs the element to be part of the DOM to work on it
-      // This code was removed in https://github.com/soflyy/breakdance-elements/pull/2184/files#diff-897333d33555b463d7a30b1328e025df240eeb851ed79e85b643c65c6c6b4bffL12
-      // but that introduced the following bug: https://github.com/soflyy/breakdance/issues/5956
-      // so we put this code back, since the element might be SSRing.
-      const isElementInDom = document.querySelector(selector);
-      return !!isElementInDom;
+      return !!document.querySelector(selector);
     }
+
+    /**
+     * Breakpoints support
+     */
 
     function setBreakpoint(swiper, settings) {
       const { BASE_BREAKPOINT_ID } = window.BreakdanceFrontend.data;
-      const isLoop = settings.infinite === "enabled" && !isBuilder();
-      const slidesPerView = settings.advanced.slides_per_view;
-      const slidesPerGroup = settings.advanced.slides_per_group;
-      const spaceBetween = settings.advanced.between_slides;
+      const { realIndex, initialized, params } = swiper;
 
-      const onePerViewAt = settings.advanced.one_per_view_at;
-      const onePerViewAtDesktop = onePerViewAt === BASE_BREAKPOINT_ID;
-      const alwaysOne = settings.effect === "fade" || settings.effect === "flip" || onePerViewAtDesktop;
+      const hasLoop = swiper.params.loop && !isBuilder();
+      const { advanced, effect } = settings;
+      const { slides_per_view, slides_per_group, between_slides, one_per_view_at } = advanced;
 
-      const { activeIndex, initialized, loopedSlides = 0 } = swiper;
-      const needsReLoop = isLoop && ((slidesPerView !== swiper.params.slidesPerView) || (slidesPerGroup !== swiper.params.slidesPerGroup));
+      const alwaysOne =
+        effect === "fade" ||
+        effect === "flip" ||
+        one_per_view_at === BASE_BREAKPOINT_ID ||
+        matchMedia(one_per_view_at);
 
-      if (alwaysOne || matchMedia(onePerViewAt)) {
+      if (alwaysOne) {
         swiper.params.slidesPerView = 1;
         swiper.params.slidesPerGroup = 1;
       } else {
-        setBreakpointProperty(swiper, "slidesPerView", slidesPerView);
-        setBreakpointProperty(swiper, "slidesPerGroup", slidesPerGroup);
+        setBreakpointProperty(swiper, "slidesPerView", slides_per_view);
+        setBreakpointProperty(swiper, "slidesPerGroup", slides_per_group);
       }
 
-      setBreakpointProperty(swiper, "spaceBetween", spaceBetween);
+      setBreakpointProperty(swiper, "spaceBetween", between_slides);
 
-      // A reloop is necessary when changing `slidesPerView`, `slidesPerGroup`, or `direction` when swiper has already been initialized.
-      if (needsReLoop && initialized) {
-        // Tip: When upgrading to swiper >=9 logic below is different.
-        // See: https://github.com/nolimits4web/swiper/blob/master/src/core/breakpoints/setBreakpoint.js
+      if (!initialized) {
+        return;
+      }
+
+      const breakpointSlidesPerView = getBreakpointValue(slides_per_view);
+      const needsReLoop = hasLoop && breakpointSlidesPerView !== params.slidesPerView;
+
+      // https://github.com/nolimits4web/swiper/blob/master/src/core/breakpoints/setBreakpoint.mjs#L105
+      if (initialized && needsReLoop) {
         swiper.loopDestroy();
-        swiper.loopCreate();
-        swiper.updateSlides();
-        swiper.slideTo(activeIndex - loopedSlides + swiper.loopedSlides, 0, false);
-      } else {
-        swiper.updateSlides();
-        swiper.slideReset(0);
+        swiper.loopCreate(realIndex);
       }
+
+      swiper.updateSlides();
+      swiper.slideReset(0);
+    }
+
+    function getBreakpointValue(value) {
+      if (Number.isFinite(value)) {
+        return value;
+      }
+
+      if (!is.obj(value)) {
+        return undefined;
+      }
+
+      const availableBreakpoints = Object.keys(value);
+      const current = getCurrentBreakpoint(availableBreakpoints);
+
+      if (!current) {
+        return undefined;
+      }
+
+      const resolvedValue = value[current.id];
+      return isUnitValue(resolvedValue) ? resolvedValue.number : resolvedValue;
     }
 
     function setBreakpointProperty(swiper, key, value) {
       if (Number.isFinite(value)) {
-        // version >= 1.3 - backwards compatibility for non-breakpoint values.
         swiper.params[key] = value;
-      } else if (is.obj(value)) {
-        // The value is an object, but we don't know if it's a breakpoint yet.
-        const availableBreakpoints = Object.keys(value);
-        const currBreakpoint = getCurrentBreakpoint(availableBreakpoints);
-        const bpValue = value[currBreakpoint.id];
+        return;
+      }
 
-        // Found a breakpoint value, use it.
-        if (bpValue) {
-          swiper.params[key] = isUnitValue(bpValue) ? bpValue.number : bpValue;
-        } else if (isUnitValue(value) && !isResponsiveValue(value)) {
-          // Otherwise, if the value is a unit value, use it.
-          // Due to unknown reasons, the value is sometimes a breakpoint + unit value object, we ignore those.
-          swiper.params[key] = value.number;
-        }
+      if (!is.obj(value)) {
+        return;
+      }
+
+      const breakpointValue = getBreakpointValue(value);
+
+      if (Number.isFinite(breakpointValue)) {
+        swiper.params[key] = breakpointValue;
+        return;
+      }
+
+      if (isUnitValue(value) && !isResponsiveValue(value)) {
+        swiper.params[key] = value.number;
       }
     }
 
     function isResponsiveValue(value) {
       const { breakpoints } = window.BreakdanceFrontend.data;
       const ids = breakpoints.map((bp) => bp.id);
-      return Object.keys(value).some(key => ids.includes(key));
+      return Object.keys(value).some((key) => ids.includes(key));
     }
 
     function isUnitValue(value) {
       return is.obj(value) && "number" in value;
+    }
+
+    function supportBreakpoints(swiper, settings) {
+      setBreakpoint(swiper, settings);
+      swiper.on("resize", () => {
+        setBreakpoint(swiper, settings);
+      });
     }
 
     function syncSliders(sliderA, sliderB, syncMode = "thumbs") {
@@ -108,6 +161,26 @@
       sliderA.update();
     }
 
+    function initSliderSync(sliderSelector, advancedSettings) {
+      const sliderA = document.querySelector(sliderSelector);
+      const sliderB = advancedSettings.sync_with_another_slider ? document.querySelector(`.${advancedSettings.slider_to_sync} .swiper`) : null;
+      const syncMode = advancedSettings.sync_mode;
+
+      if (!sliderB) return;
+
+      if (sliderB.swiper) {
+        syncSliders(sliderA.swiper, sliderB.swiper, syncMode);
+      } else {
+        sliderB.addEventListener("breakdance_swiper_init", () => {
+          syncSliders(sliderA.swiper, sliderB.swiper, syncMode);
+        });
+      }
+    }
+
+    /**
+     * Animations support
+     */
+
     function resetSlideAnimations(slide) {
       const customEvent = new Event("breakdance_reset_animations", { bubbles: true });
       slide.dispatchEvent(customEvent);
@@ -125,20 +198,18 @@
       let lastVisibleSlides = swiper.visibleSlides || [];
       const playOn = settings.advanced.play_animations_on || "transition_end";
 
-      const getNewestSlides = () => swiper.visibleSlides?.filter(x => !lastVisibleSlides.includes(x)) || [];
+      const getNewestSlides = () => swiper.visibleSlides?.filter((slide) => !lastVisibleSlides.includes(slide)) || [];
       const getHiddenSlides = () => swiper.slides?.filter((slide) => !swiper.visibleSlides.includes(slide)) || [];
 
-      // This is a workaround for when the user drags the slider before slideChange is triggered.
       swiper.on("sliderFirstMove", () => {
-        const hiddenSlides = getHiddenSlides();
-        hiddenSlides.forEach((slide) => resetSlideAnimations(slide));
+        getHiddenSlides().forEach(resetSlideAnimations);
       });
 
       swiper.on("slideChange", () => {
         const delay = playOn === "transition_start" ? 0 : swiper.params.speed * 0.3;
         const newSlides = getNewestSlides();
 
-        newSlides.forEach(slide => {
+        newSlides.forEach((slide) => {
           resetSlideAnimations(slide);
           playSlideAnimations(slide, delay);
         });
@@ -147,12 +218,14 @@
       });
     }
 
-    // This prevents memory leak from event listeners
+    /**
+     * Instance management
+     */
+
     function destroy(id) {
       if (
         window.swiperInstances &&
         window.swiperInstances[id] &&
-        // if the element is not in the DOM, "el" will be the selector instead of the element reference
         typeof window.swiperInstances[id].el === "object"
       ) {
         window.swiperInstances[id].destroy(true, true);
@@ -160,202 +233,161 @@
       }
     }
 
-    function shouldAutoplay(settings, isBuilder, forceAutoplay) {
-      if (prefersReducedMotion()) return false;
-
-      if (settings.autoplay === "enabled" && (!isBuilder || forceAutoplay)) {
-        return {
-          delay: settings.autoplay_settings.speed.number,
-          pauseOnMouseEnter:
-            !!settings.autoplay_settings.pause_on_hover,
-          disableOnInteraction:
-            !!settings.autoplay_settings.stop_on_interaction,
-          stopOnLastSlide: settings.infinite !== "enabled",
-        };
-      }
-
-      return false;
-    }
-
-    function initSliderSync(slideA, sliderB, syncMode) {
-      if (!sliderB) return;
-
-      if (sliderB.swiper) {
-        syncSliders(slideA.swiper, sliderB.swiper, syncMode);
-      } else {
-        sliderB.addEventListener("breakdance_swiper_init", () => {
-          syncSliders(slideA.swiper, sliderB.swiper, syncMode);
-        });
-      }
-    }
-
     function update({ id, selector, settings, paginationSettings, extras }) {
+      const swiperSelector = `${selector} > .breakdance-swiper-wrapper > .swiper`;
 
-      if (!isElementInDom(`${selector} > .breakdance-swiper-wrapper > .swiper`)) return;
+      if (!isElementInDom(swiperSelector)) {
+        return;
+      }
 
       destroy(id);
 
-      const defaultOptions = {
-        settings: {
-          effect: "slide",
-          coverflow: {
-            rotate: {
-              number: 50
-            },
-            depth: {
-              number: 100
-            },
-            stretch: {
-              number: 0
-            }
-          },
-          speed: { number: 1000 },
-          autoplay_settings: {
-            speed: {
-              number: 3000
-            }
-          },
-          advanced: {
-            between_slides: 0,
-            slides_per_view: 1,
-            slides_per_group: 1,
-            initial_slide: 0,
-            slide_to_clicked: false,
-            sync_mode: "thumbs",
-          },
-          direction: "horizontal",
-        },
-        pagination: {
-          type: "bullets"
-        }
-      };
+      const mergedSettings = mergeObjects(DEFAULT_SWIPER_OPTIONS.settings, settings);
+      const mergedPagination = mergeObjects(DEFAULT_SWIPER_OPTIONS.pagination, paginationSettings);
+      const mergedExtras = extras || {};
 
-      settings = mergeObjects(defaultOptions.settings, settings);
-      paginationSettings = mergeObjects(
-        defaultOptions.pagination,
-        paginationSettings
-      );
+      const isBuilderMode = Boolean(window?.BreakdanceFrontend.utils.isBuilder());
+      const forceAutoplay = mergedExtras.autoplay === true;
 
-      const advancedSettings = settings.advanced;
-      const isBuilder = !!window?.BreakdanceFrontend.utils.isBuilder();
-
-      const isCoverflowEffect = settings.effect === "coverflow";
-      const coverFlowEffect = isCoverflowEffect
-        ? {
-          coverflowEffect: {
-            rotate: settings.coverflow.rotate.number,
-            slideShadows: !!settings.coverflow.shadow,
-            depth: settings.coverflow.depth.number,
-            stretch: settings.coverflow.stretch.number
+      const swiperInstance = new Swiper(swiperSelector, {
+        ...mergedExtras,
+        ...buildBaseConfig(mergedSettings, isBuilderMode),
+        ...buildAutoplayConfig(mergedSettings, isBuilderMode, forceAutoplay),
+        ...buildPaginationConfig(selector, mergedPagination),
+        ...buildNavigationConfig(selector),
+        ...buildEffectConfig(mergedSettings),
+        ...buildBuilderOverrides(isBuilderMode),
+        mousewheel: buildMouseWheelConfig(mergedSettings.advanced),
+        initialSlide: mergedSettings.advanced.initial_slide,
+        on: {
+          init: (event) => {
+            const customEvent = new Event("breakdance_swiper_init");
+            event.el.dispatchEvent(customEvent);
           }
         }
-        : {};
-
-      const fadeEffect =
-        settings.effect === "fade"
-          ? {
-            fadeEffect: {
-              crossFade: true
-            }
-          }
-          : {};
-
-      const builderOnlySettings = isBuilder
-        ? {
-          // this prevents bugs caused by Swiper swallowing events
-          preventClicksPropagation: false,
-          preventClicks: false,
-          simulateTouch: false,
-          // doesn't play nice with our drag events
-          allowTouchMove: false
-        }
-        : {};
-
-      const forceAutoplay = extras && extras.autoplay === true;
-      const sliderToSyncWith = advancedSettings.sync_with_another_slider ? document.querySelector(`.${advancedSettings.slider_to_sync} .swiper`) : null;
-
-      if (advancedSettings.sync_with_another_slider && advancedSettings.slider_to_sync && !sliderToSyncWith) {
-        console.error("[Breakdance Slider]: The slider to sync with is not found. Please check if the element you selected exists.");
-      }
-
-      const target = document.querySelector(`${selector} > .breakdance-swiper-wrapper > .swiper`);
-      const swiperInstance = new Swiper(
-        target,
-        {
-          ...extras,
-          speed: settings.speed.number,
-          loop: settings.infinite === "enabled" && !isBuilder,
-          autoplay:
-            shouldAutoplay(settings, isBuilder, forceAutoplay),
-
-          effect: settings.effect,
-          pagination: {
-            el: `${selector} > .breakdance-swiper-wrapper > .swiper-pagination`,
-            type: paginationSettings.type,
-            clickable: true,
-          },
-          navigation: {
-            nextEl: `${selector} > .breakdance-swiper-wrapper > .swiper-button-next`,
-            prevEl: `${selector} > .breakdance-swiper-wrapper > .swiper-button-prev`,
-          },
-          keyboard: !advancedSettings.disable_keyboard_control,
-          ...coverFlowEffect,
-          ...fadeEffect,
-
-          ...builderOnlySettings,
-
-          // Advanced options
-          mousewheel: advancedSettings.swipe_on_scroll
-            ? {
-              releaseOnEdges: true
-            }
-            : false,
-
-          autoHeight: !!advancedSettings.auto_height,
-          loopPreventsSlide: false,
-          centeredSlides: isCoverflowEffect
-            ? // We decided to make it always true because otherwise it looks ugly
-            true
-            : settings.center_slides,
-          // Swiper docs advise to do this
-          watchSlidesProgress: advancedSettings.slides_per_view !== 1,
-          // doesn't do anything on its own, but enables elements to create cool effects with HTML
-          parallax: true,
-
-          direction: settings.direction,
-          a11y: {
-            slideRole: ""
-          },
-          initialSlide: advancedSettings.initial_slide,
-          slideToClickedSlide: advancedSettings.slide_to_clicked,
-          init: false
-        });
-
-      // Dispatch an event so that other scripts can hook into it
-      swiperInstance.on("init", () => {
-        const event = new Event("breakdance_swiper_init");
-        target.dispatchEvent(event);
       });
 
-      // Init the swiper last so that we can dispatch the event
-      swiperInstance.init();
-
-      // Set the breakpoint styles
-      setBreakpoint(swiperInstance, settings);
-      supportEntranceAnimations(swiperInstance, settings);
-
-      // Reset the breakpoint styles on resize
-      swiperInstance.on("resize", () => {
-        setBreakpoint(swiperInstance, settings);
-      });
-
-      initSliderSync(target, sliderToSyncWith, advancedSettings.sync_mode);
+      supportBreakpoints(swiperInstance, mergedSettings);
+      supportEntranceAnimations(swiperInstance, mergedSettings);
+      initSliderSync(swiperSelector, mergedSettings.advanced);
 
       window.swiperInstances = {
         ...window.swiperInstances,
         [id]: swiperInstance
       };
     }
+
+    /**
+     * Config builders
+     */
+
+    function buildBaseConfig(settings, isBuilderMode) {
+      const { advanced, speed, infinite, direction, center_slides } = settings;
+      const isCoverflow = settings.effect === "coverflow";
+
+      return {
+        speed: speed.number,
+        loop: infinite === "enabled" && !isBuilderMode,
+        keyboard: !advanced.disable_keyboard_control,
+        autoHeight: Boolean(advanced.auto_height),
+        loopPreventsSlide: false,
+        centeredSlides: isCoverflow ? true : center_slides,
+        watchSlidesProgress: advanced.slides_per_view !== 1,
+        parallax: true,
+        effect: settings.effect,
+        direction,
+        a11y: {
+          slideRole: ""
+        }
+      };
+    }
+
+    function buildAutoplayConfig(settings, isBuilderMode, forceAutoplay) {
+      if (prefersReducedMotion()) return { autoplay: false };
+
+      const autoplayEnabled =
+        settings.autoplay === "enabled" && (!isBuilderMode || forceAutoplay);
+
+      if (!autoplayEnabled) {
+        return { autoplay: false };
+      }
+
+      const { autoplay_settings, infinite } = settings;
+
+      return {
+        autoplay: {
+          delay: autoplay_settings.speed.number,
+          pauseOnMouseEnter: Boolean(autoplay_settings.pause_on_hover),
+          disableOnInteraction: Boolean(autoplay_settings.stop_on_interaction),
+          stopOnLastSlide: infinite !== "enabled"
+        }
+      };
+    }
+
+    function buildPaginationConfig(rootSelector, paginationSettings) {
+      return {
+        pagination: {
+          el: `${rootSelector} > .breakdance-swiper-wrapper > .swiper-pagination`,
+          type: paginationSettings.type,
+          clickable: true
+        }
+      };
+    }
+
+    function buildNavigationConfig(rootSelector) {
+      return {
+        navigation: {
+          nextEl: `${rootSelector} > .breakdance-swiper-wrapper > .swiper-button-next`,
+          prevEl: `${rootSelector} > .breakdance-swiper-wrapper > .swiper-button-prev`
+        }
+      };
+    }
+
+    function buildEffectConfig(settings) {
+      const configs = {};
+
+      if (settings.effect === "coverflow") {
+        configs.coverflowEffect = {
+          rotate: settings.coverflow.rotate.number,
+          slideShadows: Boolean(settings.coverflow.shadow),
+          depth: settings.coverflow.depth.number,
+          stretch: settings.coverflow.stretch.number
+        };
+      }
+
+      if (settings.effect === "fade") {
+        configs.fadeEffect = { crossFade: true };
+      }
+
+      return configs;
+    }
+
+    function buildBuilderOverrides(isBuilderMode) {
+      if (!isBuilderMode) {
+        return {};
+      }
+
+      return {
+        preventClicksPropagation: false,
+        preventClicks: false,
+        simulateTouch: false,
+        allowTouchMove: false
+      };
+    }
+
+    function buildMouseWheelConfig(advancedSettings) {
+      if (!advancedSettings.swipe_on_scroll) {
+        return false;
+      }
+
+      return {
+        releaseOnEdges: true
+      };
+    }
+
+    /**
+     * Builder utils
+     */
 
     function updateSliderFromChild(id) {
       const sliderId = document
