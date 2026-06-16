@@ -55,33 +55,30 @@
         },
         {
             "name": "cmb2/cmb2",
-            "version": "v2.11.0",
-            "version_normalized": "2.11.0.0",
+            "version": "v2.12.0",
+            "version_normalized": "2.12.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CMB2/CMB2.git",
-                "reference": "2847828b5cce1b48d09427ee13e6f7c752704468"
+                "reference": "9a3686d42539ee3c1113bd09623f4ffbbee94397"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CMB2/CMB2/zipball/2847828b5cce1b48d09427ee13e6f7c752704468",
-                "reference": "2847828b5cce1b48d09427ee13e6f7c752704468",
+                "url": "https://api.github.com/repos/CMB2/CMB2/zipball/9a3686d42539ee3c1113bd09623f4ffbbee94397",
+                "reference": "9a3686d42539ee3c1113bd09623f4ffbbee94397",
                 "shasum": ""
             },
             "require": {
                 "php": ">7.4"
             },
             "require-dev": {
-                "apigen/apigen": "4.1.2",
-                "awesomemotive/am-cli-tools": ">=1.3.7",
-                "nette/utils": "2.5.3",
-                "phpunit/phpunit": "^6.5",
+                "phpunit/phpunit": "^9.6",
                 "yoast/phpunit-polyfills": "^1.1"
             },
             "suggest": {
                 "composer/installers": "~1.0"
             },
-            "time": "2024-04-02T19:30:07+00:00",
+            "time": "2026-05-31T02:21:57+00:00",
             "type": "wordpress-plugin",
             "installation-source": "dist",
             "notification-url": "https://packagist.org/downloads/",
@@ -239,18 +236,95 @@
             "install-path": "../woocommerce/action-scheduler"
         },
         {
-            "name": "wp-media/wp-mixpanel",
-            "version": "v1.4.0",
-            "version_normalized": "1.4.0.0",
+            "name": "wordpress/mcp-adapter",
+            "version": "v0.4.1",
+            "version_normalized": "0.4.1.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/wp-media/wp-mixpanel.git",
-                "reference": "dfedab2014e816a1040c57d544a6180f1d446624"
+                "url": "https://github.com/WordPress/mcp-adapter.git",
+                "reference": "1a0f9ab868e34b4375be42e873f60765e6632505"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wp-media/wp-mixpanel/zipball/dfedab2014e816a1040c57d544a6180f1d446624",
-                "reference": "dfedab2014e816a1040c57d544a6180f1d446624",
+                "url": "https://api.github.com/repos/WordPress/mcp-adapter/zipball/1a0f9ab868e34b4375be42e873f60765e6632505",
+                "reference": "1a0f9ab868e34b4375be42e873f60765e6632505",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "automattic/vipwpcs": "^3.0",
+                "php-stubs/wp-cli-stubs": "^2.12",
+                "phpcompatibility/php-compatibility": "10.x-dev as 9.99.99",
+                "phpcompatibility/phpcompatibility-wp": "^2.1",
+                "phpstan/extension-installer": "^1.3",
+                "phpstan/php-8-stubs": "^0.4.24",
+                "phpstan/phpstan": "^2.1.22",
+                "phpstan/phpstan-deprecation-rules": "^2.0.3",
+                "phpunit/phpunit": "^9.6",
+                "slevomat/coding-standard": "^8.0",
+                "szepeviktor/phpstan-wordpress": "^2.0",
+                "wp-phpunit/wp-phpunit": "^6.5",
+                "wpackagist-plugin/plugin-check": "^1.6",
+                "yoast/phpunit-polyfills": "^4.0"
+            },
+            "time": "2025-12-09T06:56:51+00:00",
+            "type": "library",
+            "extra": {
+                "installer-paths": {
+                    "vendor/{$vendor}/{$name}/": [
+                        "wpackagist-plugin/plugin-check"
+                    ]
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "WP\\MCP\\": "includes/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "WordPress AI Team",
+                    "homepage": "https://make.wordpress.org/ai/"
+                }
+            ],
+            "description": "Adapter for Abilities API, letting WordPress abilities to be used as MCP tools, resources or prompts",
+            "homepage": "https://github.com/wordpress/mcp-adapter",
+            "keywords": [
+                "abilities-api",
+                "adapter",
+                "ai",
+                "api",
+                "integration",
+                "mcp",
+                "model-context-protocol",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/wordpress/mcp-adapter/issues",
+                "source": "https://github.com/wordpress/mcp-adapter"
+            },
+            "install-path": "../wordpress/mcp-adapter"
+        },
+        {
+            "name": "wp-media/wp-mixpanel",
+            "version": "v1.4.1",
+            "version_normalized": "1.4.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wp-media/wp-mixpanel.git",
+                "reference": "09dea8a51f97e8047defc9f8a995b87dec76baad"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wp-media/wp-mixpanel/zipball/09dea8a51f97e8047defc9f8a995b87dec76baad",
+                "reference": "09dea8a51f97e8047defc9f8a995b87dec76baad",
                 "shasum": ""
             },
             "require": {
@@ -267,7 +341,7 @@
                 "wp-coding-standards/wpcs": "^3",
                 "wp-media/phpunit": "^3"
             },
-            "time": "2025-11-12T09:51:35+00:00",
+            "time": "2026-05-29T18:02:43+00:00",
             "type": "library",
             "installation-source": "dist",
             "autoload": {
@@ -292,7 +366,7 @@
             "description": "WordPress Mixpanel Integration",
             "support": {
                 "issues": "https://github.com/wp-media/wp-mixpanel/issues",
-                "source": "https://github.com/wp-media/wp-mixpanel/tree/v1.4.0"
+                "source": "https://github.com/wp-media/wp-mixpanel/tree/v1.4.1"
             },
             "install-path": "../wp-media/wp-mixpanel"
         }
