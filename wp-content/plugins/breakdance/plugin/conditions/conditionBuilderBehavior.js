@@ -3,6 +3,10 @@ window.addEventListener("breakdanceFiltersAPIReady", function(_e) {
     shouldShow,
     elementProperties
   ) {
+    if (elementProperties?.settings?.conditions?.visible === false) {
+      return false;
+    }
+
     if (elementProperties?.settings?.conditions?.builder_preview) {
       return elementProperties.settings.conditions.builder_preview !== "hide";
     }

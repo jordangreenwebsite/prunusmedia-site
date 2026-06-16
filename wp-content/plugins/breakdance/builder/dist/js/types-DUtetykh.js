@@ -1,0 +1,1 @@
+import{Mf as e,Rf as t,Tf as n}from"./store-CY71t9Ks.js";const r=t({templateIds:n(e),headerIds:n(e),footerIds:n(e),popupIds:n(e),blockIds:n(e)});export{r as t};

@@ -1,0 +1,1 @@
+var e=e=>{requestAnimationFrame(()=>{requestAnimationFrame(e)})};const t=t=>{e(t)},n=t=>new Promise(n=>{e(()=>{t(),n()})});export{n,t};
