@@ -10,7 +10,19 @@ if (!window.__sspTurnstileReady) {
     window.__SSP_WEBHOOK_INIT__ = true;
 
     // Detect static environment early (before DOM may be fully loaded)
-    const isStaticSite = () => !!document.querySelector("meta[name='ssp-config-path']") || window.location.pathname.indexOf('/static/') !== -1;
+    const isStaticSite = () => {
+        const configMeta = document.querySelector("meta[name='ssp-config-path']");
+        if (configMeta) { return true; }
+        if (window.location.pathname.indexOf('/static/') !== -1) { return true; }
+        const originMeta = document.querySelector("meta[name='ssp-origin-url']");
+        if (originMeta) {
+            try {
+                const originUrl = new URL(originMeta.getAttribute('content'));
+                return window.location.hostname !== originUrl.hostname;
+            } catch (e) { }
+        }
+        return false;
+    };
 
     // Fetch API interception: CF7 5.6+ and other modern form plugins use window.fetch
     // to submit to WP REST API endpoints (e.g., /wp-json/contact-form-7/v1/contact-forms/{id}/feedback).
@@ -627,6 +639,92 @@ if (!window.__sspTurnstileReady) {
         }).catch(error => { handleMessage(settings, true, formEl); });
     }
 
+    function escapeSelector(value) {
+        if (window.CSS && typeof window.CSS.escape === 'function') { return window.CSS.escape(value); }
+        return String(value).replace(/["\\]/g, '\\$&');
+    }
+
+    function getControlLabel(control, index) {
+        var label = '';
+        var id = control.getAttribute('id');
+        if (id) {
+            var explicit = control.ownerDocument.querySelector('label[for="' + escapeSelector(id) + '"]');
+            if (explicit) { label = explicit.textContent || ''; }
+        }
+        if (!label && control.closest('label')) { label = control.closest('label').textContent || ''; }
+        if (!label) {
+            var cf7Wrap = control.closest('.wpcf7-form-control-wrap');
+            label = control.getAttribute('aria-label') || control.getAttribute('placeholder') || control.getAttribute('data-name') ||
+                (cf7Wrap ? cf7Wrap.getAttribute('data-name') : '') || '';
+        }
+        label = String(label).replace(/\*/g, '').replace(/\s+/g, ' ').trim();
+        if (/^[?\s]+$/.test(label)) { label = ''; }
+        if (!label) { label = 'Field ' + index; }
+        return label;
+    }
+
+    function uniqueFieldName(data, label, index) {
+        var base = String(label).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+        if (!base) { base = 'field_' + index; }
+        var name = base;
+        var suffix = 2;
+        while (data.has(name)) {
+            name = base + '_' + suffix;
+            suffix++;
+        }
+        return name;
+    }
+
+    function getSyntheticFieldName(data, control, index) {
+        var cf7Wrap = control.closest('.wpcf7-form-control-wrap');
+        var cf7Name = cf7Wrap ? cf7Wrap.getAttribute('data-name') : '';
+        if (cf7Name && !data.has(cf7Name)) {
+            return cf7Name;
+        }
+
+        return uniqueFieldName(data, getControlLabel(control, index), index);
+    }
+
+    function addUnnamedFormControls(data, form) {
+        if (!(data instanceof FormData) || !form) { return data; }
+
+        var controls = form.querySelectorAll('input, textarea, select');
+        var unnamedIndex = 1;
+        var addedSyntheticFields = false;
+        controls.forEach(function (control) {
+            if (control.disabled || control.name) { return; }
+            var type = (control.getAttribute('type') || control.tagName).toLowerCase();
+            if (['submit', 'button', 'reset', 'image', 'file'].indexOf(type) !== -1) { return; }
+            if ((type === 'checkbox' || type === 'radio') && !control.checked) { return; }
+
+            var value = '';
+            if (control.tagName === 'SELECT' && control.multiple) {
+                value = Array.prototype.slice.call(control.selectedOptions).map(function (option) {
+                    return option.value;
+                }).filter(Boolean).join(', ');
+            } else {
+                value = control.value || '';
+            }
+            if (!value) { return; }
+
+            data.set(getSyntheticFieldName(data, control, unnamedIndex), value);
+            addedSyntheticFields = true;
+            unnamedIndex++;
+        });
+
+        if (addedSyntheticFields && data.has('')) { data.delete(''); }
+
+        return data;
+    }
+
+    function isCf7Submission(settings, form, data) {
+        return !!(
+            (settings && settings.form_plugin === 'cf7') ||
+            (form && form.closest('.wpcf7')) ||
+            (data instanceof FormData && data.has('_wpcf7'))
+        );
+    }
+
     var __SSP_FORMS_CONFIG__ = null;
     function manageForm(candidateIds, form, originalData) {
         // Prevent double submission: both initForms and XHR/fetch interceptors may call manageForm
@@ -677,6 +775,9 @@ if (!window.__sspTurnstileReady) {
 
             if (settings) {
                 let data = (originalData instanceof FormData) ? originalData : new FormData(form);
+                if (isCf7Submission(settings, form, data)) {
+                    data = addUnnamedFormControls(data, form);
+                }
                 if (!data.has('nf_form_id')) {
                     var nfWrap = form.closest('.ninja-forms-form-wrap') || form.closest('.nf-form-cont');
                     if (nfWrap && nfWrap.id) {
@@ -856,15 +957,20 @@ if (!window.__sspTurnstileReady) {
             // Skip for forms that have their own AJAX handlers (WPForms, CF7, etc.)
             // — their XHR/fetch interceptors already call manageForm.
             // GF is NOT skipped: its non-AJAX mode needs the submit listener as a safety net.
+            // On static sites the native plugin JS (CF7, Fluent Forms, etc.) is usually
+            // not loaded, so the fetch/XHR interceptors never fire. In that case we must
+            // NOT skip these forms — the submit listener is the only path to the webhook.
+            var onStatic = isStaticSite();
             var hasNativeAjax = form.classList.contains('wpforms-ajax-form') ||
                 form.closest('.wpcf7') || form.classList.contains('frm-fluent-form') ||
                 form.closest('.forminator-custom-form') || form.closest('.nf-form-cont') ||
                 form.closest('.ninja-forms-form-wrap') || form.querySelector('input[name="wsf_form_id"]');
-            if (hasNativeAjax) return;
+            if (hasNativeAjax && !onStatic) return;
 
             form.addEventListener("submit", function (ev) {
                 if (typeof form.checkValidity === 'function' && !form.checkValidity()) return;
-                if (form.querySelector('.ssp-field-error')) return;
+                var visibleError = Array.prototype.slice.call(form.querySelectorAll('.ssp-field-error')).some(function (el) { return el.offsetParent !== null || el.style.display !== 'none'; });
+                if (visibleError) return;
                 ev.preventDefault(); ev.stopImmediatePropagation();
                 let candidates = [form.id];
                 if (form.closest('.wpcf7')) candidates.push(form.closest('.wpcf7').id, form.querySelector('input[name="_wpcf7_unit_tag"]')?.value, form.querySelector('input[name="_wpcf7"]')?.value);
@@ -883,16 +989,118 @@ if (!window.__sspTurnstileReady) {
         });
     }
 
+    // Dynamic form population from URL query parameters.
+    // Reads all URL params and pre-selects/fills matching form fields on the
+    // static site. Works with any form plugin (Gravity Forms, WPForms, CF7,
+    // Fluent Forms, Elementor, etc.) by matching params against field names
+    // and values.
+    function populateFormsFromURL() {
+        if (!isStaticSite()) return;
+        var params = new URLSearchParams(window.location.search);
+        if (!params.toString()) return;
+
+        var forms = document.querySelectorAll('form');
+        if (!forms.length) return;
+
+        params.forEach(function(val, key) {
+            var valLower = val.toLowerCase();
+            var keyLower = key.toLowerCase();
+
+            forms.forEach(function(form) {
+                var matched = false;
+
+                // 1. Radio buttons: prefer name-based match, fall back to value-based
+                var radios = form.querySelectorAll('input[type="radio"]');
+                // Try matching by name attribute first (e.g. name="als" with value matching param value)
+                radios.forEach(function(r) {
+                    if (r.name.toLowerCase() === keyLower && r.value.toLowerCase() === valLower) {
+                        r.checked = true;
+                        r.click();
+                        matched = true;
+                    }
+                });
+                // Fall back: match by value alone (GF-style, where names are auto-generated like input_32)
+                if (!matched) {
+                    radios.forEach(function(r) {
+                        if (r.value.toLowerCase() === valLower) {
+                            r.checked = true;
+                            r.click();
+                            matched = true;
+                        }
+                    });
+                }
+                if (matched) return;
+
+                // 2. Select elements: prefer name-based match, fall back to value-based
+                var selects = form.querySelectorAll('select');
+                selects.forEach(function(sel) {
+                    if (matched) return;
+                    var nameMatch = sel.name.toLowerCase() === keyLower;
+                    for (var i = 0; i < sel.options.length; i++) {
+                        if ((nameMatch || sel.options[i].value.toLowerCase() === valLower) &&
+                            sel.options[i].value.toLowerCase() === valLower) {
+                            sel.value = sel.options[i].value;
+                            sel.dispatchEvent(new Event('change', {bubbles: true}));
+                            matched = true;
+                            break;
+                        }
+                    }
+                });
+                if (matched) return;
+
+                // 3. Checkbox inputs: prefer name-based match, fall back to value-based
+                var checkboxes = form.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(function(c) {
+                    var nameMatch = c.name.toLowerCase() === keyLower ||
+                        c.name.toLowerCase().replace(/\[\]$/, '') === keyLower;
+                    if (nameMatch && c.value.toLowerCase() === valLower) {
+                        c.checked = true;
+                        c.dispatchEvent(new Event('change', {bubbles: true}));
+                        matched = true;
+                    } else if (!matched && c.value.toLowerCase() === valLower) {
+                        c.checked = true;
+                        c.dispatchEvent(new Event('change', {bubbles: true}));
+                    }
+                });
+                if (matched) return;
+
+                // 4. Text-like inputs (text, email, tel, url, number, hidden, textarea):
+                //    match by name attribute = URL param key
+                var textFields = form.querySelectorAll(
+                    'input[type="text"], input[type="email"], input[type="tel"], ' +
+                    'input[type="url"], input[type="number"], input[type="hidden"], textarea'
+                );
+                textFields.forEach(function(f) {
+                    if (matched) return;
+                    if (f.name.toLowerCase() === keyLower) {
+                        f.value = val;
+                        f.dispatchEvent(new Event('input', {bubbles: true}));
+                        f.dispatchEvent(new Event('change', {bubbles: true}));
+                        matched = true;
+                    }
+                });
+            });
+        });
+    }
+
     const runAll = () => {
         if (window.__SSP_WEBHOOK_RUNNING__) return;
         window.__SSP_WEBHOOK_RUNNING__ = true;
         initForms();
         renderTurnstileWidgets();
+        populateFormsFromURL();
         if (typeof MutationObserver !== 'undefined') {
             new MutationObserver(() => { initForms(); renderTurnstileWidgets(); }).observe(document.body, { childList: true, subtree: true });
         }
         // Ninja Forms renders via Backbone after DOMContentLoaded; re-bind when its forms are ready.
         document.addEventListener('nfFormReady', () => { initForms(); renderTurnstileWidgets(); });
+        // GF fires gform_post_render after conditional logic is initialized;
+        // re-run population so conditionally-shown fields get their values set.
+        if (window.jQuery) {
+            jQuery(document).on('gform_post_render', function() {
+                setTimeout(populateFormsFromURL, 50);
+            });
+        }
     };
 
     if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", runAll); }

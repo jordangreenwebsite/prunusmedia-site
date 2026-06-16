@@ -231,23 +231,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inject Push button into Classic Editor near Publish/Update.
     function injectClassicButton() {
-        var actions = qs('#major-publishing-actions');
-        if (!actions) return false;
-        // Skip for ssp-form post type
-        try { if (sspGetCurrentPostType() === 'ssp-form') return false; } catch(e) {}
-        if (qs('.ssp-export-button', actions)) return true;
-        var publish = qs('#publish', actions);
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'button ssp-export-button';
-        btn.style.marginLeft = '8px';
-        btn.textContent = 'Push';
-        btn.addEventListener('click', function(){ sspStartSingleExport(btn); });
-        if (publish) {
-            publish.insertAdjacentElement('afterend', btn);
-        } else {
-            actions.appendChild(btn);
-        }
+        // Classic Editor button is now injected via PHP (post_submitbox_misc_actions hook)
+        // for better reliability across different WP versions and configurations.
         return true;
     }
 

@@ -108,13 +108,15 @@ function initFuseSearch() {
 
         // Build search index for Fuse.
         for (const value of index) {
-            var result = {
+            // Preserve custom fields added via ssp_search_index_item so weighted
+            // Fuse keys from ssp_fuse_search_weights can search against them.
+            var result = Object.assign({}, value, {
                 url: window.location.origin + value.path,
                 title: value.title,
                 excerpt: value.excerpt,
                 content: value.content,
                 language: value.language
-            };
+            });
 
             if (is_multilingual) {
                 // Include entry if:
