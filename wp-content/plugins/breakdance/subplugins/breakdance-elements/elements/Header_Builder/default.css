@@ -3,7 +3,9 @@
   width: 100%;
   background-color: var(--bde-background-color);
   --bde-header-width: var(--bde-section-width);
-  --bde-header-sticky-top: calc(var(--bde-header-sticky-offset) + var(--wp-admin--admin-bar--height, 0px));
+  --bde-header-sticky-top: calc(
+    var(--bde-header-sticky-offset) + var(--wp-admin--admin-bar--height, 0px)
+  );
   --bde-header-sticky-offset: 0px;
   --bde-header-sticky-duration: var(--bde-transition-duration);
 }
@@ -64,7 +66,7 @@
 }
 
 .bde-header-builder--sticky-scroll-hide * {
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
 .bde-header-builder--sticky-scroll-start-off-hidden {
