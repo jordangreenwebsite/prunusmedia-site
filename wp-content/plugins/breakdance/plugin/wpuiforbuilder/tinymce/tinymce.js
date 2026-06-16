@@ -38,6 +38,24 @@
     );
   }
 
+  function getEditorHeight() {
+    return Number(window.breakdanceTinyMceControlConfig.editorHeight);
+  }
+
+  function enforceEditorHeight() {
+    const editorHeight = getEditorHeight();
+    const textarea = getTextarea();
+    const editor = getEditor();
+
+    if (textarea) {
+      textarea.style.height = `${editorHeight}px`;
+    }
+
+    if (editor?.iframeElement) {
+      editor.iframeElement.style.height = `${editorHeight - 20}px`;
+    }
+  }
+
   function switchEditorMode(event) {
     const isEditor = event.target.classList?.contains("switch-tmce");
 
@@ -48,6 +66,11 @@
     } else {
       bindTextarea();
     }
+
+    // WordPress/TinyMCE can resize on mode switches; keep this control stable.
+    setTimeout(() => {
+      enforceEditorHeight();
+    }, 0);
   }
 
   function updateEditorContent(event) {
@@ -81,14 +104,21 @@
   function bindEditor() {
     addEventListener("message", updateEditorContent);
 
+    function attachEditorListeners(editor) {
+      enforceEditorHeight();
+      editor.on("init", enforceEditorHeight);
+      editor.on("show", enforceEditorHeight);
+      editor.on("paste change input undo redo", onContentChange);
+    }
+
     if (!getEditor()) {
       tinymce.on("addeditor", () => {
         const editor = getEditor();
-        editor.on("paste change input undo redo", onContentChange);
+        attachEditorListeners(editor);
       });
     } else {
       const editor = getEditor();
-      editor.on("paste change input undo redo", onContentChange);
+      attachEditorListeners(editor);
     }
   }
 
@@ -114,6 +144,8 @@
 
   function bindListeners() {
     const editor = getEditor();
+
+    enforceEditorHeight();
 
     if (editor) {
       bindEditor();
