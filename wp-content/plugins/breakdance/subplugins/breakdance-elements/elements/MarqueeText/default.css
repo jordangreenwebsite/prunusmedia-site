@@ -1,0 +1,28 @@
+.breakdance .bde-marquee-text,
+.breakdance .bde-marquee-text .marquee-container {
+  width: 100%;
+}
+
+.breakdance .bde-marquee-text .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+.breakdance .bde-marquee-text .marquee-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.breakdance .bde-marquee-text .marquee-text {
+  font-size: var(--bde-h1-font-size);
+  font-weight: 400;
+  fill: var(--bde-headings-color);
+  paint-order: stroke fill;
+}
+
