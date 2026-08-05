@@ -1,0 +1,22 @@
+.bde-f-svg-icon {
+  display: inline-flex;
+  --bde-f-icon-fill: currentColor;
+  --bde-f-icon-stroke: currentColor;
+  --bde-f-icon-size: 1em;
+  justify-content: center;
+  align-items: center;
+  width: var(--bde-f-icon-size);
+  height: var(--bde-f-icon-size);
+}
+
+/* The svg fills the wrapper div, so the wrapper — the element that carries
+   classes — is the single thing to size. A width/height on a wrapper class
+   overrides the --bde-f-icon-size default above (selector CSS loads after
+   element defaults) and the svg follows. */
+.bde-f-svg-icon > svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 0;
+  stroke: var(--bde-f-icon-fill);
+  fill: var(--bde-f-icon-stroke);
+}
