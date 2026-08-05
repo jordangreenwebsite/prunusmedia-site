@@ -1,0 +1,57 @@
+.bde-adjacentposts {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  gap: 20px;
+  text-align: left;
+}
+
+.bde-adjacentposts .ee-adjacentposts-prev,
+.bde-adjacentposts .ee-adjacentposts-next {
+  width: 50%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-decoration: none;
+  gap: 15px;
+}
+.bde-adjacentposts .ee-adjacentposts-next {
+  justify-content: flex-end;
+}
+
+.bde-adjacentposts .ee-adjacentposts-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+  gap: 5px;
+}
+.bde-adjacentposts
+  .ee-adjacentposts-next
+  .ee-adjacentposts-content {
+  text-align: right;
+}
+.bde-adjacentposts .ee-adjacentposts-icon {
+  display: flex;
+  font-size: 24px;
+}
+
+.bde-adjacentposts .ee-adjacentposts-icon > svg {
+  font-size: inherit;
+  width: 1em;
+  height: 1em;
+  stroke-width: 0;
+  stroke: currentColor;
+  fill: currentColor;
+}
+
+.bde-adjacentposts .ee-adjacentposts-full {
+  width: 100%;
+}
+.bde-adjacentposts .ee-adjacentposts-label {
+  display: block;
+}
+.bde-adjacentposts .ee-adjacentposts-title {
+  margin: 0;
+}
