@@ -1,0 +1,120 @@
+.ssp-language-environments {
+	margin-top: 8px;
+	max-width: 200px;
+}
+
+.environment-container .ssp-language-environments__trigger {
+	background: transparent;
+	border: 0;
+	color: var(--wp-admin-theme-color, #2271b1);
+	cursor: pointer;
+	font-size: 13px;
+	line-height: 1.4;
+	margin: 0;
+	padding: 0;
+	text-align: left;
+	text-decoration: underline;
+}
+
+.environment-container .ssp-language-environments__trigger:hover,
+.environment-container .ssp-language-environments__trigger:focus {
+	color: var(--wp-admin-theme-color-darker-10, #135e96);
+	text-decoration: underline;
+}
+
+.environment-container .ssp-language-environments__trigger:focus {
+	box-shadow: 0 0 0 1px var(--wp-admin-theme-color, #2271b1);
+	outline: 2px solid transparent;
+}
+
+.ssp-language-environments__modal.components-modal__frame,
+.ssp-language-environments__modal .components-modal__frame {
+	max-width: 620px;
+	width: calc(100% - 32px);
+}
+
+.ssp-language-environments__description {
+	color: #646970;
+	margin: 0 0 18px;
+}
+
+.ssp-language-environments__row {
+	align-items: center;
+	display: grid;
+	gap: 12px;
+	grid-template-columns: minmax(120px, 1fr) minmax(220px, 2fr);
+	margin-bottom: 14px;
+}
+
+.ssp-language-environments__label {
+	display: block;
+	font-weight: 600;
+}
+
+.ssp-language-environments__select {
+	width: 100%;
+}
+
+.ssp-language-environments__footer {
+	align-items: center;
+	border-top: 1px solid #dcdcde;
+	display: flex;
+	gap: 16px;
+	justify-content: space-between;
+	margin: 24px -32px -24px;
+	padding: 16px 32px;
+}
+
+.ssp-language-environments__actions {
+	align-items: center;
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+}
+
+.ssp-language-environments__message {
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.4;
+	min-height: 18px;
+}
+
+.ssp-language-environments__message--error {
+	color: #b32d2e;
+}
+
+.ssp-language-environments__message--success {
+	color: #008a20;
+}
+
+@media screen and (max-width: 782px) {
+	.ssp-language-environments__modal.components-modal__frame,
+	.ssp-language-environments__modal .components-modal__frame {
+		width: calc(100% - 24px);
+	}
+
+	.ssp-language-environments__row,
+	.ssp-language-environments__footer {
+		display: block;
+	}
+
+	.ssp-language-environments__label {
+		margin-bottom: 6px;
+	}
+
+	.ssp-language-environments__footer {
+		margin-left: -24px;
+		margin-right: -24px;
+		padding-left: 24px;
+		padding-right: 24px;
+	}
+
+	.ssp-language-environments__message {
+		display: block;
+		margin-bottom: 12px;
+	}
+
+	.ssp-language-environments__actions {
+		justify-content: flex-start;
+	}
+}

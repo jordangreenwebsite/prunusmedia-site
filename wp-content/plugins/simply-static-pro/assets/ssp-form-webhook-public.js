@@ -9,6 +9,26 @@ if (!window.__sspTurnstileReady) {
     if (window.__SSP_WEBHOOK_INIT__) { return; }
     window.__SSP_WEBHOOK_INIT__ = true;
 
+    function sspBuildConfigUrl(configPath, fileName, versionSuffix) {
+        let basePath = String(configPath || '/wp-content/uploads/simply-static/configs/').trim();
+
+        basePath = basePath.replace(/^(https?)\/\//i, '$1://');
+
+        if (!basePath.endsWith('/')) {
+            basePath += '/';
+        }
+
+        try {
+            return new URL(fileName + versionSuffix, new URL(basePath, window.location.origin + '/')).toString();
+        } catch (_) {
+            if (/^https?:\/\//i.test(basePath)) {
+                return basePath + fileName + versionSuffix;
+            }
+
+            return window.location.origin + (basePath.charAt(0) === '/' ? '' : '/') + basePath + fileName + versionSuffix;
+        }
+    }
+
     // Detect static environment early (before DOM may be fully loaded)
     const isStaticSite = () => {
         const configMeta = document.querySelector("meta[name='ssp-config-path']");
@@ -23,6 +43,114 @@ if (!window.__sspTurnstileReady) {
         }
         return false;
     };
+
+    function completeXhr(xhr, status, responseText, statusText) {
+        var responseHeaders = 'content-type: application/json\r\n';
+        var getResponseHeader = function (name) {
+            return String(name || '').toLowerCase() === 'content-type' ? 'application/json' : null;
+        };
+        var getAllResponseHeaders = function () { return responseHeaders; };
+        try {
+            Object.defineProperty(xhr, 'getResponseHeader', {
+                value: getResponseHeader
+            });
+            Object.defineProperty(xhr, 'getAllResponseHeaders', {
+                value: getAllResponseHeaders
+            });
+        } catch (e) {
+            try {
+                xhr.getResponseHeader = getResponseHeader;
+                xhr.getAllResponseHeaders = getAllResponseHeaders;
+            } catch (ignore) {}
+        }
+        Object.defineProperty(xhr, 'status', { get: function () { return status; } });
+        Object.defineProperty(xhr, 'readyState', { get: function () { return 4; } });
+        Object.defineProperty(xhr, 'responseText', { get: function () { return responseText; } });
+        Object.defineProperty(xhr, 'response', { get: function () { return responseText; } });
+        if (statusText) {
+            Object.defineProperty(xhr, 'statusText', { get: function () { return statusText; } });
+        }
+        if (typeof xhr.onreadystatechange === 'function') { xhr.onreadystatechange(new Event('readystatechange')); }
+        if (typeof xhr.onload === 'function') { xhr.onload(new Event('load')); }
+        xhr.dispatchEvent(new Event('readystatechange'));
+        xhr.dispatchEvent(new Event('load'));
+        xhr.dispatchEvent(new Event('loadend'));
+    }
+
+    function sspStaticToken(prefix) {
+        return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+    }
+
+    function sspSubmissionId() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return window.crypto.randomUUID();
+        }
+
+        var bytes = new Uint8Array(16);
+        if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+            window.crypto.getRandomValues(bytes);
+        } else {
+            for (var i = 0; i < bytes.length; i++) {
+                bytes[i] = Math.floor(Math.random() * 256);
+            }
+        }
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+        var hex = Array.prototype.map.call(bytes, function (value) {
+            return value.toString(16).padStart(2, '0');
+        }).join('');
+        return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' +
+            hex.slice(16, 20) + '-' + hex.slice(20);
+    }
+
+    function isSimplyStaticEntriesEndpoint(url) {
+        return /\/wp-json\/simplystatic\/v1\/entries\/?$/i.test(String(url || '').split('?')[0]);
+    }
+
+    function sameHost(url) {
+        try {
+            return new URL(url, window.location.href).hostname === window.location.hostname;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function safeRedirectUrl(value, settings) {
+        try {
+            var url = new URL(String(value || ''), window.location.href);
+            if (!/^https?:$/.test(url.protocol) || url.username || url.password) { return null; }
+
+            var trustedOrigins = [window.location.origin];
+            var configuredOrigins = settings && Array.isArray(settings.form_redirect_trusted_origins)
+                ? settings.form_redirect_trusted_origins
+                : [];
+
+            configuredOrigins.forEach(function (origin) {
+                try {
+                    var trusted = new URL(String(origin));
+                    if (/^https?:$/.test(trusted.protocol) && !trusted.username && !trusted.password) {
+                        trustedOrigins.push(trusted.origin);
+                    }
+                } catch (e) { }
+            });
+
+            return trustedOrigins.indexOf(url.origin) === -1 ? null : url.toString();
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function resolveSubmitUrl(url, settings) {
+        if (!settings || !settings.rest_base || !isSimplyStaticEntriesEndpoint(url) || !sameHost(url)) {
+            return url;
+        }
+
+        var restBase = String(settings.rest_base);
+        if (restBase.slice(-1) !== '/') { restBase += '/'; }
+
+        return restBase + 'simplystatic/v1/entries';
+    }
 
     // Fetch API interception: CF7 5.6+ and other modern form plugins use window.fetch
     // to submit to WP REST API endpoints (e.g., /wp-json/contact-form-7/v1/contact-forms/{id}/feedback).
@@ -372,37 +500,68 @@ if (!window.__sspTurnstileReady) {
                 }
 
                 // Fluent Forms
+                if (actionName === 'fluentform_generate_protection_token') {
+                    var ffTokenId = '';
+                    try { ffTokenId = (body instanceof FormData) ? body.get('form_id') : new URLSearchParams(bodyStr).get('form_id'); } catch (e) {}
+                    var selfFfToken = this;
+                    setTimeout(function () {
+                        completeXhr(selfFfToken, 200, JSON.stringify({
+                            success: true,
+                            data: {
+                                token: sspStaticToken('ssp_ff_' + (ffTokenId || 'form'))
+                            }
+                        }));
+                    }, 0);
+                    return;
+                }
+
                 if (actionName === 'fluentform_submit') {
                     var ffId = null;
                     try { ffId = (body instanceof FormData) ? body.get('form_id') : new URLSearchParams(bodyStr).get('form_id'); } catch (e) {}
+                    var ffCandidates = [];
                     if (ffId) {
+                        ffCandidates = [ffId, 'fluentform_' + ffId];
                         var ffEl = document.querySelector('form.frm-fluent-form[data-form_id="' + ffId + '"]') ||
                             document.querySelector('.frm-fluent-form');
+                        var ffSubmission = null;
                         if (ffEl && window.__SSP_MANAGE_FORM__) {
-                            window.__SSP_MANAGE_FORM__([ffId, 'fluentform_' + ffId], ffEl);
+                            ffSubmission = window.__SSP_MANAGE_FORM__(ffCandidates, ffEl);
                         }
                     }
-                    // Fluent Forms expects a specific response format; return early with a clean response.
-                    // IMPORTANT: Do NOT include `redirectUrl` — Fluent Forms uses `"redirectUrl" in r.data.result`
-                    // (the `in` operator checks key existence, not value), so even an empty string triggers
-                    // `location.href = ''` which reloads the page.
+
+                    // Fluent Forms expects a specific response format. Only include redirectUrl
+                    // when SSP has a configured redirect and the webhook submission succeeded.
                     var selfFf = this;
-                    setTimeout(function () {
-                        var ffResp = JSON.stringify({ success: true, data: { result: { message: 'Thanks! Your message has been sent.', action: 'hide_form' } } });
-                        Object.defineProperty(selfFf, 'status', { get: function () { return 200; } });
-                        Object.defineProperty(selfFf, 'readyState', { get: function () { return 4; } });
-                        Object.defineProperty(selfFf, 'responseText', { get: function () { return ffResp; } });
-                        Object.defineProperty(selfFf, 'response', { get: function () { return ffResp; } });
-                        if (typeof selfFf.onreadystatechange === 'function') { selfFf.onreadystatechange(new Event('readystatechange')); }
-                        if (typeof selfFf.onload === 'function') { selfFf.onload(new Event('load')); }
-                        selfFf.dispatchEvent(new Event('readystatechange'));
-                        selfFf.dispatchEvent(new Event('load'));
-                        selfFf.dispatchEvent(new Event('loadend'));
+                    var sendFluentFormsResponse = function (submission) {
+                        var settings = submission && submission.settings ? submission.settings : null;
+                        var result = {
+                            message: settings && settings.form_success_message ? settings.form_success_message : 'Thanks! Your message has been sent.',
+                            action: 'hide_form'
+                        };
+                        var redirectUrl = settings && settings.form_redirect_url ? String(settings.form_redirect_url).trim() : '';
+                        if (submission && submission.success && isSettingEnabled(settings && settings.form_use_redirect) && redirectUrl) {
+                            result.redirectTo = 'customUrl';
+                            result.redirectUrl = redirectUrl;
+                        }
+
+                        completeXhr(selfFf, 200, JSON.stringify({ success: true, data: { result: result } }));
                         // Hide Fluent Forms error containers that may appear after submission
                         setTimeout(function () {
                             document.querySelectorAll('[class*="fluentform_"][class*="_errors"], .ff-errors-in-stack').forEach(function (el) { el.style.display = 'none'; });
                         }, 100);
-                    }, 0);
+                    };
+
+                    if (ffSubmission && typeof ffSubmission.then === 'function') {
+                        ffSubmission.then(function (submission) {
+                            sendFluentFormsResponse(submission);
+                        }).catch(function () {
+                            sendFluentFormsResponse(null);
+                        });
+                    } else {
+                        setTimeout(function () {
+                            sendFluentFormsResponse(null);
+                        }, 0);
+                    }
                     return;
                 }
 
@@ -580,9 +739,26 @@ if (!window.__sspTurnstileReady) {
         let v = version_element.getAttribute('content');
         if (v) { version_suffix = '?ver=' + encodeURIComponent(v); }
     }
-    var config_url = window.location.origin + config_path + 'forms.json' + version_suffix;
+    var config_url = sspBuildConfigUrl(config_path, 'forms.json', version_suffix);
+
+    function isSettingEnabled(value) {
+        return String(value) === '1';
+    }
+
+    function maybeRedirect(settings) {
+        if (!settings || !isSettingEnabled(settings.form_use_redirect)) { return false; }
+
+        var redirectUrl = safeRedirectUrl(settings.form_redirect_url, settings);
+        if (!redirectUrl) { return false; }
+
+        window.location.replace(redirectUrl);
+        return true;
+    }
 
     function handleMessage(settings, error = false, formEl) {
+        if (!error && maybeRedirect(settings)) { return; }
+        if (isSettingEnabled(settings && settings.form_disable_feedback)) { return; }
+
         var notice = document.createElement('div');
         notice.className = 'ssp-form-response';
         notice.setAttribute('role', 'alert');
@@ -593,7 +769,7 @@ if (!window.__sspTurnstileReady) {
         message.style.cssText = 'width:100%;background:' + (error ? '#e24b4b' : '#58b348') + ';color:#fff;text-align:center;padding:10px;border-radius:3px;';
         var successText = settings && settings.form_success_message ? settings.form_success_message : 'Thanks! Your message has been sent.';
         var errorText = settings && settings.form_error_message ? settings.form_error_message : 'Sorry, something went wrong. Please try again.';
-        message.innerHTML = error ? errorText : successText;
+        message.textContent = error ? errorText : successText;
         notice.appendChild(message);
 
         var target = null;
@@ -615,28 +791,84 @@ if (!window.__sspTurnstileReady) {
         }
     }
 
-    function submitForm(url, settings, data, formEl) {
-        let requestData = { method: "POST", body: data, redirect: 'manual', mode: 'cors', credentials: 'omit' };
-        let mergedHeaders = new Headers();
-        if (settings.form_custom_headers) {
-            settings.form_custom_headers.split(',').forEach(header => {
-                if (!header) return;
-                let parts = header.split(':');
-                if (parts.length >= 2) {
-                    let name = parts[0].trim();
-                    let value = parts.slice(1).join(':').trim();
-                    if (name) mergedHeaders.set(name, value);
-                }
-            });
-        }
-        if (!mergedHeaders.has('Accept')) { mergedHeaders.set('Accept', 'application/json'); }
-        requestData.headers = mergedHeaders;
+    function buildWebhookHeaders(rawHeaders) {
+        var headers = new Headers();
+        var raw = String(rawHeaders || '');
 
-        fetch(url, requestData).then(response => {
+        if (raw.length > 32768) {
+            throw new Error('Custom webhook headers are too large.');
+        }
+
+        // Newlines are unambiguous separators. For backwards compatibility,
+        // commas only split when the following text looks like another header.
+        var entries = raw
+            ? raw.split(/\r?\n|,(?=\s*[!#$%&'*+\-.^_`|~0-9A-Za-z]+\s*:)/)
+            : [];
+
+        if (entries.length > 32) {
+            throw new Error('Too many custom webhook headers.');
+        }
+
+        entries.forEach(function (entry) {
+            entry = entry.trim();
+            if (!entry) { return; }
+
+            var separator = entry.indexOf(':');
+            if (separator < 1) {
+                throw new Error('A custom webhook header is malformed.');
+            }
+
+            var name = entry.slice(0, separator).trim();
+            var value = entry.slice(separator + 1).trim();
+            if (!/^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/.test(name) || name.length > 128) {
+                throw new Error('A custom webhook header name is invalid.');
+            }
+            if (value.length > 4096 || /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(value)) {
+                throw new Error('A custom webhook header value is invalid.');
+            }
+
+            try {
+                headers.set(name, value);
+            } catch (error) {
+                throw new Error('A custom webhook header was rejected by the browser.');
+            }
+        });
+
+        if (!headers.has('Accept')) {
+            headers.set('Accept', 'application/json');
+        }
+
+        return headers;
+    }
+
+    function submitForm(url, settings, data, formEl) {
+        if (!url) {
+            handleMessage(settings, true, formEl);
+            return Promise.resolve({ success: false, settings: settings, form: formEl, error: 'missing_webhook_url' });
+        }
+
+        url = resolveSubmitUrl(url, settings);
+
+		let requestData = { method: "POST", body: data, redirect: 'manual', mode: 'cors', credentials: 'omit' };
+		try {
+			requestData.headers = buildWebhookHeaders(settings && settings.form_custom_headers);
+		} catch (error) {
+			handleMessage(settings, true, formEl);
+			return Promise.resolve({ success: false, settings: settings, form: formEl, error: error });
+		}
+
+        return fetch(url, requestData).then(response => {
             const isRedirectLike = response.type === 'opaqueredirect' || (response.status >= 300 && response.status < 400);
-            if (response.ok || isRedirectLike) { handleMessage(settings, false, formEl); }
-            else { handleMessage(settings, true, formEl); }
-        }).catch(error => { handleMessage(settings, true, formEl); });
+            const success = response.ok || isRedirectLike;
+            if (success && formEl && settings && settings.form_delivery_transport === 'studio_queue') {
+                formEl.__sspQueueSubmissionId = null;
+            }
+            handleMessage(settings, !success, formEl);
+            return { success: success, settings: settings, form: formEl, response: response };
+        }).catch(error => {
+            handleMessage(settings, true, formEl);
+            return { success: false, settings: settings, form: formEl, error: error };
+        });
     }
 
     function escapeSelector(value) {
@@ -726,52 +958,87 @@ if (!window.__sspTurnstileReady) {
     }
 
     var __SSP_FORMS_CONFIG__ = null;
+    var __SSP_FORMS_CONFIG_PROMISE__ = null;
+
+    function loadFormsConfig() {
+        if (__SSP_FORMS_CONFIG__) { return Promise.resolve(__SSP_FORMS_CONFIG__); }
+        if (__SSP_FORMS_CONFIG_PROMISE__) { return __SSP_FORMS_CONFIG_PROMISE__; }
+
+        __SSP_FORMS_CONFIG_PROMISE__ = fetch(config_url)
+            .then(r => r.ok ? r.json() : Promise.reject(r.status))
+            .then(json => {
+                __SSP_FORMS_CONFIG__ = json;
+                return json;
+            }).catch(error => {
+                __SSP_FORMS_CONFIG_PROMISE__ = null;
+                throw error;
+            });
+
+        return __SSP_FORMS_CONFIG_PROMISE__;
+    }
+
+    function findFormSettings(json, candidateIds, form) {
+        if (!Array.isArray(json)) { return null; }
+
+        const ids = Array.isArray(candidateIds) ? candidateIds.filter(Boolean) : [candidateIds].filter(Boolean);
+        const norm = (v) => (v == null ? '' : String(v).trim());
+        const stripHash = (v) => norm(v).replace(/^#/, '');
+        const cf7Num = (v) => { const s = norm(v), m = s.match(/wpcf7-f(\d+)-p/); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+        const gfNum = (v) => { const s = norm(v), m = s.match(/gform(?:_wrapper)?_(\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+        const foNum = (v) => { const s = norm(v), m = s.match(/forminator-(?:form|module)-(\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+        const nfNum = (v) => { const s = norm(v), m = s.match(/nf-form-(\d+)-cont/); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+        const ffNum = (v) => { const s = norm(v), m = s.match(/fluentform[_-](\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+
+        try {
+            const namedInputs = Object.create(null);
+            const controls = form && form.elements
+                ? Array.from(form.elements)
+                : (form ? Array.from(form.querySelectorAll('input[name]')) : []);
+            controls.forEach(control => {
+                if (!control || String(control.tagName).toLowerCase() !== 'input' || !control.name || !control.value) return;
+                if (!Object.prototype.hasOwnProperty.call(namedInputs, control.name)) {
+                    namedInputs[control.name] = control.value;
+                }
+            });
+            json.forEach(cfg => {
+                if (!cfg || !cfg.form_hidden_name) return;
+                const hiddenName = norm(cfg.form_hidden_name);
+                if (hiddenName && Object.prototype.hasOwnProperty.call(namedInputs, hiddenName)) {
+                    ids.push(namedInputs[hiddenName]);
+                }
+            });
+        } catch (e) { }
+
+        const normCandidates = [];
+        ids.forEach(cid => {
+            const a = norm(cid), b = stripHash(cid), nCf7 = cf7Num(cid), nGf = gfNum(cid), nFo = foNum(cid), nNf = nfNum(cid), nFf = ffNum(cid);
+            [a, b, nCf7, nGf, nFo, nNf, nFf].forEach(v => { if (v && normCandidates.indexOf(v) === -1) normCandidates.push(v); });
+        });
+
+        return json.find(x => {
+            const sidRaw = x && x.form_id, sid = stripHash(sidRaw), sCf7 = cf7Num(sidRaw), sGf = gfNum(sidRaw), sFo = foNum(sidRaw), sNf = nfNum(sidRaw), sFf = ffNum(sidRaw);
+            return normCandidates.some(c => {
+                const cc = stripHash(c);
+                const usePartialMatch = sid && cc && !/^\d+$/.test(sid) && !/^\d+$/.test(cc);
+                return sid === cc || (usePartialMatch && (sid.indexOf(cc) !== -1 || cc.indexOf(sid) !== -1)) ||
+                    (sCf7 && cf7Num(cc) === sCf7) || (sGf && gfNum(cc) === sGf) || (sFo && foNum(cc) === sFo) ||
+                    (sNf && nfNum(cc) === sNf) || (sFf && ffNum(cc) === sFf);
+            });
+        }) || null;
+    }
+
     function manageForm(candidateIds, form, originalData) {
         // Prevent double submission: both initForms and XHR/fetch interceptors may call manageForm
-        // for the same form submission. Only the first call proceeds; flag resets after 3 seconds.
-        if (form && form.__sspSubmitting) return;
+        // for the same form submission. Return the in-flight promise so callers can reuse the result.
+        if (form && form.__sspSubmitting) {
+            return form.__sspSubmissionPromise || Promise.resolve({ success: false, skipped: true, settings: null, form: form });
+        }
         if (form) {
             form.__sspSubmitting = true;
-            setTimeout(function () { form.__sspSubmitting = false; }, 3000);
         }
-        const ids = Array.isArray(candidateIds) ? candidateIds.filter(Boolean) : [candidateIds].filter(Boolean);
-        const loadConfig = __SSP_FORMS_CONFIG__ ? Promise.resolve(__SSP_FORMS_CONFIG__) : fetch(config_url)
-            .then(r => r.ok ? r.json() : Promise.reject(r.status))
-            .then(json => { __SSP_FORMS_CONFIG__ = json; return json; });
 
-        loadConfig.then(json => {
-            let settings = null;
-            if (Array.isArray(json)) {
-                const norm = (v) => (v == null ? '' : String(v).trim());
-                const stripHash = (v) => norm(v).replace(/^#/, '');
-                const cf7Num = (v) => { const s = norm(v), m = s.match(/wpcf7-f(\d+)-p/); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
-                const gfNum = (v) => { const s = norm(v), m = s.match(/gform(?:_wrapper)?_(\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
-                const foNum = (v) => { const s = norm(v), m = s.match(/forminator-(?:form|module)-(\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
-                const nfNum = (v) => { const s = norm(v), m = s.match(/nf-form-(\d+)-cont/); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
-
-                try {
-                    json.forEach(cfg => {
-                        if (!cfg || !cfg.form_hidden_name) return;
-                        var inp = form.querySelector('input[name="' + cfg.form_hidden_name + '"]');
-                        if (inp && inp.value) { ids.push(inp.value); }
-                    });
-                } catch (e) { }
-
-                const normCandidates = [];
-                ids.forEach(cid => {
-                    const a = norm(cid), b = stripHash(cid), nCf7 = cf7Num(cid), nGf = gfNum(cid), nFo = foNum(cid), nNf = nfNum(cid);
-                    [a, b, nCf7, nGf, nFo, nNf].forEach(v => { if (v && normCandidates.indexOf(v) === -1) normCandidates.push(v); });
-                });
-
-                settings = json.find(x => {
-                    const sidRaw = x && x.form_id, sid = stripHash(sidRaw), sCf7 = cf7Num(sidRaw), sGf = gfNum(sidRaw), sFo = foNum(sidRaw), sNf = nfNum(sidRaw);
-                    return normCandidates.some(c => {
-                        const cc = stripHash(c);
-                        return sid === cc || (sid && cc && (sid.indexOf(cc) !== -1 || cc.indexOf(sid) !== -1)) ||
-                            (sCf7 && cf7Num(cc) === sCf7) || (sGf && gfNum(cc) === sGf) || (sFo && foNum(cc) === sFo) || (sNf && nfNum(cc) === sNf);
-                    });
-                });
-            }
+        const submissionPromise = loadFormsConfig().then(json => {
+            let settings = findFormSettings(json, candidateIds, form);
 
             if (settings) {
                 let data = (originalData instanceof FormData) ? originalData : new FormData(form);
@@ -804,6 +1071,67 @@ if (!window.__sspTurnstileReady) {
                 var restBase = (settings.rest_base && typeof settings.rest_base === 'string') ? settings.rest_base : '';
                 if (restBase && restBase.slice(-1) !== '/') { restBase += '/'; }
                 var targetUrl = settings.form_webhook;
+                var queueTransport = settings.form_delivery_transport === 'studio_queue';
+				if (settings.form_connection_id) {
+					data.set('_ssp_connection_id', String(settings.form_connection_id));
+				}
+
+                if (queueTransport) {
+                    if (!settings.form_queue_site_id || !settings.form_connection_id) {
+                        handleMessage(settings, true, form);
+                        return { success: false, settings: settings, form: form, error: 'queue_configuration_missing' };
+                    }
+                    form.__sspQueueSubmissionId = form.__sspQueueSubmissionId || sspSubmissionId();
+                    data.set('_ssp_submission_id', form.__sspQueueSubmissionId);
+                    data.set('_ssp_site_id', String(settings.form_queue_site_id));
+                }
+
+                if (settings.form_id && isSimplyStaticEntriesEndpoint(targetUrl)) {
+                    data.set('_ssp_form_id', String(settings.form_id));
+                }
+
+				var requiredCaptcha = settings.form_requires_captcha_proxy && String(settings.form_requires_captcha_proxy) !== '0';
+				var requiredService = String(settings.form_captcha_service || 'turnstile');
+				var captchaUnavailable = requiredCaptcha && (
+					(requiredService === 'recaptcha_v3' && (!hasRecaptcha || typeof grecaptcha === 'undefined')) ||
+					(requiredService !== 'recaptcha_v3' && !hasTurnstile)
+				);
+				if (captchaUnavailable) {
+					var captchaErrorSettings = Object.assign({}, settings, {
+						form_error_message: 'CAPTCHA protection could not initialize for this form. Please reload the page or contact the site owner.'
+					});
+					handleMessage(captchaErrorSettings, true, form);
+					console.error('[SSP] CAPTCHA proxy required but its form widget is unavailable.');
+					return { success: false, settings: settings, form: form, error: 'captcha_widget_missing' };
+				}
+
+                if (queueTransport) {
+                    if (hasTurnstile) {
+                        if (!data.has('cf-turnstile-response')) {
+                            var queueTsContainer = form.querySelector('.ssp-cf-turnstile') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('.ssp-cf-turnstile'));
+                            var queueTsInput = form.querySelector('input[name="cf-turnstile-response"]') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('input[name="cf-turnstile-response"]'));
+                            if (!queueTsInput && queueTsContainer) { queueTsInput = queueTsContainer.querySelector('input[name="cf-turnstile-response"]'); }
+                            if (queueTsInput && queueTsInput.value) { data.set('cf-turnstile-response', queueTsInput.value); }
+                        }
+                        return submitForm(targetUrl, settings, data, form);
+                    }
+
+                    if (hasRecaptcha && typeof grecaptcha !== 'undefined') {
+                        return new Promise(function (resolve) {
+                            grecaptcha.ready(function () {
+                                grecaptcha.execute(recaptchaInput.getAttribute('data-sitekey'), { action: 'submit' }).then(function (token) {
+                                    data.set('g-recaptcha-response', token);
+                                    resolve(submitForm(targetUrl, settings, data, form));
+                                }).catch(function () {
+                                    handleMessage(settings, true, form);
+                                    resolve({ success: false, settings: settings, form: form, error: 'recaptcha_failed' });
+                                });
+                            });
+                        });
+                    }
+
+                    return submitForm(targetUrl, settings, data, form);
+                }
 
                 if (hasTurnstile && restBase && targetUrl) {
                     if (!data.has('cf-turnstile-response')) {
@@ -812,23 +1140,76 @@ if (!window.__sspTurnstileReady) {
                         if (!tsInp && tsContainer) { tsInp = tsContainer.querySelector('input[name="cf-turnstile-response"]'); }
                         if (tsInp && tsInp.value) { data.set('cf-turnstile-response', tsInp.value); }
                     }
-                    submitForm(restBase + 'simplystatic/v1/turnstile/submit?forward_to=' + encodeURIComponent(targetUrl), settings, data, form);
+                    return submitForm(restBase + 'simplystatic/v1/turnstile/submit?forward_to=' + encodeURIComponent(targetUrl), settings, data, form);
                 } else if (hasRecaptcha && restBase && targetUrl && typeof grecaptcha !== 'undefined') {
-                    grecaptcha.ready(function () {
-                        grecaptcha.execute(recaptchaInput.getAttribute('data-sitekey'), { action: 'submit' }).then(token => {
-                            data.set('g-recaptcha-response', token);
-                            submitForm(restBase + 'simplystatic/v1/recaptcha/submit?forward_to=' + encodeURIComponent(targetUrl), settings, data, form);
-                        }).catch(() => handleMessage(settings, true, form));
+                    return new Promise(function (resolve) {
+                        grecaptcha.ready(function () {
+                            grecaptcha.execute(recaptchaInput.getAttribute('data-sitekey'), { action: 'submit' }).then(token => {
+                                data.set('g-recaptcha-response', token);
+                                resolve(submitForm(restBase + 'simplystatic/v1/recaptcha/submit?forward_to=' + encodeURIComponent(targetUrl), settings, data, form));
+                            }).catch(function () {
+                                handleMessage(settings, true, form);
+                                resolve({ success: false, settings: settings, form: form, error: 'recaptcha_failed' });
+                            });
+                        });
                     });
                 } else {
-                    submitForm(targetUrl, settings, data, form);
+                    return submitForm(targetUrl, settings, data, form);
                 }
             } else {
                 handleMessage({ form_success_message: 'Form submitted (fallback).', form_error_message: 'Mapping error.' }, true, form);
+                return { success: false, settings: null, form: form, error: 'mapping_error' };
             }
-        }).catch(e => console.error('[SSP] Config error', e));
+
+            return { success: false, settings: settings, form: form, error: 'submission_not_started' };
+        }).catch(e => {
+            console.error('[SSP] Config error', e);
+            return { success: false, settings: null, form: form, error: e };
+        });
+
+        if (form) {
+            form.__sspSubmissionPromise = submissionPromise;
+            submissionPromise.then(function () {
+                setTimeout(function () {
+                    form.__sspSubmitting = false;
+                    if (form.__sspSubmissionPromise === submissionPromise) {
+                        form.__sspSubmissionPromise = null;
+                    }
+                }, 3000);
+            }, function () {
+                form.__sspSubmitting = false;
+                if (form.__sspSubmissionPromise === submissionPromise) {
+                    form.__sspSubmissionPromise = null;
+                }
+            });
+        }
+
+        return submissionPromise;
     }
     window.__SSP_MANAGE_FORM__ = manageForm;
+
+    function getFormCandidates(form) {
+        let candidates = [form.id];
+        if (form.closest('.wpcf7')) candidates.push(form.closest('.wpcf7').id, form.querySelector('input[name="_wpcf7_unit_tag"]')?.value, form.querySelector('input[name="_wpcf7"]')?.value);
+        if (form.querySelector('input[name="wpforms[id]"]')) candidates.push(form.querySelector('input[name="wpforms[id]"]').value);
+        if (form.querySelector('input[name="wsf_form_id"]')) candidates.push(form.querySelector('input[name="wsf_form_id"]').value);
+        if (form.querySelector('input[name="gform_submit"]')) candidates.push(form.querySelector('input[name="gform_submit"]').value);
+        if (form.querySelector('input[name="_fluentform_id"]')) {
+            const fluentFormId = form.querySelector('input[name="_fluentform_id"]').value;
+            candidates.push(fluentFormId, 'fluentform_' + fluentFormId);
+        }
+        if (form.classList.contains('frm-fluent-form') && form.getAttribute('data-form_id')) {
+            const fluentFormDataId = form.getAttribute('data-form_id');
+            candidates.push(fluentFormDataId, 'fluentform_' + fluentFormDataId);
+        }
+        if (form.querySelector('input[name="form_id"]')) candidates.push(form.querySelector('input[name="form_id"]').value);
+        if (form.querySelector('input[name="_kb_form_id"]')) candidates.push(form.querySelector('input[name="_kb_form_id"]').value);
+        if (form.closest('.nf-form-cont')) {
+            const nfId = form.closest('.nf-form-cont').id;
+            candidates.push(nfId, nfId.match(/nf-form-(\d+)-cont/)?.[1]);
+        }
+        return candidates;
+    }
 
     // Explicit Turnstile rendering: find all .ssp-cf-turnstile placeholders that
     // have not been rendered yet and call turnstile.render() on each.
@@ -902,6 +1283,11 @@ if (!window.__sspTurnstileReady) {
         });
     }
 
+    // The loader bootstrap is attached to the Turnstile script handle so it
+    // also works when only native comments are enabled. Expose the richer form
+    // renderer for that bootstrap when this asset is present.
+    window.__sspRenderTurnstileWidgets = renderTurnstileWidgets;
+
     // Global callback invoked by Turnstile script after API loads (via ?onload= param).
     // This ensures rendering happens even when the script loads after our initForms() ran.
     // Replaces the early stub defined above the IIFE.
@@ -932,10 +1318,7 @@ if (!window.__sspTurnstileReady) {
             if (form.closest('.gform_wrapper')) {
                 var gfOrigSubmit = form.submit;
                 form.submit = function () {
-                    var gfId = form.querySelector('input[name="gform_submit"]');
-                    var candidates = [form.id];
-                    if (gfId && gfId.value) { candidates.push(gfId.value, 'gform_' + gfId.value); }
-                    manageForm(candidates, form);
+                    manageForm(getFormCandidates(form), form);
                 };
             }
 
@@ -972,19 +1355,7 @@ if (!window.__sspTurnstileReady) {
                 var visibleError = Array.prototype.slice.call(form.querySelectorAll('.ssp-field-error')).some(function (el) { return el.offsetParent !== null || el.style.display !== 'none'; });
                 if (visibleError) return;
                 ev.preventDefault(); ev.stopImmediatePropagation();
-                let candidates = [form.id];
-                if (form.closest('.wpcf7')) candidates.push(form.closest('.wpcf7').id, form.querySelector('input[name="_wpcf7_unit_tag"]')?.value, form.querySelector('input[name="_wpcf7"]')?.value);
-                if (form.querySelector('input[name="wpforms[id]"]')) candidates.push(form.querySelector('input[name="wpforms[id]"]').value);
-                if (form.querySelector('input[name="wsf_form_id"]')) candidates.push(form.querySelector('input[name="wsf_form_id"]').value);
-                if (form.querySelector('input[name="gform_submit"]')) candidates.push(form.querySelector('input[name="gform_submit"]').value);
-                if (form.querySelector('input[name="_fluentform_id"]')) candidates.push(form.querySelector('input[name="_fluentform_id"]').value);
-                if (form.querySelector('input[name="form_id"]')) candidates.push(form.querySelector('input[name="form_id"]').value);
-                if (form.querySelector('input[name="_kb_form_id"]')) candidates.push(form.querySelector('input[name="_kb_form_id"]').value);
-                if (form.closest('.nf-form-cont')) {
-                    const nfId = form.closest('.nf-form-cont').id;
-                    candidates.push(nfId, nfId.match(/nf-form-(\d+)-cont/)?.[1]);
-                }
-                manageForm(candidates, form);
+                manageForm(getFormCandidates(form), form);
             }, false);
         });
     }

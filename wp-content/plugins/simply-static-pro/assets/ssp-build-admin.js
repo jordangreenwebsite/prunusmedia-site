@@ -15,9 +15,9 @@ function checkIfRunning() {
     )
         .then(resp => resp.json() )
         .then( resp  => {
-            var json = JSON.parse( resp );
+			var json = (typeof resp === 'string') ? JSON.parse(resp) : resp;
 
-            if ( json.running ) {
+			if ( json && json.running ) {
                 jQuery('.generate-build').attr('disabled', 'disabled');
                 showRunningLabel();
             } else {
@@ -25,7 +25,10 @@ function checkIfRunning() {
                 hideRunningLabel();
                 clearInterval(checkInterval);
             }
-        } );
+		} )
+		.catch(function () {
+			clearInterval(checkInterval);
+		});
 }
 
 function showRunningLabel() {
@@ -53,6 +56,7 @@ function hideRunningLabel() {
 }
 
 function startCheckIfRunning() {
+	clearInterval(checkInterval);
     checkIfRunning();
     checkInterval = setInterval(
         function() {
@@ -84,10 +88,23 @@ jQuery(document).ready(function ($) {
             dataType: 'json',
             success: function (response) {
                 if (response.success) {
-                    $('.generate-build').removeAttr('disabled');
-                    $('#export-file-container .spinner').removeClass('is-active');
-                }
+					$('#export-file-container .spinner').removeClass('is-active');
+					startCheckIfRunning();
+				} else {
+					$('.generate-build').removeAttr('disabled');
+					$('#export-file-container .spinner').removeClass('is-active');
+					if (response.data && response.data.message) {
+						window.alert(response.data.message);
+					}
+				}
             },
+			error: function (xhr) {
+				$('.generate-build').removeAttr('disabled');
+				$('#export-file-container .spinner').removeClass('is-active');
+				if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
+					window.alert(xhr.responseJSON.data.message);
+				}
+			},
         });
     });
 
@@ -99,6 +116,10 @@ jQuery(document).ready(function ($) {
 
         var term_id = $(this).attr('data-term-id');
         var btn = $(this);
+		if (!window.confirm(sspb_ajax.delete_confirm)) {
+			return;
+		}
+		btn.attr('disabled', 'disabled');
 
         $.ajax({
             type: 'POST',
@@ -106,6 +127,7 @@ jQuery(document).ready(function ($) {
             data: {'action': 'delete_build', 'delete_nonce': sspb_ajax.delete_build_nonce, 'term_id': term_id},
             dataType: 'json',
             success: function (response) {
+				btn.removeAttr('disabled');
                 if (response.success) {
                     $(btn).parent().append('<p>' + sspb_ajax.delete_success + '</p>');
                 } else {
@@ -113,6 +135,7 @@ jQuery(document).ready(function ($) {
                 }
             },
             error: function () {
+				btn.removeAttr('disabled');
                 $(btn).parent().append('<p>' + sspb_ajax.delete_error + '</p>');
             },
         });

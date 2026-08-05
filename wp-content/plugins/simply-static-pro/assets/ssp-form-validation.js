@@ -1,6 +1,26 @@
 (function(){
     'use strict';
 
+    function sspBuildConfigUrl(configPath, fileName, versionSuffix) {
+        let basePath = String(configPath || '/wp-content/uploads/simply-static/configs/').trim();
+
+        basePath = basePath.replace(/^(https?)\/\//i, '$1://');
+
+        if (!basePath.endsWith('/')) {
+            basePath += '/';
+        }
+
+        try {
+            return new URL(fileName + versionSuffix, new URL(basePath, window.location.origin + '/')).toString();
+        } catch (_) {
+            if (/^https?:\/\//i.test(basePath)) {
+                return basePath + fileName + versionSuffix;
+            }
+
+            return window.location.origin + (basePath.charAt(0) === '/' ? '' : '/') + basePath + fileName + versionSuffix;
+        }
+    }
+
     // Utility: create or return an error container for an input
     function getErrorEl(input){
         let el = input.closest('[data-ssp-field]') || input.parentElement;
@@ -300,7 +320,7 @@
             if(v){ version_suffix = '?ver=' + encodeURIComponent(v); }
         }
         const configPath = configMeta.getAttribute('content');
-        const configUrl = window.location.origin + configPath + 'forms.json' + version_suffix;
+        const configUrl = sspBuildConfigUrl(configPath, 'forms.json', version_suffix);
 
         function markWrappers(form){
             try{
