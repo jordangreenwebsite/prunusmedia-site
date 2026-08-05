@@ -191,7 +191,12 @@ document.addEventListener('DOMContentLoaded', function() {
             body: body.toString()
         })
             .then(function(res){ return res.json(); })
-            .then(function(){ restoreButton(buttonEl); })
+            .then(function(response){
+                if (response && response.success === false && response.data && response.data.message) {
+                    window.alert(response.data.message);
+                }
+                restoreButton(buttonEl);
+            })
             .catch(function(){ restoreButton(buttonEl); });
     }
 

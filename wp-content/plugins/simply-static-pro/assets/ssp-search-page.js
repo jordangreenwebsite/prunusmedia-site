@@ -13,6 +13,30 @@ function sspGetQueryParam(name) {
   } catch (_) { return ''; }
 }
 
+function sspSafeNavigationUrl(value) {
+  try {
+    const url = new URL(String(value || ''), window.location.origin + '/');
+    if (!/^https?:$/.test(url.protocol) || url.username || url.password) return null;
+
+    const trustedOrigins = [window.location.origin];
+    if (window.ssp_search && Array.isArray(ssp_search.trusted_navigation_origins)) {
+      ssp_search.trusted_navigation_origins.forEach(function(origin) {
+        try {
+          const trusted = new URL(String(origin));
+          if (/^https?:$/.test(trusted.protocol) && !trusted.username && !trusted.password) {
+            trustedOrigins.push(trusted.origin);
+          }
+        } catch (_) {}
+      });
+    }
+
+    if (trustedOrigins.indexOf(url.origin) === -1) return null;
+    return url.toString();
+  } catch (_) {
+    return null;
+  }
+}
+
 // Derive the static export base path (e.g., '/static/') from the ssp-config-path meta tag only.
 // Falls back to '/'. Always returns a leading and trailing slash.
 function sspGetExportBase() {
@@ -135,7 +159,10 @@ function sspEnsureHeadingPlaceholder(beforeEl) {
     if (document.getElementById('ssp-term')) return;
     const h = document.createElement('h1');
     h.className = 'ssp-search-heading';
-    h.innerHTML = 'Searched for: <span id="ssp-term"></span>';
+    h.appendChild(document.createTextNode('Searched for: '));
+    const term = document.createElement('span');
+    term.id = 'ssp-term';
+    h.appendChild(term);
     if (beforeEl && beforeEl.parentNode) {
       beforeEl.parentNode.insertBefore(h, beforeEl);
     } else {
@@ -360,6 +387,7 @@ function sspMaybeRedirectForSearch() {
       }
     }
 
+    target = sspSafeNavigationUrl(target);
     if (target && target !== window.location.href) {
       window.location.replace(target);
     }

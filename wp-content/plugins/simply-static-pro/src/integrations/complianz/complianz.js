@@ -6,7 +6,6 @@
 
 let config_element = document.querySelector("meta[name='ssp-config-path']");
 let config_path = config_element.getAttribute("content");
-let config_url = window.location.origin + config_path;
 let version_element = document.querySelector("meta[name='ssp-config-version']");
 let version_suffix = '';
 if (null !== version_element) {
@@ -15,7 +14,28 @@ if (null !== version_element) {
         version_suffix = '?ver=' + encodeURIComponent(v);
     }
 }
-let cookie_data_url = config_url + 'complianz-cookie-data.json' + version_suffix;
+
+function sspBuildConfigUrl(configPath, fileName, versionSuffix) {
+    let basePath = String(configPath || '/wp-content/uploads/simply-static/configs/').trim();
+
+    basePath = basePath.replace(/^(https?)\/\//i, '$1://');
+
+    if (!basePath.endsWith('/')) {
+        basePath += '/';
+    }
+
+    try {
+        return new URL(fileName + versionSuffix, new URL(basePath, window.location.origin + '/')).toString();
+    } catch (_) {
+        if (/^https?:\/\//i.test(basePath)) {
+            return basePath + fileName + versionSuffix;
+        }
+
+        return window.location.origin + (basePath.charAt(0) === '/' ? '' : '/') + basePath + fileName + versionSuffix;
+    }
+}
+
+let cookie_data_url = sspBuildConfigUrl(config_path, 'complianz-cookie-data.json', version_suffix);
 function loadComplianzData(callback) {
     let xobj = new XMLHttpRequest();
     xobj.overrideMimeType("application/json");
@@ -122,7 +142,7 @@ function cmplzLoadConsentAreaContent(consentedCategory, consentedService){
         let blockId = obj.getAttribute('data-block_id');
         if ( consentedCategory === category || consentedService === service ) {
             let consent_area_name = 'complianz-consent-area-' + postId + '-' + blockId + '.html';
-            let consent_url = config_url + consent_area_name;
+            let consent_url = sspBuildConfigUrl(config_path, consent_area_name, version_suffix);
             //if not stored yet, load. As features in the user object can be changed on updates, we also check for the version
             let request = new XMLHttpRequest();
             request.open('GET', consent_url, true);
@@ -1486,10 +1506,7 @@ if ( complianz.geoip == 1 && (cmplz_user_data.length == 0 || (cmplz_user_data.ve
     let request = new XMLHttpRequest();
     let cmplzUserRegion = cmplz_get_url_parameter(window.location.href, 'cmplz_user_region');
     cmplzUserRegion = cmplzUserRegion ? '&cmplz_user_region=' + cmplzUserRegion : '';
-    let banner_url = config_url + 'complianz-banner.json';
-    if (version_suffix) {
-        banner_url += version_suffix;
-    }
+    let banner_url = sspBuildConfigUrl(config_path, 'complianz-banner.json', version_suffix);
     let delimiter = banner_url.indexOf('?') !== -1 ? '&' : '?';
     request.open('GET', banner_url + delimiter + complianz.locale + cmplzUserRegion, true);
     request.setRequestHeader('Content-type', 'application/json');
@@ -2195,9 +2212,10 @@ function cmplz_load_manage_consent_container() {
             consent_area_name = 'complianz-do-not-track.html';
         }
 
-        let html_consent_url = config_url + consent_area_name;
+        let html_consent_url = sspBuildConfigUrl(config_path, consent_area_name, version_suffix);
+        let delimiter = html_consent_url.indexOf('?') !== -1 ? '&' : '?';
 
-        request.open('GET', html_consent_url+'?'+complianz.locale, true);
+        request.open('GET', html_consent_url + delimiter + complianz.locale, true);
         request.setRequestHeader('Content-type', 'application/json');
         request.send();
         request.onload = function() {

@@ -18,9 +18,43 @@ function WPML_Integration() {
      *
      * @param href Full URL.
      */
-    this.redirectTo = function redirectTo(href) {
-        window.location.replace(href);
-    }
+	    this.redirectTo = function redirectTo(href) {
+	        var safeHref = this.getSafeLanguageUrl(href);
+	        if (!safeHref) {
+	            return false;
+	        }
+
+	        window.location.replace(safeHref);
+	        return true;
+	    }
+
+	    /**
+	     * Allow same-origin HTTP(S) URLs and explicitly trusted WPML language origins.
+	     */
+	    this.getSafeLanguageUrl = function getSafeLanguageUrl(href) {
+	        try {
+	            var url = new URL(String(href || ''), window.location.origin + '/');
+	            if (!/^https?:$/.test(url.protocol) || url.username || url.password) {
+	                return '';
+	            }
+
+	            var trusted = [window.location.origin];
+	            if (window.ssp_wpml_geo && Array.isArray(window.ssp_wpml_geo.trusted_origins)) {
+	                window.ssp_wpml_geo.trusted_origins.forEach(function(origin) {
+	                    try {
+	                        var parsed = new URL(origin, window.location.origin + '/');
+	                        if (/^https?:$/.test(parsed.protocol) && !parsed.username && !parsed.password) {
+	                            trusted.push(parsed.origin);
+	                        }
+	                    } catch (_) {}
+	                });
+	            }
+
+	            return trusted.indexOf(url.origin) !== -1 ? url.toString() : '';
+	        } catch (_) {
+	            return '';
+	        }
+	    }
 
     /**
      * Get the stored Language from cookie.
@@ -28,7 +62,7 @@ function WPML_Integration() {
      * @returns {string}
      */
     this.getStoredLanguage = function getStoredLanguage() {
-        return this.getCookie('simply_static_lang');
+        return this.normalizeLanguage(this.getCookie('simply_static_lang'));
     }
 
     /**
@@ -37,7 +71,18 @@ function WPML_Integration() {
      * @param lang Abbreviation of a language (en, de, hr).
      */
     this.storeLanguage = function storeLanguage(lang) {
-        return this.setCookie('simply_static_lang', lang, 30);
+        lang = this.normalizeLanguage(lang);
+        return lang ? this.setCookie('simply_static_lang', lang, 30) : false;
+    }
+
+    /** Normalize a conservative BCP47-style language tag for keys/cookies. */
+    this.normalizeLanguage = function normalizeLanguage(lang) {
+        lang = String(lang || '').trim().replace(/_/g, '-');
+        if (!/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/.test(lang)) {
+            return '';
+        }
+
+        return lang.toLowerCase();
     }
 
     /**
@@ -69,7 +114,7 @@ function WPML_Integration() {
         }
 
         // Current Browser Language.
-        let current_language = navigator.language.substring(0, 2);
+        let current_language = this.normalizeLanguage(navigator.language).substring(0, 2);
 
         if (this.getStoredLanguage()) {
             // We have the stored language, let's find if we're on it.
@@ -150,8 +195,12 @@ function WPML_Integration() {
             link = event.target;
         }
 
-        var href = link.getAttribute('href');
-        var lang = self.getLanguageFromHref(href);
+	        var href = link.getAttribute('href');
+	        if (!self.getSafeLanguageUrl(href)) {
+	            try { event.preventDefault(); } catch (_) {}
+	            return false;
+	        }
+	        var lang = self.getLanguageFromHref(href);
 
         if (!lang) {
             return true;
@@ -184,12 +233,18 @@ function WPML_Integration() {
                 language_href = language.parentElement.parentElement.getAttribute('href');
             }
 
-            // We may need to modify the tag.
-            if (language_tag) {
-                if (language_tag.includes("-")) {
-                    let parts = language_tag.split('-');
-                    languages_links[language_tag] = parts[0];
-                } else {
+	            language_href = this.getSafeLanguageUrl(language_href);
+
+	            // We may need to modify the tag.
+	            if (language_tag && language_href) {
+	                language_tag = this.normalizeLanguage(language_tag);
+	                if (!language_tag) {
+	                    continue;
+	                }
+	                if (language_tag.includes("-")) {
+	                    let parts = language_tag.split('-');
+	                    languages_links[parts[0]] = language_href;
+	                } else {
                     languages_links[language_tag] = language_href;
                 }
             }
@@ -206,10 +261,21 @@ function WPML_Integration() {
      * @param exdays
      */
     this.setCookie = function setCookie(cname, cvalue, exdays) {
+        if (!/^[A-Za-z0-9_-]+$/.test(String(cname || ''))) {
+            return false;
+        }
+
+        cvalue = this.normalizeLanguage(cvalue);
+        if (!cvalue) {
+            return false;
+        }
+
         const d = new Date();
         d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
         let expires = "expires=" + d.toUTCString();
-        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+        let secure = window.location.protocol === 'https:' ? ';Secure' : '';
+        document.cookie = cname + "=" + encodeURIComponent(cvalue) + ";" + expires + ";path=/;SameSite=Lax" + secure;
+        return true;
     }
 
     /**
@@ -227,7 +293,11 @@ function WPML_Integration() {
                 c = c.substring(1);
             }
             if (c.indexOf(name) == 0) {
-                return c.substring(name.length, c.length);
+                try {
+                    return decodeURIComponent(c.substring(name.length, c.length));
+                } catch (_) {
+                    return '';
+                }
             }
         }
         return "";
