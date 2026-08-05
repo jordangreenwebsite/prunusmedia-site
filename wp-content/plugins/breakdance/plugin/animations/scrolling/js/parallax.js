@@ -10,6 +10,29 @@
     prefersReducedMotion
   } = BreakdanceFrontend.utils;
 
+  // ScrollTrigger.refresh(true) uses a "safe" code path that skips the
+  // plugin's lazy self-registration, so it reads `document` off an
+  // uninitialized internal and throws
+  // "Cannot read properties of undefined (reading 'fullscreenElement')"
+  // when it runs before gsap.registerPlugin(ScrollTrigger). This can happen
+  // because gsap and ScrollTrigger are loaded async, so ScrollTrigger may
+  // evaluate before gsap and never auto-register. Only refresh once an
+  // animation instance has registered the plugin; if it hasn't, there are no
+  // ScrollTrigger instances to refresh anyway. gsap.core.globals() with no
+  // args reads the registered globals without mutating them.
+  function isScrollTriggerRegistered() {
+    return (
+      typeof gsap !== 'undefined' &&
+      typeof ScrollTrigger !== 'undefined' &&
+      !!gsap.core?.globals?.().ScrollTrigger
+    );
+  }
+
+  function refreshScrollTrigger() {
+    if (!isScrollTriggerRegistered()) return;
+    ScrollTrigger.refresh(true);
+  }
+
   class BreakdanceParallax {
     tweens = [];
     enabledClass = 'breakdance-animation-enabled';
@@ -214,7 +237,7 @@
     }
 
     refresh() {
-      ScrollTrigger.refresh(true);
+      refreshScrollTrigger();
     }
 
     destroy() {
@@ -250,7 +273,7 @@
         document.dispatchEvent(event);
 
         // Refresh ScrollTrigger only once.
-        ScrollTrigger.refresh(true);
+        refreshScrollTrigger();
       });
     }
   }

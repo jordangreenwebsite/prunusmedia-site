@@ -1,0 +1,1 @@
+import{ad as e}from"./store-B_NQqf2E.js";function t(e){return function(t){return e?.[t]}}var n=t,r=n({"&":`&amp;`,"<":`&lt;`,">":`&gt;`,'"':`&quot;`,"'":`&#39;`}),i=/[&<>"']/g,a=RegExp(i.source);function o(t){return t=e(t),t&&a.test(t)?t.replace(i,r):t}var s=o;export{n,s as t};

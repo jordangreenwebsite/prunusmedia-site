@@ -1,0 +1,1 @@
+import{Cp as e,gp as t,kp as n}from"./store-B_NQqf2E.js";const r=n({templateIds:t(e),headerIds:t(e),footerIds:t(e),popupIds:t(e),blockIds:t(e)});export{r as t};
