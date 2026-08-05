@@ -1,0 +1,15 @@
+.bde-image-hover-card {
+  max-width: 100%;
+  display: flex;
+}
+.bde-image-hover-card .c4-izmir {
+  --transition-duration: var(--bde-transition-duration);
+}
+.bde-image-hover-card figure {
+  display: flex;
+  width: 100%;
+}
+.bde-image-hover-card img {
+  max-width: 100%;
+  height: auto;
+}

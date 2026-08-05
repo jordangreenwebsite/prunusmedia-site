@@ -1,0 +1,21 @@
+.bde-rich-text {
+  max-width: 100%;
+  color: var(--bde-text-color, var(--bde-body-text-color));
+}
+
+.bde-rich-text > :last-child li:last-child > p {
+  margin-bottom: 0;
+}
+
+.bde-rich-text img.aligncenter {
+    display: block;
+    margin: auto;
+}
+
+.bde-rich-text img.alignleft {
+    float: left;
+}
+
+.bde-rich-text img.alignright {
+    float: right;
+}
