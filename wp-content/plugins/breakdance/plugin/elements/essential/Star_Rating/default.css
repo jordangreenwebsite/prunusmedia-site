@@ -1,0 +1,30 @@
+.bde-star-rating {
+  max-width: 100%;
+  width: max-content;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.bde-star-rating > svg {
+  position: absolute;
+}
+.bde-star-rating .bde-star-rating__wrapper {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.bde-star-rating .bde-star-rating__wrapper svg {
+  width: 32px;
+  height: 32px;
+}
+.bde-star-rating .bde-star-rating__wrapper svg {
+  fill: orange;
+}
+.bde-star-rating .bde-star-rating__label {
+  font-weight: 400;
+  line-height: 1.2;
+  font-size: 20px;
+}

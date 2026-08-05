@@ -1,0 +1,22 @@
+.bde-woo-breadcrumb .woocommerce-breadcrumb {
+  margin-bottom: 0;
+}
+
+.bde-woo-breadcrumb .bde-woo-breadcrumb_delimiter:before {
+  content: "/";
+}
+
+.bde-woo-breadcrumb .woocommerce-breadcrumb > * {
+  display: inline-block;
+}
+
+.bde-woo-breadcrumb .woocommerce-breadcrumb a {
+  text-decoration: none;
+  transition: all ease 0.2s;
+}
+
+.bde-woo-breadcrumb .bde-woo-breadcrumb_delimiter:before {
+  content: "/";
+  margin: 0 8px;
+  color: #ccc;
+}

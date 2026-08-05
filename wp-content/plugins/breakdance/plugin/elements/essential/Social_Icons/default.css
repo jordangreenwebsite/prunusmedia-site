@@ -1,0 +1,66 @@
+/* Element Wrapper */
+.bde-social-icons {
+    max-width: 100%;
+    width: max-content;
+    display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* Icon Wrapper */
+.bde-social-icons .bde-social-icons__icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+	background-color: var(--bde-brand-primary-color);
+	border-radius: 100%;
+    padding: 30px;
+    transition-property: background-color, transform, opacity;
+    transition-duration: var(--bde-transition-duration);
+    transition-timing-function: ease;
+}
+
+/* Icon Image */
+.bde-social-icons .bde-social-icons__icon-wrapper svg {
+    fill: #fff;
+    width: 20px;
+    height: 20px;
+    transition-property: fill;
+    transition-duration: var(--bde-transition-duration);
+    transition-timing-function: ease;
+}
+
+/* Default Social Networks Colors */
+.bde-social-icons .bde-social-icons__icon-facebook {
+	background-color:#4267B2;
+}
+.bde-social-icons .bde-social-icons__icon-instagram {
+	background-color:#E1306C;
+}
+.bde-social-icons .bde-social-icons__icon-twitter {
+	background-color:#000;
+}
+.bde-social-icons .bde-social-icons__icon-youtube {
+	background-color:#FF0000;
+}
+.bde-social-icons .bde-social-icons__icon-dribbble {
+	background-color:#Ea4c89;
+}
+.bde-social-icons .bde-social-icons__icon-behance {
+	background-color:#053eff;
+}
+.bde-social-icons .bde-social-icons__icon-github {
+	background-color:#24292e;
+}
+.bde-social-icons .bde-social-icons__icon-linkedin {
+	background-color:#0077b5;
+}
+.bde-social-icons .bde-social-icons__icon-vimeo {
+	background-color:#19B7EA;
+}
+.bde-social-icons .bde-social-icons__icon-custom {
+	background-color: var(--bde-brand-primary-color);
+}
