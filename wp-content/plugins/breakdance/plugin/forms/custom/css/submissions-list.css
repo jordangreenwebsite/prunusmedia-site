@@ -1,0 +1,9 @@
+/* Form Submissions list table — unread rows */
+.wp-list-table .breakdance-form-submission--unread :where(th, td) {
+  background-color: #e5f2ff;
+  font-weight: bold;
+}
+
+.wp-list-table .breakdance-form-submission--unread:hover :where(th, td) {
+  background-color: #d7e9fc;
+}

@@ -12,7 +12,7 @@ function getBlocks() {
 	const blocks = breakdanceGlobalBlock.blocks
 		.map( ( block ) => ( {
 			label: block.post_title,
-			value: block.ID,
+			value: String(block.ID),
 		} ) );
 
 	return [ emptyItem, ...blocks ];

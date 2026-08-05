@@ -33,7 +33,7 @@ const {builderName} = window.breakdanceConfig;
 registerBlockType("breakdance/block-breakdance-launcher", {
 	title: __(`${builderName} Launcher`),
 	icon: Logo,
-	category: "common",
+	category: "text",
 	supports: {
 		multiple: false,
 		html: false,

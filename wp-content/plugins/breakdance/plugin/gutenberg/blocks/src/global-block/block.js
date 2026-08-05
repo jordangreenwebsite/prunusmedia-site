@@ -38,7 +38,7 @@ registerBlockType("breakdance/global-block", {
 	title: __(`${builderName} ${strings.globalBlocks}`), // Block title.
 	icon: Logo, // Block icon from Dashicons → https://developer.wordpress.org/resource/dashicons/.
 	description: `Add ${builderName} ${strings.globalBlocks} to your Gutenberg Page`,
-	category: "common", // Block category — Group blocks together based on common traits E.g. common, formatting, layout widgets, embed.
+	category: "text", // Block category — Group blocks together based on common traits E.g. text, media, design, widgets, embed.
 	attributes: {
 		blockId: {
 			default: "",

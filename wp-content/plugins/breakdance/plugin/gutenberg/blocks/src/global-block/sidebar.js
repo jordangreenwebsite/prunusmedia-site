@@ -1,4 +1,5 @@
 /* global breakdanceConfig */
+const { __ } = wp.i18n;
 const { InspectorControls } = wp.blockEditor;
 const { PanelBody, Button, Icon } = wp.components;
 
@@ -23,7 +24,7 @@ export default function Sidebar( props ) {
 				Edit {strings.globalBlock} in { builderName }
 			</Button>
 
-			<Button icon={ refreshIcon } onClick={ props.onRefreshClick } />
+			<Button icon={ refreshIcon } label={ __( 'Refresh' ) } onClick={ props.onRefreshClick } />
 		</div>
 	);
 
