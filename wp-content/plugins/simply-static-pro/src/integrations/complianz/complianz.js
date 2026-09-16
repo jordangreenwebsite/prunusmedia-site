@@ -1112,6 +1112,22 @@ function cmplz_get_services_on_page(){
     return services;
 }
 
+/**
+ * Resolve both the legacy Complianz CSS placeholders and the plain tokens
+ * emitted by newer Complianz releases.
+ *
+ * @param {string} css_file_url
+ * @param {string|number} banner_id
+ * @param {string} consent_type
+ * @returns {string}
+ */
+function cmplz_resolve_css_file_url(css_file_url, banner_id, consent_type) {
+    return css_file_url
+        .replace('{type}', consent_type)
+        .replace('{banner_id}', banner_id)
+        .replace('banner-banner_id-type.css', 'banner-' + banner_id + '-' + consent_type + '.css');
+}
+
 /*
  * Run the actual cookie warning
  *
@@ -1140,7 +1156,7 @@ window.show_cookie_banner = function () {
         disableCookiebanner = true;
     }
     cmplz_manage_consent_button = document.querySelector('#cmplz-manage-consent .cmplz-manage-consent.manage-consent-'+complianz.user_banner_id);
-    let css_file_url = complianz.css_file.replace('{type}', complianz.consenttype ).replace('{banner_id}', complianz.user_banner_id);
+    let css_file_url = cmplz_resolve_css_file_url(complianz.css_file, complianz.user_banner_id, complianz.consenttype);
     if ( complianz.css_file.indexOf('cookiebanner/css/defaults/banner') !== -1 ) {
         console.log('Fallback default css file used. Please re-save banner settings, or check file writing permissions in uploads directory');
     }

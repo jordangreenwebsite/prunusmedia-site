@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
             el.preventDefault();
 
             const submitButton = form.querySelector('input[type="submit"], button[type="submit"]');
-            const recaptchaInput = form.querySelector('input.g-recaptcha-response[data-sitekey]');
+            const recaptchaInput = form.querySelector('input.ssp-g-recaptcha-response[data-sitekey]');
 
             if (submitButton) {
                 submitButton.disabled = true;
@@ -142,7 +142,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     grecaptcha.execute(recaptchaInput.getAttribute('data-sitekey'), {action: 'submit'})
                         .then(function (token) {
                             recaptchaInput.value = token;
-                            submitForm("POST", comment_endpoint, redirect_url, new FormData(form), el);
+                            const data = new FormData(form);
+                            data.set('g-recaptcha-response', token);
+                            submitForm("POST", comment_endpoint, redirect_url, data, el);
                         })
                         .catch(function () {
                             if (submitButton) {

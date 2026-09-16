@@ -51,8 +51,9 @@ function sspGetExportBase() {
   try {
     const meta = document.querySelector("meta[name='ssp-config-path']");
     if (meta) {
-      let p = meta.getAttribute('content') || '/';
-      if (p.charAt(0) !== '/') p = '/' + p;
+      let raw = meta.getAttribute('content') || '/';
+      raw = String(raw).trim().replace(/^(https?)\/\//i, '$1://');
+      const p = new URL(raw, window.location.origin + '/').pathname || '/';
       const idx = p.indexOf(marker);
       if (idx !== -1) {
         const base = p.substring(0, idx + 1);

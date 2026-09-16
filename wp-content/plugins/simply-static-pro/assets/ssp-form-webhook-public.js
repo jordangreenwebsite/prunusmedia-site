@@ -77,6 +77,172 @@ if (!window.__sspTurnstileReady) {
         xhr.dispatchEvent(new Event('loadend'));
     }
 
+    function settleManagedSubmission(submission) {
+        return Promise.resolve(submission).then(function (result) {
+            return {
+                accepted: !!(result && result.success === true),
+                result: result || null
+            };
+        }, function () {
+            return { accepted: false, result: null };
+        });
+    }
+
+    function managedSubmissionMessage(outcome) {
+        var settings = outcome && outcome.result && outcome.result.settings
+            ? outcome.result.settings
+            : null;
+        var key = outcome && outcome.accepted ? 'form_success_message' : 'form_error_message';
+        var fallback = outcome && outcome.accepted
+            ? 'Thanks! Your message has been sent.'
+            : 'Sorry, something went wrong. Please try again.';
+        return settings && settings[key] ? String(settings[key]) : fallback;
+    }
+
+    function escapeManagedResponseHtml(value) {
+        return String(value || '').replace(/[&<>"']/g, function (character) {
+            return {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[character];
+        });
+    }
+
+    function managedProviderPayload(provider, outcome, context) {
+        context = context || {};
+        var accepted = !!(outcome && outcome.accepted);
+        var message = managedSubmissionMessage(outcome);
+        var escapedMessage = escapeManagedResponseHtml(message);
+        var formId = context.formId || '0';
+        var escapedFormId = escapeManagedResponseHtml(formId);
+
+        switch (provider) {
+            case 'cf7':
+                return {
+                    status: accepted ? 'mail_sent' : 'mail_failed',
+                    message: message,
+                    posted_data_hash: '',
+                    into: context.into || '.wpcf7',
+                    invalid_fields: []
+                };
+            case 'ws_form':
+                return accepted
+                    ? { error: false, data: { js: '' } }
+                    : { error: true, data: { message: message } };
+            case 'kadence_forms':
+                if (context.rest) {
+                    return accepted ? { success: true } : { success: false, message: message };
+                }
+                return accepted
+                    ? {
+                        success: true,
+                        html: '<div class="kadence-blocks-form-message kadence-blocks-form-success">' + escapedMessage + '</div>'
+                    }
+                    : {
+                        success: false,
+                        html: '<div class="kadence-blocks-form-message kadence-blocks-form-error">' + escapedMessage + '</div>',
+                        message: message
+                    };
+            case 'ninja_forms':
+                return accepted
+                    ? {
+                        data: {
+                            actions: { success_message: message },
+                            form_id: formId
+                        },
+                        errors: []
+                    }
+                    : {
+                        data: { form_id: formId },
+                        errors: [ { message: message } ]
+                    };
+            case 'wp_forms':
+                return accepted
+                    ? {
+                        success: true,
+                        data: {
+                            confirmation: '<div class="wpforms-confirmation-container"><p>' + escapedMessage + '</p></div>'
+                        }
+                    }
+                    : { success: false, data: { message: message } };
+            case 'forminator':
+                return accepted
+                    ? {
+                        success: true,
+                        data: {
+                            success: true,
+                            message: message,
+                            behav: 'behaviour-thankyou',
+                            errors: [],
+                            fadeout: false,
+                            fadeout_time: 0
+                        }
+                    }
+                    : {
+                        success: false,
+                        data: { success: false, message: message, errors: [] }
+                    };
+            case 'fluent_forms':
+                if (!accepted) {
+                    return { success: false, data: { message: message } };
+                }
+                var settings = outcome.result && outcome.result.settings ? outcome.result.settings : null;
+                var result = { message: message, action: 'hide_form' };
+                var redirectUrl = settings && settings.form_redirect_url
+                    ? safeRedirectUrl(settings.form_redirect_url, settings)
+                    : null;
+                if (isSettingEnabled(settings && settings.form_use_redirect) && redirectUrl) {
+                    result.redirectTo = 'customUrl';
+                    result.redirectUrl = redirectUrl;
+                }
+                return { success: true, data: { result: result } };
+            case 'elementor_forms':
+                return accepted
+                    ? { success: true, data: { message: message } }
+                    : { success: false, data: { message: message, errors: [] } };
+            case 'gravity_forms':
+                return accepted
+                    ? {
+                        success: true,
+                        data: {
+                            is_valid: true,
+                            page_number: 0,
+                            source_page_number: 0,
+                            confirmation_markup: '<div id="gform_confirmation_wrapper_' + escapedFormId + '" class="gform_confirmation_wrapper"><div id="gform_confirmation_message_' + escapedFormId + '" class="gform_confirmation_message_' + escapedFormId + ' gform_confirmation_message">' + escapedMessage + '</div></div>',
+                            confirmation_type: 'message'
+                        }
+                    }
+                    : {
+                        success: false,
+                        data: { is_valid: false, message: message, validation_messages: {} }
+                    };
+            case 'bricks_forms':
+                return accepted
+                    ? { success: true, data: { type: 'success', message: message } }
+                    : { success: false, data: { type: 'danger', message: message } };
+            default:
+                return { success: accepted, data: { message: message } };
+        }
+    }
+
+    function managedFetchResponse(provider, submission, context) {
+        return settleManagedSubmission(submission).then(function (outcome) {
+            return new Response(JSON.stringify(managedProviderPayload(provider, outcome, context)), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        });
+    }
+
+    function completeManagedXhr(provider, xhr, submission, context) {
+        return settleManagedSubmission(submission).then(function (outcome) {
+            completeXhr(xhr, 200, JSON.stringify(managedProviderPayload(provider, outcome, context)));
+        });
+    }
+
     function sspStaticToken(prefix) {
         return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
     }
@@ -154,9 +320,9 @@ if (!window.__sspTurnstileReady) {
 
     // Fetch API interception: CF7 5.6+ and other modern form plugins use window.fetch
     // to submit to WP REST API endpoints (e.g., /wp-json/contact-form-7/v1/contact-forms/{id}/feedback).
-    // On static sites these endpoints don't exist and return 404. We intercept and return
-    // a fake success response so the plugin's JS completes normally, while SSP's own submit
-    // handler (bound in initForms) sends the actual data to the configured webhook.
+    // On static sites these endpoints don't exist and return 404. We intercept them,
+    // wait for SSP's managed submission, and then return the matching plugin-native
+    // success or failure response so the plugin UI cannot acknowledge lost data.
     if (!window.__SSP_FETCH_OVERRIDDEN__) {
         window.__SSP_FETCH_OVERRIDDEN__ = true;
         const _origFetch = window.fetch;
@@ -171,6 +337,7 @@ if (!window.__sspTurnstileReady) {
             var cf7Match = method === 'POST' && url.match(/contact-form-7\/v1\/contact-forms\/(\d+)\/feedback/);
             if (cf7Match) {
                 var formId = cf7Match[1];
+                var cf7Submission = null;
 
                 // Find the CF7 form element and trigger SSP webhook submission
                 var cf7Form = document.querySelector('#wpcf7-f' + formId + ' form') ||
@@ -179,7 +346,7 @@ if (!window.__sspTurnstileReady) {
                     var unitTag = cf7Form.querySelector('input[name="_wpcf7_unit_tag"]');
                     var candidates = [formId];
                     if (unitTag && unitTag.value) { candidates.push(unitTag.value); }
-                    window.__SSP_MANAGE_FORM__(candidates, cf7Form, (init && init.body) ? init.body : null);
+                    cf7Submission = window.__SSP_MANAGE_FORM__(candidates, cf7Form, (init && init.body) ? init.body : null);
                 }
 
                 // Build the `into` selector CF7 uses to locate its form container
@@ -187,17 +354,7 @@ if (!window.__sspTurnstileReady) {
                 // be a valid CSS selector pointing to the .wpcf7 wrapper element.
                 var cf7Container = cf7Form ? cf7Form.closest('.wpcf7') : null;
                 var intoSelector = (cf7Container && cf7Container.id) ? '#' + cf7Container.id : '.wpcf7';
-                var fakeBody = JSON.stringify({
-                    status: 'mail_sent',
-                    message: 'Thank you for your message. It has been sent.',
-                    posted_data_hash: '',
-                    into: intoSelector,
-                    invalid_fields: []
-                });
-                return Promise.resolve(new Response(fakeBody, {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' }
-                }));
+                return managedFetchResponse('cf7', cf7Submission, { into: intoSelector });
             }
 
             // Intercept CF7 schema requests (GET before submission) to avoid 404s.
@@ -221,6 +378,7 @@ if (!window.__sspTurnstileReady) {
             // Intercept WS Form REST API POST submissions via fetch
             if (method === 'POST' && url.match(/ws-form\/v1\/submit/)) {
                 var wsFormId = null;
+                var wsSubmission = null;
                 if (init && init.body instanceof FormData) {
                     try { wsFormId = init.body.get('wsf_form_id'); } catch (e) {}
                 }
@@ -233,19 +391,17 @@ if (!window.__sspTurnstileReady) {
                     if (wsEl) {
                         var wsForm = (wsEl.tagName === 'FORM') ? wsEl : wsEl.querySelector('form');
                         if (wsForm && window.__SSP_MANAGE_FORM__) {
-                            window.__SSP_MANAGE_FORM__([wsFormId, 'ws-form-' + wsFormId, 'wsf-' + wsFormId], wsForm, (init && init.body) ? init.body : null);
+                            wsSubmission = window.__SSP_MANAGE_FORM__([wsFormId, 'ws-form-' + wsFormId, 'wsf-' + wsFormId], wsForm, (init && init.body) ? init.body : null);
                         }
                     }
                 }
-                return Promise.resolve(new Response(JSON.stringify({ error: false, data: { js: '' } }), {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' }
-                }));
+                return managedFetchResponse('ws_form', wsSubmission, { formId: wsFormId || '0' });
             }
 
             // Intercept Kadence Forms REST API submissions
             var kadenceMatch = method === 'POST' && url.match(/kadence-form\/v1\/process|kb-form\/v1\/process/);
             if (kadenceMatch) {
+                var kbSubmissionFetch = null;
                 if (init && init.body instanceof FormData) {
                     var kbIdFetch = null;
                     try { kbIdFetch = init.body.get('_kb_form_id'); } catch (e) {}
@@ -253,14 +409,14 @@ if (!window.__sspTurnstileReady) {
                         var kbInp = document.querySelector('input[name="_kb_form_id"][value="' + kbIdFetch + '"]');
                         var kbFormFetch = kbInp ? kbInp.closest('form') : document.querySelector('.kb-form');
                         if (kbFormFetch && window.__SSP_MANAGE_FORM__) {
-                            window.__SSP_MANAGE_FORM__([kbIdFetch], kbFormFetch);
+                            kbSubmissionFetch = window.__SSP_MANAGE_FORM__([kbIdFetch], kbFormFetch);
                         }
                     }
                 }
-                return Promise.resolve(new Response(JSON.stringify({ success: true }), {
-                    status: 200,
-                    headers: { 'Content-Type': 'application/json' }
-                }));
+                return managedFetchResponse('kadence_forms', kbSubmissionFetch, {
+                    formId: kbIdFetch || '0',
+                    rest: true
+                });
             }
 
             return _origFetch.apply(this, arguments);
@@ -297,6 +453,7 @@ if (!window.__sspTurnstileReady) {
                 if (isWsSubmit) {
                     // Actual form submission — extract form ID and trigger SSP webhook
                     var wsFormIdXhr = null;
+                    var wsSubmissionXhr = null;
                     if (body instanceof FormData) {
                         try { wsFormIdXhr = body.get('wsf_form_id'); } catch (e) {}
                     } else if (typeof body === 'string') {
@@ -311,24 +468,11 @@ if (!window.__sspTurnstileReady) {
                         if (wsElXhr) {
                             var wsFormXhr = (wsElXhr.tagName === 'FORM') ? wsElXhr : wsElXhr.querySelector('form');
                             if (wsFormXhr && window.__SSP_MANAGE_FORM__) {
-                                window.__SSP_MANAGE_FORM__([wsFormIdXhr, 'ws-form-' + wsFormIdXhr, 'wsf-' + wsFormIdXhr], wsFormXhr, body);
+                                wsSubmissionXhr = window.__SSP_MANAGE_FORM__([wsFormIdXhr, 'ws-form-' + wsFormIdXhr, 'wsf-' + wsFormIdXhr], wsFormXhr, body);
                             }
                         }
                     }
-                    // Return fake success for POST submit
-                    var selfWsPost = this;
-                    setTimeout(function () {
-                        var wsResp = JSON.stringify({ error: false, data: { js: '' } });
-                        Object.defineProperty(selfWsPost, 'status', { get: function () { return 200; } });
-                        Object.defineProperty(selfWsPost, 'readyState', { get: function () { return 4; } });
-                        Object.defineProperty(selfWsPost, 'responseText', { get: function () { return wsResp; } });
-                        Object.defineProperty(selfWsPost, 'response', { get: function () { return wsResp; } });
-                        if (typeof selfWsPost.onreadystatechange === 'function') { selfWsPost.onreadystatechange(new Event('readystatechange')); }
-                        if (typeof selfWsPost.onload === 'function') { selfWsPost.onload(new Event('load')); }
-                        selfWsPost.dispatchEvent(new Event('readystatechange'));
-                        selfWsPost.dispatchEvent(new Event('load'));
-                        selfWsPost.dispatchEvent(new Event('loadend'));
-                    }, 0);
+                    completeManagedXhr('ws_form', this, wsSubmissionXhr, { formId: wsFormIdXhr || '0' });
                     return;
                 }
 
@@ -366,6 +510,7 @@ if (!window.__sspTurnstileReady) {
                 if (actionName === 'nf_ajax_submit') {
                     var nfFormId = null;
                     var nfParsed = null;
+                    var nfSubmission = null;
                     try { var fd = (body instanceof FormData) ? body.get('formData') : new URLSearchParams(bodyStr).get('formData'); if (fd) { nfParsed = JSON.parse(fd); nfFormId = nfParsed.id; } } catch (e) {}
                     if (nfFormId) {
                         var formEl = document.querySelector('#nf-form-' + nfFormId + '-cont form') ||
@@ -395,107 +540,48 @@ if (!window.__sspTurnstileReady) {
                                     }
                                 }
                             }
-                            window.__SSP_MANAGE_FORM__([nfFormId, 'nf-form-' + nfFormId + '-cont'], formEl, nfOrigData);
+                            // Ninja serializes ordinary values into formData, but File
+                            // objects remain on the live DOM controls. Capture them now,
+                            // before Ninja clears the form after its AJAX callback.
+                            nfOrigData = appendSelectedFileInputs(nfOrigData, formEl, body);
+                            nfSubmission = window.__SSP_MANAGE_FORM__([nfFormId, 'nf-form-' + nfFormId + '-cont'], formEl, nfOrigData);
                         }
                     }
-                    // Return a Ninja Forms-specific fake success response so NF JS
-                    // shows the success message instead of hanging or showing errors.
-                    var selfNf = this;
-                    setTimeout(function () {
-                        var nfResp = JSON.stringify({
-                            data: {
-                                actions: {
-                                    success_message: 'Thanks! Your message has been sent.'
-                                },
-                                form_id: nfFormId || 0
-                            },
-                            errors: []
-                        });
-                        Object.defineProperty(selfNf, 'status', { get: function () { return 200; } });
-                        Object.defineProperty(selfNf, 'readyState', { get: function () { return 4; } });
-                        Object.defineProperty(selfNf, 'responseText', { get: function () { return nfResp; } });
-                        Object.defineProperty(selfNf, 'response', { get: function () { return nfResp; } });
-                        if (typeof selfNf.onreadystatechange === 'function') { selfNf.onreadystatechange(new Event('readystatechange')); }
-                        if (typeof selfNf.onload === 'function') { selfNf.onload(new Event('load')); }
-                        selfNf.dispatchEvent(new Event('readystatechange'));
-                        selfNf.dispatchEvent(new Event('load'));
-                        selfNf.dispatchEvent(new Event('loadend'));
-                    }, 0);
+                    completeManagedXhr('ninja_forms', this, nfSubmission, { formId: nfFormId || '0' });
                     return;
                 }
 
                 // WPForms
                 if (actionName === 'wpforms_submit') {
                     var wpFormsId = null;
+                    var wpFormsSubmission = null;
                     try { wpFormsId = (body instanceof FormData) ? body.get('wpforms[id]') : new URLSearchParams(bodyStr).get('wpforms[id]'); } catch (e) {}
                     if (wpFormsId) {
                         var wpFormEl = document.querySelector('#wpforms-form-' + wpFormsId) ||
                             document.querySelector('#wpforms-' + wpFormsId) ||
                             document.querySelector('.wpforms-form');
                         if (wpFormEl && window.__SSP_MANAGE_FORM__) {
-                            window.__SSP_MANAGE_FORM__([wpFormsId, 'wpforms-form-' + wpFormsId, 'wpforms-' + wpFormsId], wpFormEl);
+                            wpFormsSubmission = window.__SSP_MANAGE_FORM__([wpFormsId, 'wpforms-form-' + wpFormsId, 'wpforms-' + wpFormsId], wpFormEl);
                         }
                     }
-                    // Return a WPForms-specific fake success response with confirmation
-                    // so WPForms JS shows the confirmation message instead of doing nothing.
-                    var selfWp = this;
-                    setTimeout(function () {
-                        var wpResp = JSON.stringify({
-                            success: true,
-                            data: {
-                                confirmation: '<div class="wpforms-confirmation-container"><p>Thanks! Your message has been sent.</p></div>'
-                            }
-                        });
-                        Object.defineProperty(selfWp, 'status', { get: function () { return 200; } });
-                        Object.defineProperty(selfWp, 'readyState', { get: function () { return 4; } });
-                        Object.defineProperty(selfWp, 'responseText', { get: function () { return wpResp; } });
-                        Object.defineProperty(selfWp, 'response', { get: function () { return wpResp; } });
-                        if (typeof selfWp.onreadystatechange === 'function') { selfWp.onreadystatechange(new Event('readystatechange')); }
-                        if (typeof selfWp.onload === 'function') { selfWp.onload(new Event('load')); }
-                        selfWp.dispatchEvent(new Event('readystatechange'));
-                        selfWp.dispatchEvent(new Event('load'));
-                        selfWp.dispatchEvent(new Event('loadend'));
-                    }, 0);
+                    completeManagedXhr('wp_forms', this, wpFormsSubmission, { formId: wpFormsId || '0' });
                     return;
                 }
 
                 // Forminator
                 if (actionName === 'forminator_submit_form_custom-forms') {
                     var fmId = null;
+                    var fmSubmission = null;
                     try { fmId = (body instanceof FormData) ? body.get('form_id') : new URLSearchParams(bodyStr).get('form_id'); } catch (e) {}
                     if (fmId) {
                         var fmEl = document.querySelector('#forminator-module-' + fmId + ' form') ||
                             document.querySelector('.forminator-custom-form[data-form-id="' + fmId + '"]') ||
                             document.querySelector('.forminator-custom-form');
                         if (fmEl && window.__SSP_MANAGE_FORM__) {
-                            window.__SSP_MANAGE_FORM__([fmId, 'forminator-module-' + fmId], fmEl);
+                            fmSubmission = window.__SSP_MANAGE_FORM__([fmId, 'forminator-module-' + fmId], fmEl);
                         }
                     }
-                    // Return a Forminator-specific fake success response so Forminator JS
-                    // shows the thank-you message and hides the form properly.
-                    var selfFm = this;
-                    setTimeout(function () {
-                        var fmResp = JSON.stringify({
-                            success: true,
-                            data: {
-                                success: true,
-                                message: 'Thanks! Your message has been sent.',
-                                behav: 'behaviour-thankyou',
-                                errors: [],
-                                fadeout: false,
-                                fadeout_time: 0
-                            }
-                        });
-                        Object.defineProperty(selfFm, 'status', { get: function () { return 200; } });
-                        Object.defineProperty(selfFm, 'readyState', { get: function () { return 4; } });
-                        Object.defineProperty(selfFm, 'responseText', { get: function () { return fmResp; } });
-                        Object.defineProperty(selfFm, 'response', { get: function () { return fmResp; } });
-                        if (typeof selfFm.onreadystatechange === 'function') { selfFm.onreadystatechange(new Event('readystatechange')); }
-                        if (typeof selfFm.onload === 'function') { selfFm.onload(new Event('load')); }
-                        selfFm.dispatchEvent(new Event('readystatechange'));
-                        selfFm.dispatchEvent(new Event('load'));
-                        selfFm.dispatchEvent(new Event('loadend'));
-                    }, 0);
+                    completeManagedXhr('forminator', this, fmSubmission, { formId: fmId || '0' });
                     return;
                 }
 
@@ -517,89 +603,41 @@ if (!window.__sspTurnstileReady) {
 
                 if (actionName === 'fluentform_submit') {
                     var ffId = null;
+                    var ffSubmission = null;
                     try { ffId = (body instanceof FormData) ? body.get('form_id') : new URLSearchParams(bodyStr).get('form_id'); } catch (e) {}
                     var ffCandidates = [];
                     if (ffId) {
                         ffCandidates = [ffId, 'fluentform_' + ffId];
                         var ffEl = document.querySelector('form.frm-fluent-form[data-form_id="' + ffId + '"]') ||
                             document.querySelector('.frm-fluent-form');
-                        var ffSubmission = null;
                         if (ffEl && window.__SSP_MANAGE_FORM__) {
                             ffSubmission = window.__SSP_MANAGE_FORM__(ffCandidates, ffEl);
                         }
                     }
-
-                    // Fluent Forms expects a specific response format. Only include redirectUrl
-                    // when SSP has a configured redirect and the webhook submission succeeded.
-                    var selfFf = this;
-                    var sendFluentFormsResponse = function (submission) {
-                        var settings = submission && submission.settings ? submission.settings : null;
-                        var result = {
-                            message: settings && settings.form_success_message ? settings.form_success_message : 'Thanks! Your message has been sent.',
-                            action: 'hide_form'
-                        };
-                        var redirectUrl = settings && settings.form_redirect_url ? String(settings.form_redirect_url).trim() : '';
-                        if (submission && submission.success && isSettingEnabled(settings && settings.form_use_redirect) && redirectUrl) {
-                            result.redirectTo = 'customUrl';
-                            result.redirectUrl = redirectUrl;
-                        }
-
-                        completeXhr(selfFf, 200, JSON.stringify({ success: true, data: { result: result } }));
-                        // Hide Fluent Forms error containers that may appear after submission
-                        setTimeout(function () {
-                            document.querySelectorAll('[class*="fluentform_"][class*="_errors"], .ff-errors-in-stack').forEach(function (el) { el.style.display = 'none'; });
-                        }, 100);
-                    };
-
-                    if (ffSubmission && typeof ffSubmission.then === 'function') {
-                        ffSubmission.then(function (submission) {
-                            sendFluentFormsResponse(submission);
-                        }).catch(function () {
-                            sendFluentFormsResponse(null);
-                        });
-                    } else {
-                        setTimeout(function () {
-                            sendFluentFormsResponse(null);
-                        }, 0);
-                    }
+                    completeManagedXhr('fluent_forms', this, ffSubmission, { formId: ffId || '0' });
                     return;
                 }
 
                 // Kadence Forms
                 if (actionName === 'kb_process_ajax_submit' || actionName === 'kb_process_advanced_form_submit') {
                     var kbId = null;
+                    var kbSubmission = null;
                     try { kbId = (body instanceof FormData) ? body.get('_kb_form_id') : new URLSearchParams(bodyStr).get('_kb_form_id'); } catch (e) {}
                     if (kbId) {
                         var kbEl = document.querySelector('input[name="_kb_form_id"][value="' + kbId + '"]');
                         kbEl = kbEl ? kbEl.closest('form') : document.querySelector('.kb-form');
                         if (kbEl && window.__SSP_MANAGE_FORM__) {
-                            window.__SSP_MANAGE_FORM__([kbId], kbEl);
+                            kbSubmission = window.__SSP_MANAGE_FORM__([kbId], kbEl);
                         }
                     }
-                    // Return a Kadence-specific fake success response with HTML confirmation
-                    // so Kadence JS appends the message and clears the form.
-                    var selfKb = this;
-                    setTimeout(function () {
-                        var kbResp = JSON.stringify({
-                            success: true,
-                            html: '<div class="kadence-blocks-form-message kadence-blocks-form-success">Thanks! Your message has been sent.</div>'
-                        });
-                        Object.defineProperty(selfKb, 'status', { get: function () { return 200; } });
-                        Object.defineProperty(selfKb, 'readyState', { get: function () { return 4; } });
-                        Object.defineProperty(selfKb, 'responseText', { get: function () { return kbResp; } });
-                        Object.defineProperty(selfKb, 'response', { get: function () { return kbResp; } });
-                        if (typeof selfKb.onreadystatechange === 'function') { selfKb.onreadystatechange(new Event('readystatechange')); }
-                        if (typeof selfKb.onload === 'function') { selfKb.onload(new Event('load')); }
-                        selfKb.dispatchEvent(new Event('readystatechange'));
-                        selfKb.dispatchEvent(new Event('load'));
-                        selfKb.dispatchEvent(new Event('loadend'));
-                    }, 0);
+                    completeManagedXhr('kadence_forms', this, kbSubmission, { formId: kbId || '0' });
                     return;
                 }
 
                 // Elementor Forms
                 if (actionName === 'elementor_pro_forms_send_form') {
                     var elFormId = null;
+                    var elSubmission = null;
                     try { elFormId = (body instanceof FormData) ? body.get('form_id') : new URLSearchParams(bodyStr).get('form_id'); } catch (e) {}
                     if (!elFormId) {
                         try { elFormId = (body instanceof FormData) ? body.get('form_fields[form_id]') : null; } catch (e) {}
@@ -610,121 +648,49 @@ if (!window.__sspTurnstileReady) {
                             document.querySelector('form.elementor-form');
                         if (elFormEl && window.__SSP_MANAGE_FORM__) {
                             var elOrigData = (body instanceof FormData) ? body : null;
-                            window.__SSP_MANAGE_FORM__([elFormId, 'elementor-form-' + elFormId], elFormEl, elOrigData);
+                            elSubmission = window.__SSP_MANAGE_FORM__([elFormId, 'elementor-form-' + elFormId], elFormEl, elOrigData);
                         }
                     }
-                    // Return an Elementor-specific fake success response so Elementor JS
-                    // shows a confirmation message and resets the form properly.
-                    var selfEl = this;
-                    setTimeout(function () {
-                        var elResp = JSON.stringify({
-                            success: true,
-                            data: {
-                                message: 'Thanks! Your message has been sent.'
-                            }
-                        });
-                        Object.defineProperty(selfEl, 'status', { get: function () { return 200; } });
-                        Object.defineProperty(selfEl, 'readyState', { get: function () { return 4; } });
-                        Object.defineProperty(selfEl, 'responseText', { get: function () { return elResp; } });
-                        Object.defineProperty(selfEl, 'response', { get: function () { return elResp; } });
-                        if (typeof selfEl.onreadystatechange === 'function') { selfEl.onreadystatechange(new Event('readystatechange')); }
-                        if (typeof selfEl.onload === 'function') { selfEl.onload(new Event('load')); }
-                        selfEl.dispatchEvent(new Event('readystatechange'));
-                        selfEl.dispatchEvent(new Event('load'));
-                        selfEl.dispatchEvent(new Event('loadend'));
-                    }, 0);
+                    completeManagedXhr('elementor_forms', this, elSubmission, { formId: elFormId || '0' });
                     return;
                 }
 
                 // Gravity Forms AJAX (GF 2.9+ uses 'gform_submit_form', legacy uses 'gform_submit')
                 if (actionName === 'gform_submit_form' || actionName === 'gform_submit') {
                     var gfId = null;
+                    var gfSubmission = null;
                     try { gfId = (body instanceof FormData) ? (body.get('gform_submit') || body.get('form_id')) : (new URLSearchParams(bodyStr).get('gform_submit') || new URLSearchParams(bodyStr).get('form_id')); } catch (e) {}
                     if (gfId) {
                         var gfEl = document.querySelector('#gform_' + gfId) || document.querySelector('#gform_wrapper_' + gfId + ' form');
                         if (gfEl && window.__SSP_MANAGE_FORM__) {
-                            window.__SSP_MANAGE_FORM__([gfId, 'gform_' + gfId, 'gform_wrapper_' + gfId], gfEl);
+                            gfSubmission = window.__SSP_MANAGE_FORM__([gfId, 'gform_' + gfId, 'gform_wrapper_' + gfId], gfEl);
                         }
                     }
-                    // Return a Gravity Forms-specific fake success response with confirmation_markup
-                    // so GF JS shows the confirmation message and hides the form properly.
-                    var selfGf = this;
-                    setTimeout(function () {
-                        var gfResp = JSON.stringify({
-                            success: true,
-                            data: {
-                                is_valid: true,
-                                page_number: 0,
-                                source_page_number: 0,
-                                confirmation_markup: '<div id="gform_confirmation_wrapper_' + (gfId || '0') + '" class="gform_confirmation_wrapper"><div id="gform_confirmation_message_' + (gfId || '0') + '" class="gform_confirmation_message_' + (gfId || '0') + ' gform_confirmation_message">Thanks! Your message has been sent.</div></div>',
-                                confirmation_type: 'message'
-                            }
-                        });
-                        Object.defineProperty(selfGf, 'status', { get: function () { return 200; } });
-                        Object.defineProperty(selfGf, 'readyState', { get: function () { return 4; } });
-                        Object.defineProperty(selfGf, 'responseText', { get: function () { return gfResp; } });
-                        Object.defineProperty(selfGf, 'response', { get: function () { return gfResp; } });
-                        if (typeof selfGf.onreadystatechange === 'function') { selfGf.onreadystatechange(new Event('readystatechange')); }
-                        if (typeof selfGf.onload === 'function') { selfGf.onload(new Event('load')); }
-                        selfGf.dispatchEvent(new Event('readystatechange'));
-                        selfGf.dispatchEvent(new Event('load'));
-                        selfGf.dispatchEvent(new Event('loadend'));
-                    }, 0);
+                    completeManagedXhr('gravity_forms', this, gfSubmission, { formId: gfId || '0' });
                     return;
                 }
 
                 // Bricks Forms
                 if (actionName === 'bricks_form_submit') {
                     var bxFormId = null;
+                    var bxSubmission = null;
                     try { bxFormId = (body instanceof FormData) ? (body.get('formId') || body.get('postId')) : (new URLSearchParams(bodyStr).get('formId') || new URLSearchParams(bodyStr).get('postId')); } catch (e) {}
                     if (bxFormId) {
                         var bxEl = document.querySelector('#brxe-' + bxFormId) || document.querySelector('.brxe-form');
                         var bxForm = bxEl ? ((bxEl.tagName === 'FORM') ? bxEl : bxEl.querySelector('form')) : null;
                         if (!bxForm) { bxForm = bxEl; }
                         if (bxForm && window.__SSP_MANAGE_FORM__) {
-                            window.__SSP_MANAGE_FORM__([bxFormId, 'brxe-' + bxFormId], bxForm);
+                            bxSubmission = window.__SSP_MANAGE_FORM__([bxFormId, 'brxe-' + bxFormId], bxForm);
                         }
                     }
-                    // Return a Bricks-specific fake success response so Bricks JS
-                    // shows the success message and resets the form.
-                    var selfBx = this;
-                    setTimeout(function () {
-                        var bxResp = JSON.stringify({
-                            success: true,
-                            data: {
-                                type: 'success',
-                                message: 'Thanks! Your message has been sent.'
-                            }
-                        });
-                        Object.defineProperty(selfBx, 'status', { get: function () { return 200; } });
-                        Object.defineProperty(selfBx, 'readyState', { get: function () { return 4; } });
-                        Object.defineProperty(selfBx, 'responseText', { get: function () { return bxResp; } });
-                        Object.defineProperty(selfBx, 'response', { get: function () { return bxResp; } });
-                        if (typeof selfBx.onreadystatechange === 'function') { selfBx.onreadystatechange(new Event('readystatechange')); }
-                        if (typeof selfBx.onload === 'function') { selfBx.onload(new Event('load')); }
-                        selfBx.dispatchEvent(new Event('readystatechange'));
-                        selfBx.dispatchEvent(new Event('load'));
-                        selfBx.dispatchEvent(new Event('loadend'));
-                    }, 0);
+                    completeManagedXhr('bricks_forms', this, bxSubmission, { formId: bxFormId || '0' });
                     return;
                 }
 
-                // Block the XHR request entirely — fire error/load events so callers don't hang
-                var self = this;
-                setTimeout(function () {
-                    var fakeResponse = '{"success":true,"data":{"message":"","data":[]}}';
-                    Object.defineProperty(self, 'status', { get: function () { return 200; } });
-                    Object.defineProperty(self, 'readyState', { get: function () { return 4; } });
-                    Object.defineProperty(self, 'responseText', { get: function () { return fakeResponse; } });
-                    Object.defineProperty(self, 'response', { get: function () { return fakeResponse; } });
-                    if (typeof self.onreadystatechange === 'function') { self.onreadystatechange(new Event('readystatechange')); }
-                    if (typeof self.onload === 'function') { self.onload(new Event('load')); }
-                    self.dispatchEvent(new Event('readystatechange'));
-                    self.dispatchEvent(new Event('load'));
-                    self.dispatchEvent(new Event('loadend'));
-                }, 0);
-                return; // Do NOT call _origSend
-            }
+				// Unknown admin-ajax actions may be unrelated plugin requests. Preserve
+				// their real response instead of acknowledging delivery that never ran.
+				return _origSend.apply(this, arguments);
+			}
 
             return _origSend.apply(this, arguments);
         };
@@ -799,6 +765,13 @@ if (!window.__sspTurnstileReady) {
             throw new Error('Custom webhook headers are too large.');
         }
 
+        // Older Form Connections could serialize an empty repeater as a lone
+        // comma. Preserve strict validation for real entries while treating
+        // delimiter-only legacy values as the empty header list they represent.
+        if (/^[\s,]*$/.test(raw)) {
+            raw = '';
+        }
+
         // Newlines are unambiguous separators. For backwards compatibility,
         // commas only split when the following text looks like another header.
         var entries = raw
@@ -839,6 +812,206 @@ if (!window.__sspTurnstileReady) {
         }
 
         return headers;
+    }
+
+    function appendSelectedFileInputs(data, form, interceptedData) {
+        if (!(data instanceof FormData)) { return data; }
+        var filesByField = Object.create(null);
+        var interceptedFileFields = Object.create(null);
+        var collectFile = function (fieldName, file) {
+            fieldName = String(fieldName || '').trim();
+            if (!fieldName || typeof File === 'undefined' || !(file instanceof File) || file.size < 1) { return; }
+            filesByField[fieldName] = filesByField[fieldName] || [];
+            filesByField[fieldName].push(file);
+        };
+        if (interceptedData instanceof FormData) {
+            interceptedData.forEach(function (value, fieldName) {
+                if (typeof File !== 'undefined' && value instanceof File && value.size > 0) {
+                    interceptedFileFields[String(fieldName || '').trim()] = true;
+                }
+                collectFile(fieldName, value);
+            });
+        }
+        if (form && typeof form.querySelectorAll === 'function') {
+            form.querySelectorAll('input[type="file"]').forEach(function (input) {
+                if (input.disabled) { return; }
+                var fieldName = String(input.name || input.id || '').trim();
+                // The intercepted request is authoritative when it already contains
+                // files for this field; DOM fallback exists for Ninja versions that
+                // serialize only scalar JSON into the request body.
+                if (!fieldName || interceptedFileFields[fieldName]) { return; }
+                Array.prototype.forEach.call(input.files || [], function (file) {
+                    collectFile(fieldName, file);
+                });
+            });
+        }
+        Object.keys(filesByField).forEach(function (fieldName) {
+            data.delete(fieldName);
+            filesByField[fieldName].forEach(function (file) {
+                data.append(fieldName, file, file.name);
+            });
+        });
+        return data;
+    }
+
+    function queuedFileEntries(data) {
+        var files = [];
+        if (!(data instanceof FormData)) { return files; }
+        var position = 0;
+        data.forEach(function (value, fieldName) {
+            if (!(value instanceof File) || value.size < 1) { return; }
+            files.push({ position: position++, fieldName: String(fieldName), file: value });
+        });
+        return files;
+    }
+
+    function queueSubmissionData(data, attachmentIds) {
+        var clean = new FormData();
+        data.forEach(function (value, fieldName) {
+            if (!(value instanceof File)) { clean.append(fieldName, value); }
+        });
+        clean.set('_ssp_attachments', JSON.stringify(attachmentIds));
+        return clean;
+    }
+
+    function sha256File(file) {
+        if (!window.crypto || !window.crypto.subtle || typeof file.arrayBuffer !== 'function') {
+            return Promise.reject(new Error('This browser cannot verify attachment integrity.'));
+        }
+        return file.arrayBuffer().then(function (bytes) {
+            return window.crypto.subtle.digest('SHA-256', bytes);
+        }).then(function (digest) {
+            return Array.prototype.map.call(new Uint8Array(digest), function (value) {
+                return value.toString(16).padStart(2, '0');
+            }).join('');
+        });
+    }
+
+    function resolveAttachmentEndpoint(settings, submitUrl) {
+        var configured = settings && settings.form_attachment_endpoint
+            ? String(settings.form_attachment_endpoint)
+            : '';
+        try {
+            var submit = new URL(String(submitUrl || ''), window.location.href);
+            var upload = configured ? new URL(configured, window.location.href) : new URL(submit.toString());
+            if (!configured) {
+                upload.pathname = upload.pathname.replace(/\/form-submit\/?$/, '/form-upload');
+                upload.search = '';
+                upload.hash = '';
+            }
+            if (
+                upload.origin !== submit.origin ||
+                !/\/functions\/v1\/form-upload\/?$/.test(upload.pathname) ||
+                upload.search || upload.hash
+            ) {
+                return '';
+            }
+            return upload.toString();
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function uploadToSignedAttachment(uploadUrl, file, sha256) {
+        var body = new FormData();
+        body.append('cacheControl', '0');
+        body.append('metadata', JSON.stringify({ sha256: sha256 }));
+        body.append('', file, file.name);
+        return fetch(uploadUrl, {
+            method: 'PUT',
+            headers: { 'x-upsert': 'false' },
+            body: body,
+            mode: 'cors',
+            credentials: 'omit'
+        }).then(function (response) {
+            if (!response.ok) {
+                throw new Error('An attachment could not be uploaded.');
+            }
+        });
+    }
+
+    function uploadQueuedAttachments(targetUrl, settings, data) {
+        var files = queuedFileEntries(data);
+        if (!files.length) { return Promise.resolve(data); }
+        if (files.length > 10) {
+            return Promise.reject(new Error('The form has too many attachments.'));
+        }
+        var totalBytes = files.reduce(function (total, item) { return total + item.file.size; }, 0);
+        if (files.some(function (item) { return item.file.size > 25 * 1024 * 1024; }) || totalBytes > 50 * 1024 * 1024) {
+            return Promise.reject(new Error('The selected attachments are too large.'));
+        }
+
+        var uploadEndpoint = resolveAttachmentEndpoint(settings, targetUrl);
+        if (!uploadEndpoint) {
+            return Promise.reject(new Error('Attachment delivery is not configured.'));
+        }
+
+        return Promise.all(files.map(function (item) {
+            return sha256File(item.file).then(function (sha256) {
+                return {
+                    position: item.position,
+                    fieldName: item.fieldName,
+                    file: item.file,
+                    sha256: sha256
+                };
+            });
+        })).then(function (preparedFiles) {
+            var headers = buildWebhookHeaders(settings && settings.form_custom_headers);
+            headers.set('Content-Type', 'application/json');
+            return fetch(uploadEndpoint, {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    submission_id: String(data.get('_ssp_submission_id') || ''),
+                    site_id: String(data.get('_ssp_site_id') || ''),
+                    form_connection_id: String(data.get('_ssp_connection_id') || ''),
+                    turnstile_token: String(data.get('cf-turnstile-response') || ''),
+                    recaptcha_token: String(data.get('g-recaptcha-response') || ''),
+                    files: preparedFiles.map(function (item) {
+                        return {
+                            field_name: item.fieldName,
+                            file_name: item.file.name,
+                            content_type: item.file.type || 'application/octet-stream',
+                            byte_size: item.file.size,
+                            sha256: item.sha256
+                        };
+                    })
+                }),
+                redirect: 'manual',
+                mode: 'cors',
+                credentials: 'omit'
+            }).then(function (response) {
+                return response.json().catch(function () { return {}; }).then(function (body) {
+                    if (!response.ok || body.success !== true || !Array.isArray(body.uploads)) {
+                        throw new Error(body.error || 'Attachment delivery could not be prepared.');
+                    }
+                    return { body: body, preparedFiles: preparedFiles };
+                });
+            });
+        }).then(function (result) {
+            if (result.body.uploads.length !== result.preparedFiles.length) {
+                throw new Error('Attachment delivery returned an invalid manifest.');
+            }
+            var attachmentIds = [];
+            return Promise.all(result.body.uploads.map(function (upload, index) {
+                var prepared = result.preparedFiles[index];
+                var attachmentId = String(upload.attachment_id || '').toLowerCase();
+                if (
+                    Number(upload.position) !== prepared.position ||
+                    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(attachmentId)
+                ) {
+                    throw new Error('Attachment delivery returned an invalid manifest.');
+                }
+                attachmentIds[index] = attachmentId;
+                if (upload.committed === true && !upload.upload_url) { return Promise.resolve(); }
+                if (!upload.upload_url) {
+                    throw new Error('Attachment delivery did not return an upload target.');
+                }
+                return uploadToSignedAttachment(String(upload.upload_url), prepared.file, prepared.sha256);
+            })).then(function () {
+                return queueSubmissionData(data, attachmentIds);
+            });
+        });
     }
 
     function submitForm(url, settings, data, formEl) {
@@ -980,51 +1153,247 @@ if (!window.__sspTurnstileReady) {
     function findFormSettings(json, candidateIds, form) {
         if (!Array.isArray(json)) { return null; }
 
-        const ids = Array.isArray(candidateIds) ? candidateIds.filter(Boolean) : [candidateIds].filter(Boolean);
         const norm = (v) => (v == null ? '' : String(v).trim());
         const stripHash = (v) => norm(v).replace(/^#/, '');
-        const cf7Num = (v) => { const s = norm(v), m = s.match(/wpcf7-f(\d+)-p/); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
-        const gfNum = (v) => { const s = norm(v), m = s.match(/gform(?:_wrapper)?_(\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
-        const foNum = (v) => { const s = norm(v), m = s.match(/forminator-(?:form|module)-(\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
-        const nfNum = (v) => { const s = norm(v), m = s.match(/nf-form-(\d+)-cont/); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
-        const ffNum = (v) => { const s = norm(v), m = s.match(/fluentform[_-](\d+)/i); return m ? m[1] : (/^\d+$/.test(s) ? s : ''); };
+        const ids = (Array.isArray(candidateIds) ? candidateIds : [candidateIds])
+            .map(stripHash)
+            .filter(Boolean);
+        const providerId = (plugin, value) => {
+            const id = stripHash(value);
+            const patterns = {
+                cf7: /^(?:wpcf7-f)?(\d+)(?:-p\d+-o\d+)?$/i,
+                gravity_forms: /^(?:gform(?:_wrapper)?_)?(\d+)$/i,
+                wp_forms: /^(?:wpforms-form-)?(\d+)$/i,
+                forminator: /^(?:forminator-(?:form|module)-)?(\d+)$/i,
+                fluent_forms: /^(?:fluentform[_-])?(\d+)$/i,
+                ws_form: /^(?:(?:wsf|ws)-form-)?(\d+)$/i,
+                ninja_forms: /^(?:nf-form-)?(\d+)(?:-cont)?$/i
+            };
+            const match = patterns[plugin] && id.match(patterns[plugin]);
+            return match ? match[1] : id;
+        };
+        const hasTypedPrefix = (plugin, value) => {
+            const id = stripHash(value);
+            const patterns = {
+                cf7: /^wpcf7-f\d+/i,
+                gravity_forms: /^gform(?:_wrapper)?_\d+/i,
+                wp_forms: /^wpforms-form-\d+/i,
+                forminator: /^forminator-(?:form|module)-\d+/i,
+                fluent_forms: /^fluentform[_-]\d+/i,
+                ws_form: /^(?:wsf|ws)-form-\d+/i,
+                ninja_forms: /^nf-form-\d+-cont/i
+            };
+            return !!(patterns[plugin] && patterns[plugin].test(id));
+        };
 
+        const namedInputs = Object.create(null);
+        const providerHints = [];
+        const addProviderHint = (plugin) => {
+            if (providerHints.indexOf(plugin) === -1) { providerHints.push(plugin); }
+        };
         try {
-            const namedInputs = Object.create(null);
             const controls = form && form.elements
                 ? Array.from(form.elements)
                 : (form ? Array.from(form.querySelectorAll('input[name]')) : []);
             controls.forEach(control => {
-                if (!control || String(control.tagName).toLowerCase() !== 'input' || !control.name || !control.value) return;
+                if (!control || String(control.tagName).toLowerCase() !== 'input' ||
+                    String(control.type || '').toLowerCase() !== 'hidden' || !control.name || !control.value) return;
                 if (!Object.prototype.hasOwnProperty.call(namedInputs, control.name)) {
                     namedInputs[control.name] = control.value;
+                } else if (namedInputs[control.name] !== control.value) {
+                    // Conflicting duplicate hidden markers are ambiguous.
+                    namedInputs[control.name] = null;
                 }
             });
-            json.forEach(cfg => {
-                if (!cfg || !cfg.form_hidden_name) return;
-                const hiddenName = norm(cfg.form_hidden_name);
-                if (hiddenName && Object.prototype.hasOwnProperty.call(namedInputs, hiddenName)) {
-                    ids.push(namedInputs[hiddenName]);
-                }
-            });
+
+            const formId = stripHash(form && form.id);
+            const classList = form && form.classList;
+            if (namedInputs._wpcf7 || (form && form.closest('.wpcf7'))) { addProviderHint('cf7'); }
+            if (namedInputs.gform_submit || /^gform_\d+$/i.test(formId)) { addProviderHint('gravity_forms'); }
+            if (namedInputs['wpforms[id]'] || (classList && classList.contains('wpforms-form')) || /^wpforms-form-\d+$/i.test(formId)) { addProviderHint('wp_forms'); }
+            if (namedInputs.forminator_form_id || namedInputs.forminator_nonce || namedInputs._forminator_nonce || (form && form.closest('[id^="forminator-module-"]'))) { addProviderHint('forminator'); }
+            if (namedInputs._fluentform_id || (classList && classList.contains('frm-fluent-form'))) { addProviderHint('fluent_forms'); }
+            if (namedInputs.wsf_form_id || (form && form.closest('.wsf-form'))) { addProviderHint('ws_form'); }
+            if (namedInputs._kb_form_id || (classList && classList.contains('kb-form'))) { addProviderHint('kadence_forms'); }
+            if (namedInputs.elementor_form_id || (classList && classList.contains('elementor-form'))) { addProviderHint('elementor_forms'); }
+            if (namedInputs.bricks_form_id || namedInputs.formId || (classList && classList.contains('brxe-form'))) { addProviderHint('bricks_forms'); }
+            if (namedInputs.nf_form_id || (form && form.closest('.nf-form-cont, .ninja-forms-form-wrap'))) { addProviderHint('ninja_forms'); }
         } catch (e) { }
 
-        const normCandidates = [];
-        ids.forEach(cid => {
-            const a = norm(cid), b = stripHash(cid), nCf7 = cf7Num(cid), nGf = gfNum(cid), nFo = foNum(cid), nNf = nfNum(cid), nFf = ffNum(cid);
-            [a, b, nCf7, nGf, nFo, nNf, nFf].forEach(v => { if (v && normCandidates.indexOf(v) === -1) normCandidates.push(v); });
+        const connectionMarker = norm(form && form.getAttribute && form.getAttribute('data-ssp-form-connection'));
+        if (connectionMarker) {
+            const connectionMatches = json.filter(cfg => cfg && norm(cfg.form_type) === 'webhook' && cfg.form_plugin === 'other' &&
+                norm(cfg.form_connection_id) === connectionMarker);
+            if (connectionMatches.length === 1) { return connectionMatches[0]; }
+            // An exported connection marker is authoritative. Never fall back to a
+            // DOM ID or hidden field when it is stale, unknown, or duplicated.
+            return null;
+        }
+		const otherDomId = stripHash(form && form.id);
+		let otherDomIdUnique = true;
+		try {
+			if (otherDomId && document.forms) {
+				const duplicateCount = Array.prototype.filter.call(document.forms, candidate =>
+					stripHash(candidate && candidate.id) === otherDomId
+				).length;
+				otherDomIdUnique = duplicateCount <= 1;
+			}
+		} catch (e) { otherDomIdUnique = false; }
+
+        const matches = json.filter(cfg => {
+            if (!cfg || norm(cfg.form_type) !== 'webhook') { return false; }
+            const plugin = norm(cfg.form_plugin);
+            const formId = stripHash(cfg.form_id);
+            if (!plugin || !formId || (providerHints.length && providerHints.indexOf(plugin) === -1)) {
+                return false;
+            }
+
+            const hiddenName = norm(cfg.form_hidden_name);
+            const hiddenValue = hiddenName && Object.prototype.hasOwnProperty.call(namedInputs, hiddenName)
+                ? stripHash(namedInputs[hiddenName])
+                : '';
+            const ownMarkerMatches = hiddenValue && (
+                hiddenValue === formId || providerId(plugin, hiddenValue) === providerId(plugin, formId)
+            );
+            if (plugin === 'other') {
+				return !!ownMarkerMatches || !!(otherDomIdUnique && otherDomId && otherDomId === formId);
+            }
+            if (ownMarkerMatches) { return true; }
+
+            return ids.some(candidate => {
+                const typed = hasTypedPrefix(plugin, candidate);
+                if (!providerHints.length && !typed && candidate !== formId) { return false; }
+                return candidate === formId || providerId(plugin, candidate) === providerId(plugin, formId);
+            });
         });
 
-        return json.find(x => {
-            const sidRaw = x && x.form_id, sid = stripHash(sidRaw), sCf7 = cf7Num(sidRaw), sGf = gfNum(sidRaw), sFo = foNum(sidRaw), sNf = nfNum(sidRaw), sFf = ffNum(sidRaw);
-            return normCandidates.some(c => {
-                const cc = stripHash(c);
-                const usePartialMatch = sid && cc && !/^\d+$/.test(sid) && !/^\d+$/.test(cc);
-                return sid === cc || (usePartialMatch && (sid.indexOf(cc) !== -1 || cc.indexOf(sid) !== -1)) ||
-                    (sCf7 && cf7Num(cc) === sCf7) || (sGf && gfNum(cc) === sGf) || (sFo && foNum(cc) === sFo) ||
-                    (sNf && nfNum(cc) === sNf) || (sFf && ffNum(cc) === sFf);
+        if (matches.length <= 1) { return matches[0] || null; }
+
+        // Older versions could publish aliases for the same provider identity
+        // as separate connections (for example Gravity Forms `1` and
+        // `gform_1`). Prefer the one whose stored identifier exactly matches
+        // the form on the page. Exact duplicate configurations remain
+        // ambiguous and deliberately fail closed.
+        if (otherDomId) {
+            const exactDomMatches = matches.filter(cfg => stripHash(cfg.form_id) === otherDomId);
+            if (exactDomMatches.length > 1) { return null; }
+            if (exactDomMatches.length === 1) { return exactDomMatches[0]; }
+        }
+
+        for (const candidate of ids) {
+            const exactCandidateMatches = matches.filter(cfg => stripHash(cfg.form_id) === candidate);
+            if (exactCandidateMatches.length > 1) { return null; }
+            if (exactCandidateMatches.length === 1) { return exactCandidateMatches[0]; }
+        }
+
+        return null;
+    }
+
+    function sspTurnstileWidget(form) {
+        if (!form || typeof form.querySelector !== 'function') { return null; }
+        var widget = form.querySelector('.ssp-cf-turnstile');
+        if (widget) { return widget; }
+        var wrapper = typeof form.closest === 'function'
+            ? (form.closest('.nf-form-cont') || form.closest('.ninja-forms-form-wrap'))
+            : null;
+        return wrapper ? wrapper.querySelector('.ssp-cf-turnstile') : null;
+    }
+
+    function applySspTurnstileToken(data, form) {
+        var widget = sspTurnstileWidget(form);
+        if (!(data instanceof FormData) || !widget) { return false; }
+        var token = '';
+        var widgetId = widget.dataset ? String(widget.dataset.sspWidgetId || '') : '';
+        if (widgetId && window.turnstile && typeof window.turnstile.getResponse === 'function') {
+            try { token = String(window.turnstile.getResponse(widgetId) || ''); } catch (e) {}
+        }
+        if (!token) {
+            var input = widget.querySelector('input[name="cf-turnstile-response"]');
+            token = input ? String(input.value || '') : '';
+        }
+
+        // Provider-native CAPTCHA plugins may add the same field name with a
+        // different site key. Never let their token win FormData insertion order.
+        data.delete('cf-turnstile-response');
+        if (token) { data.set('cf-turnstile-response', token); }
+        return !!token;
+    }
+
+    function resetSspTurnstileWidget(form) {
+        var widget = sspTurnstileWidget(form);
+        var widgetId = widget && widget.dataset ? String(widget.dataset.sspWidgetId || '') : '';
+        if (!widgetId || !window.turnstile || typeof window.turnstile.reset !== 'function') { return; }
+        try { window.turnstile.reset(widgetId); } catch (e) {}
+    }
+
+    function sspRecaptchaV2Widget(form) {
+        if (!form || typeof form.querySelector !== 'function') { return null; }
+        var widget = form.querySelector('.ssp-g-recaptcha[data-sitekey]');
+        if (widget) { return widget; }
+        var wrapper = typeof form.closest === 'function'
+            ? (form.closest('.nf-form-cont') || form.closest('.ninja-forms-form-wrap'))
+            : null;
+        return wrapper ? wrapper.querySelector('.ssp-g-recaptcha[data-sitekey]') : null;
+    }
+
+    function applySspRecaptchaV2Token(data, form) {
+        var widget = sspRecaptchaV2Widget(form);
+        if (!(data instanceof FormData) || !widget) { return false; }
+        var token = '';
+        var widgetId = widget.dataset ? String(widget.dataset.sspWidgetId || '') : '';
+        if (widgetId && window.grecaptcha && typeof window.grecaptcha.getResponse === 'function') {
+            try { token = String(window.grecaptcha.getResponse(widgetId) || ''); } catch (e) {}
+        }
+        if (!token) {
+            var input = widget.querySelector('textarea[name="g-recaptcha-response"], input[name="g-recaptcha-response"]');
+            token = input ? String(input.value || '') : '';
+        }
+
+        // The page can still contain a provider-native widget while an older
+        // static export is being replaced. Submit only the SSP-managed token.
+        data.delete('g-recaptcha-response');
+        if (token) { data.set('g-recaptcha-response', token); }
+        return !!token;
+    }
+
+    function resetSspRecaptchaV2Widget(form) {
+        var widget = sspRecaptchaV2Widget(form);
+        var widgetId = widget && widget.dataset ? String(widget.dataset.sspWidgetId || '') : '';
+        if (!widgetId || !window.grecaptcha || typeof window.grecaptcha.reset !== 'function') { return; }
+        try { window.grecaptcha.reset(widgetId); } catch (e) {}
+    }
+
+    // Gravity Forms consent fields always serialize hidden copies of their
+    // label and description. Those audit values are useful to Gravity's own
+    // entry model, but are not submitted answers and must not appear in a
+    // managed notification when the visible consent checkbox is unchecked.
+    function scrubGravityConsentMetadata(data, form, settings) {
+        if (!(data instanceof FormData) || !form || typeof form.querySelectorAll !== 'function') {
+            return data;
+        }
+        var plugin = settings ? String(settings.form_plugin || '') : '';
+        if (plugin !== 'gravity_forms' && !form.closest('.gform_wrapper')) {
+            return data;
+        }
+
+        form.querySelectorAll('.gfield--type-consent, .ginput_container_consent').forEach(function (container) {
+            var field = container.closest('.gfield') || container;
+            var checkbox = field.querySelector('input[type="checkbox"][name]');
+            if (!checkbox) { return; }
+            var match = String(checkbox.name || '').match(/^(input_\d+)[._]1$/);
+            if (!match) { return; }
+
+            if (!checkbox.checked) {
+                data.delete(checkbox.name);
+            }
+            field.querySelectorAll('input[type="hidden"][name]').forEach(function (hidden) {
+                if (new RegExp('^' + match[1] + '[._](?:2|3)$').test(String(hidden.name || ''))) {
+                    data.delete(hidden.name);
+                }
             });
-        }) || null;
+        });
+
+        return data;
     }
 
     function manageForm(candidateIds, form, originalData) {
@@ -1042,6 +1411,7 @@ if (!window.__sspTurnstileReady) {
 
             if (settings) {
                 let data = (originalData instanceof FormData) ? originalData : new FormData(form);
+                data = scrubGravityConsentMetadata(data, form, settings);
                 if (isCf7Submission(settings, form, data)) {
                     data = addUnnamedFormControls(data, form);
                 }
@@ -1065,9 +1435,13 @@ if (!window.__sspTurnstileReady) {
                     var elId = data.get('form_id');
                     if (elId) { data.set('elementor_form_id', elId); }
                 }
-                var hasTurnstile = !!(form.querySelector('.ssp-cf-turnstile') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('.ssp-cf-turnstile')));
-                var recaptchaInput = form.querySelector('input.g-recaptcha-response[data-sitekey]') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('input.g-recaptcha-response[data-sitekey]'));
+                var hasTurnstile = !!sspTurnstileWidget(form);
+                var recaptchaInput = form.querySelector('input.ssp-g-recaptcha-response[data-sitekey]') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('input.ssp-g-recaptcha-response[data-sitekey]'));
                 var hasRecaptcha = !!recaptchaInput;
+                var recaptchaV2Widget = sspRecaptchaV2Widget(form);
+				var hasRecaptchaV2Token = recaptchaV2Widget
+					? applySspRecaptchaV2Token(data, form)
+					: !!form.querySelector('.elementor-g-recaptcha[data-sitekey], .g-recaptcha[data-sitekey]') && !!String(data.get('g-recaptcha-response') || '').trim();
                 var restBase = (settings.rest_base && typeof settings.rest_base === 'string') ? settings.rest_base : '';
                 if (restBase && restBase.slice(-1) !== '/') { restBase += '/'; }
                 var targetUrl = settings.form_webhook;
@@ -1094,7 +1468,8 @@ if (!window.__sspTurnstileReady) {
 				var requiredService = String(settings.form_captcha_service || 'turnstile');
 				var captchaUnavailable = requiredCaptcha && (
 					(requiredService === 'recaptcha_v3' && (!hasRecaptcha || typeof grecaptcha === 'undefined')) ||
-					(requiredService !== 'recaptcha_v3' && !hasTurnstile)
+					(requiredService === 'recaptcha_v2' && !hasRecaptchaV2Token) ||
+					(requiredService !== 'recaptcha_v2' && requiredService !== 'recaptcha_v3' && !hasTurnstile)
 				);
 				if (captchaUnavailable) {
 					var captchaErrorSettings = Object.assign({}, settings, {
@@ -1106,14 +1481,25 @@ if (!window.__sspTurnstileReady) {
 				}
 
                 if (queueTransport) {
+                    var submitQueuedData = function () {
+                        return uploadQueuedAttachments(targetUrl, settings, data).then(function (submissionData) {
+                            return submitForm(targetUrl, settings, submissionData, form);
+                        }).catch(function (error) {
+                            // The managed submit has not started when attachment
+                            // preparation fails. Use a fresh reservation ID on retry
+                            // so changed file selections cannot collide with the old
+                            // (eventually cleaned-up) reservation.
+                            form.__sspQueueSubmissionId = null;
+                            handleMessage(settings, true, form);
+                            return { success: false, settings: settings, form: form, error: error };
+                        });
+                    };
+					if (requiredService === 'recaptcha_v2') {
+						return submitQueuedData();
+					}
                     if (hasTurnstile) {
-                        if (!data.has('cf-turnstile-response')) {
-                            var queueTsContainer = form.querySelector('.ssp-cf-turnstile') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('.ssp-cf-turnstile'));
-                            var queueTsInput = form.querySelector('input[name="cf-turnstile-response"]') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('input[name="cf-turnstile-response"]'));
-                            if (!queueTsInput && queueTsContainer) { queueTsInput = queueTsContainer.querySelector('input[name="cf-turnstile-response"]'); }
-                            if (queueTsInput && queueTsInput.value) { data.set('cf-turnstile-response', queueTsInput.value); }
-                        }
-                        return submitForm(targetUrl, settings, data, form);
+                        applySspTurnstileToken(data, form);
+                        return submitQueuedData();
                     }
 
                     if (hasRecaptcha && typeof grecaptcha !== 'undefined') {
@@ -1121,7 +1507,7 @@ if (!window.__sspTurnstileReady) {
                             grecaptcha.ready(function () {
                                 grecaptcha.execute(recaptchaInput.getAttribute('data-sitekey'), { action: 'submit' }).then(function (token) {
                                     data.set('g-recaptcha-response', token);
-                                    resolve(submitForm(targetUrl, settings, data, form));
+                                    resolve(submitQueuedData());
                                 }).catch(function () {
                                     handleMessage(settings, true, form);
                                     resolve({ success: false, settings: settings, form: form, error: 'recaptcha_failed' });
@@ -1130,16 +1516,13 @@ if (!window.__sspTurnstileReady) {
                         });
                     }
 
-                    return submitForm(targetUrl, settings, data, form);
+                    return submitQueuedData();
                 }
 
-                if (hasTurnstile && restBase && targetUrl) {
-                    if (!data.has('cf-turnstile-response')) {
-                        var tsContainer = form.querySelector('.ssp-cf-turnstile') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('.ssp-cf-turnstile'));
-                        var tsInp = form.querySelector('input[name="cf-turnstile-response"]') || (form.closest('.nf-form-cont') && form.closest('.nf-form-cont').querySelector('input[name="cf-turnstile-response"]'));
-                        if (!tsInp && tsContainer) { tsInp = tsContainer.querySelector('input[name="cf-turnstile-response"]'); }
-                        if (tsInp && tsInp.value) { data.set('cf-turnstile-response', tsInp.value); }
-                    }
+				if (requiredService === 'recaptcha_v2' && restBase && targetUrl) {
+					return submitForm(restBase + 'simplystatic/v1/recaptcha/submit?forward_to=' + encodeURIComponent(targetUrl), settings, data, form);
+				} else if (hasTurnstile && restBase && targetUrl) {
+                    applySspTurnstileToken(data, form);
                     return submitForm(restBase + 'simplystatic/v1/turnstile/submit?forward_to=' + encodeURIComponent(targetUrl), settings, data, form);
                 } else if (hasRecaptcha && restBase && targetUrl && typeof grecaptcha !== 'undefined') {
                     return new Promise(function (resolve) {
@@ -1169,19 +1552,15 @@ if (!window.__sspTurnstileReady) {
 
         if (form) {
             form.__sspSubmissionPromise = submissionPromise;
-            submissionPromise.then(function () {
-                setTimeout(function () {
-                    form.__sspSubmitting = false;
-                    if (form.__sspSubmissionPromise === submissionPromise) {
-                        form.__sspSubmissionPromise = null;
-                    }
-                }, 3000);
-            }, function () {
-                form.__sspSubmitting = false;
+            var clearActiveSubmission = function () {
                 if (form.__sspSubmissionPromise === submissionPromise) {
+                    resetSspTurnstileWidget(form);
+                    resetSspRecaptchaV2Widget(form);
+                    form.__sspSubmitting = false;
                     form.__sspSubmissionPromise = null;
                 }
-            });
+            };
+            submissionPromise.then(clearActiveSubmission, clearActiveSubmission);
         }
 
         return submissionPromise;
@@ -1267,14 +1646,19 @@ if (!window.__sspTurnstileReady) {
 
             // Render the widget if it hasn't been rendered yet
             if (placeholder && !placeholder.dataset.sspRendered) {
-                placeholder.dataset.sspRendered = '1';
                 try {
-                    turnstile.render(placeholder, {
+                    var widgetId = turnstile.render(placeholder, {
                         sitekey: placeholder.getAttribute('data-sitekey'),
                         theme: placeholder.getAttribute('data-theme') || 'auto',
                         size: placeholder.getAttribute('data-size') || 'normal'
                     });
+                    placeholder.dataset.sspRendered = '1';
+                    if (widgetId !== undefined && widgetId !== null) {
+                        placeholder.dataset.sspWidgetId = String(widgetId);
+                    }
                 } catch (e) {
+                    delete placeholder.dataset.sspRendered;
+                    delete placeholder.dataset.sspWidgetId;
                     if (typeof console !== 'undefined') {
                         console.warn('[SSP] Turnstile render error:', e.message || e);
                     }
@@ -1301,8 +1685,60 @@ if (!window.__sspTurnstileReady) {
         renderTurnstileWidgets();
     }
 
+    // Explicit reCAPTCHA v2 rendering mirrors the Turnstile lifecycle and
+    // restores widgets removed by dynamically rendered Ninja/WS forms.
+    function renderRecaptchaV2Widgets() {
+        if (!window.grecaptcha || typeof window.grecaptcha.render !== 'function') return;
+
+        document.querySelectorAll('form').forEach(function (form) {
+            var placeholder = sspRecaptchaV2Widget(form);
+            if (!placeholder) {
+                var nfWrap = form.closest('.nf-form-cont') || form.closest('.ninja-forms-form-wrap');
+                var wsWrap = form.closest('.wsf-form') || form.closest('.ws-form');
+                if (nfWrap || wsWrap) {
+                    var existingWidget = document.querySelector('.ssp-g-recaptcha[data-sitekey]');
+                    var cfg = window.__SSP_RECAPTCHA_V2_CFG__ || {};
+                    var sitekey = existingWidget ? existingWidget.getAttribute('data-sitekey') : (cfg.sitekey || '');
+                    if (sitekey) {
+                        placeholder = document.createElement('div');
+                        placeholder.className = 'g-recaptcha ssp-g-recaptcha';
+                        placeholder.setAttribute('data-sitekey', sitekey);
+                        placeholder.style.marginTop = '15px';
+                        var submitBtn = form.querySelector('input[type="submit"], button[type="submit"]');
+                        if (submitBtn && submitBtn.parentNode) {
+                            submitBtn.parentNode.insertBefore(placeholder, submitBtn);
+                        } else {
+                            form.appendChild(placeholder);
+                        }
+                    }
+                }
+            }
+
+            if (placeholder && !placeholder.dataset.sspWidgetId) {
+                try {
+                    var widgetId = window.grecaptcha.render(placeholder, {
+                        sitekey: placeholder.getAttribute('data-sitekey')
+                    });
+                    placeholder.dataset.sspWidgetId = String(widgetId);
+                } catch (e) {
+                    delete placeholder.dataset.sspWidgetId;
+                    if (typeof console !== 'undefined') {
+                        console.warn('[SSP] reCAPTCHA v2 render error:', e.message || e);
+                    }
+                }
+            }
+        });
+    }
+
+    window.__sspRenderRecaptchaV2Widgets = renderRecaptchaV2Widgets;
+    window.__sspRecaptchaV2Ready = renderRecaptchaV2Widgets;
+
+    if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+        renderRecaptchaV2Widgets();
+    }
+
     function initForms() {
-        const allFormRoots = document.querySelectorAll(".wpcf7 form, .wpcf7-form, .gform_wrapper form, .gform_wrapper, .wpforms-container form, .elementor-form, .wsf-form form, .ws-form form, .frm-fluent-form, .brxe-form, .brxe-brf-pro-forms, .wp-block-kadence-form form, .forminator-custom-form, .ninja-forms-form-wrap form, .nf-form-cont form, .ninja-forms-form-wrap, .nf-form-cont");
+        const allFormRoots = document.querySelectorAll("form[data-ssp-form-connection], .wpcf7 form, .wpcf7-form, .gform_wrapper form, .gform_wrapper, .wpforms-container form, .elementor-form, .wsf-form form, .ws-form form, .frm-fluent-form, .brxe-form, .brxe-brf-pro-forms, .wp-block-kadence-form form, .forminator-custom-form, .ninja-forms-form-wrap form, .nf-form-cont form, .ninja-forms-form-wrap, .nf-form-cont");
 
         allFormRoots.forEach((root) => {
             let form = (root.tagName === 'FORM') ? root : root.querySelector('form');
@@ -1459,12 +1895,13 @@ if (!window.__sspTurnstileReady) {
         window.__SSP_WEBHOOK_RUNNING__ = true;
         initForms();
         renderTurnstileWidgets();
+        renderRecaptchaV2Widgets();
         populateFormsFromURL();
         if (typeof MutationObserver !== 'undefined') {
-            new MutationObserver(() => { initForms(); renderTurnstileWidgets(); }).observe(document.body, { childList: true, subtree: true });
+            new MutationObserver(() => { initForms(); renderTurnstileWidgets(); renderRecaptchaV2Widgets(); }).observe(document.body, { childList: true, subtree: true });
         }
         // Ninja Forms renders via Backbone after DOMContentLoaded; re-bind when its forms are ready.
-        document.addEventListener('nfFormReady', () => { initForms(); renderTurnstileWidgets(); });
+        document.addEventListener('nfFormReady', () => { initForms(); renderTurnstileWidgets(); renderRecaptchaV2Widgets(); });
         // GF fires gform_post_render after conditional logic is initialized;
         // re-run population so conditionally-shown fields get their values set.
         if (window.jQuery) {
