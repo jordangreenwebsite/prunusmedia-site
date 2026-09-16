@@ -1,0 +1,1 @@
+import{Lp as e,Wp as t,Xp as n}from"./store-9sESPe2v.js";const r=n({templateIds:e(t),headerIds:e(t),footerIds:e(t),popupIds:e(t),blockIds:e(t)});export{r as t};
