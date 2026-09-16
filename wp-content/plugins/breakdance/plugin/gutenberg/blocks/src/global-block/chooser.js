@@ -1,6 +1,4 @@
-/* global breakdanceGlobalBlock */
-
-const { SelectControl } = wp.components;
+import { SelectControl } from "@wordpress/components";
 const name = window.breakdanceConfig.strings.globalBlock;
 
 function getBlocks() {

@@ -1,6 +1,5 @@
-/* global breakdanceGlobalBlock */
-const { useState, useEffect } = wp.element;
-const { Spinner } = wp.components;
+import { useState, useEffect, useRef } from "@wordpress/element";
+import { Spinner } from "@wordpress/components";
 
 export default function BlockSSR( props ) {
 	const { blockPreviewUrl } = breakdanceGlobalBlock;
@@ -10,18 +9,52 @@ export default function BlockSSR( props ) {
 	const [ isLoading, setIsLoading ] = useState( true );
 	const [ isEmpty, setIsEmpty ] = useState( false );
 	const [ iframeHeight, setIframeHeight ] = useState( null );
+	const hasReportedSize = useRef( false );
 
 	useEffect( () => {
 		setIsLoading( true );
 		setIsEmpty( false );
+		hasReportedSize.current = false;
 	}, [ props.blockId ] );
 
-	const onLoad = ( event ) => {
-		const iframeDocument = event.target.contentDocument.documentElement;
-		const body = event.target.contentDocument.body;
-		const height = iframeDocument.scrollHeight;
+	useEffect( () => {
+		const onMessage = ( event ) => {
+			const data = event.data;
 
-		const hasChildren = !body.classList.contains( 'is-breakdance-block-empty' );
+			if ( ! data || data.type !== 'breakdance-global-block-preview' ) {
+				return;
+			}
+
+			const iframe = props.iframeRef.current;
+
+			if ( ! iframe || event.source !== iframe.contentWindow ) {
+				return;
+			}
+
+			hasReportedSize.current = true;
+			setIframeHeight( data.height + 'px' );
+			setIsLoading( false );
+			setIsEmpty( !! data.isEmpty );
+		};
+
+		window.addEventListener( 'message', onMessage );
+
+		return () => window.removeEventListener( 'message', onMessage );
+	}, [ props.iframeRef ] );
+
+	const onLoad = ( event ) => {
+		const iframeDocument = event.target.contentDocument;
+
+		if ( ! iframeDocument ) {
+			if ( ! hasReportedSize.current ) {
+				setIframeHeight( '500px' );
+			}
+			setIsLoading( false );
+			return;
+		}
+
+		const height = iframeDocument.documentElement.scrollHeight;
+		const hasChildren = ! iframeDocument.body.classList.contains( 'is-breakdance-block-empty' );
 
 		setIframeHeight( height + 'px' );
 		setIsLoading( false );

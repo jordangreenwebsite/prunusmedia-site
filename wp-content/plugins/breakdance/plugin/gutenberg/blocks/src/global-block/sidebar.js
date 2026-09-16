@@ -1,7 +1,6 @@
-/* global breakdanceConfig */
-const { __ } = wp.i18n;
-const { InspectorControls } = wp.blockEditor;
-const { PanelBody, Button, Icon } = wp.components;
+import { __ } from "@wordpress/i18n";
+import { InspectorControls } from "@wordpress/block-editor";
+import { PanelBody, Button, Icon } from "@wordpress/components";
 
 export default function Sidebar( props ) {
 	const showEditButton = !! props.blockId;
@@ -21,7 +20,7 @@ export default function Sidebar( props ) {
 	const editButton = (
 		<div className="breakdance-global-block-edit">
 			<Button isSecondary href={ builderURL } target="_blank">
-				Edit {strings.globalBlock} in { builderName }
+				Edit in { builderName }
 			</Button>
 
 			<Button icon={ refreshIcon } label={ __( 'Refresh' ) } onClick={ props.onRefreshClick } />

@@ -2,16 +2,15 @@
 	"name": "breakdance-blocks",
 	"version": "1.0.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
-		"start": "cgb-scripts start",
-		"build": "cgb-scripts build",
-		"eject": "cgb-scripts eject"
+		"start": "node build.mjs --watch",
+		"build": "node build.mjs"
 	},
-	"dependencies": {
-		"@wordpress/data": "^4.27.0",
-		"cgb-scripts": "1.23.1"
+	"devDependencies": {
+		"esbuild": "^0.25.0"
 	},
 	"engines": {
-		"node": ">=14 <16"
+		"node": ">=18"
 	}
 }
