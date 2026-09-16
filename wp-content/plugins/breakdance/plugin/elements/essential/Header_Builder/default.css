@@ -21,8 +21,7 @@
     var(--bde-section-horizontal-padding);
 }
 
-.breakdance
-  .bde-header-builder.bde-header-builder--overlay:not(
+.bde-header-builder.bde-header-builder--overlay:not(
     .bde-header-builder--sticky
   ) {
   position: absolute;
@@ -43,8 +42,7 @@
   bottom: 0;
 }
 
-.breakdance
-  .bde-header-builder.bde-header-builder--sticky
+.bde-header-builder.bde-header-builder--sticky
   .bde-header-builder__container {
   transition-property: min-height;
   transition-duration: var(--bde-header-sticky-duration);
@@ -52,8 +50,7 @@
 }
 
 .bde-header-builder .bde-header-builder__header-builder-border-top,
-.breakdance
-  .bde-header-builder
+.bde-header-builder
   .bde-header-builder__header-builder-border-bottom {
   transition-property: height, background-color;
   transition-duration: var(--bde-header-sticky-duration);

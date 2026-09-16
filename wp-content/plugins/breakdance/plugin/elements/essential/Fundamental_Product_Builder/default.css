@@ -1,0 +1,3 @@
+.bde-f-product-builder .woocommerce-notices-wrapper:empty {
+  display: none;
+}

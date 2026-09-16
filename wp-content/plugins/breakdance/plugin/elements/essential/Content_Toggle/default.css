@@ -68,15 +68,13 @@
   background-color: white;
   transition: var(--bde-transition-duration);
 }
-.breakdance
-  .bde-content-toggle
+.bde-content-toggle
   input:checked
   + .bde-content-toggle__slider:before {
   transform: translateY(-50%)
     translateX(calc(var(--switchWidth) - var(--toggleSize)));
 }
-.breakdance
-  .bde-content-toggle
+.bde-content-toggle
   input:checked
   + .bde-content-toggle__slider:before {
   background-color: white;
