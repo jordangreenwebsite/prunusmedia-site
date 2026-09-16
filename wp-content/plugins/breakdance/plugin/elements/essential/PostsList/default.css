@@ -30,10 +30,8 @@
   order: 0;
 }
 
-.breakdance
 .bde-post-list
 .ee-post-image-link.ee-posts-image-left,
-.breakdance
 .bde-post-list
 .ee-post-image-link.ee-posts-image-right {
   width: 25%;
@@ -83,14 +81,12 @@
   color: inherit;
 }
 
-.breakdance
 .bde-post-list
 .ee-post-meta-item:not(:last-child):after {
   content: ".";
   margin: 0 5px;
 }
 
-.breakdance
 .bde-post-list
 .ee-post-taxonomy-item:not(:last-child):after {
   content: "/";

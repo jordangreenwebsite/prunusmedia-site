@@ -1,0 +1,446 @@
+/* Light default styling: a single bordered field with the submit icon
+   sitting inside it, neutral enough to disappear under any design system.
+   Everything here is overridable by ordinary class CSS. */
+.bde-search-form-v2__form {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The positioning context for the overlapped submit button: the button
+   anchors to this row, not to the form, which grows taller when the
+   in-panel results flow below the input. */
+.bde-search-form-v2__input {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.bde-search-form-v2__field {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 44px 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+}
+
+.bde-search-form-v2__field:focus {
+  outline: none;
+  border-color: #6b7280;
+}
+
+.bde-search-form-v2__field::placeholder {
+  color: #9ca3af;
+}
+
+/* The button overlaps the field's right edge and blends in: no border or
+   background of its own, just a muted icon that darkens on hover/focus.
+   The field's right padding reserves its footprint so text never runs
+   under the icon. */
+.bde-search-form-v2__button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border: none;
+  background: none;
+  color: #6b7280;
+  font: inherit;
+  cursor: pointer;
+}
+
+.bde-search-form-v2__button:hover,
+.bde-search-form-v2__button:focus-visible {
+  color: #1f2937;
+}
+
+/* Autocomplete results: a dropdown panel anchored under the field. Items
+   arrive rendered from the endpoint, either the built-in link items below
+   or a Global Block per result. */
+.bde-search-form-v2__results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+.bde-search-form-v2__results[hidden] {
+  display: none;
+}
+
+/* Open/close animation, driven by the JS: is-opening plays on the
+   hidden-to-visible flip only (content swaps while open do not replay);
+   is-closing plays before hidden is set. */
+.bde-search-form-v2__results.is-opening {
+  animation: bde-search-form-v2-results-in 0.18s ease-out both;
+}
+
+.bde-search-form-v2__results.is-closing {
+  animation: bde-search-form-v2-results-out 0.15s ease-in both;
+}
+
+@keyframes bde-search-form-v2-results-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bde-search-form-v2-results-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* Inside the modal the results are part of the panel body, flowing below
+   the input and growing the panel, rather than a floating dropdown. The
+   panel supplies the surface, so the dropdown chrome goes away. The form
+   is a flex row, so a static results list must wrap onto its own
+   full-width second row or it lands beside the field and stretches it. */
+.bde-search-form-v2__modal .bde-search-form-v2__form {
+  flex-wrap: wrap;
+}
+
+.bde-search-form-v2__modal .bde-search-form-v2__results {
+  position: static;
+  flex: 0 0 100%;
+  width: 100%;
+  margin-top: 16px;
+  max-height: min(50vh, 480px);
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.bde-search-form-v2__result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: #1f2937;
+  text-decoration: none;
+}
+
+/* is-active is the keyboard highlight (arrow navigation); it mirrors the
+   pointer hover so both input methods read the same. */
+a.bde-search-form-v2__result:hover,
+.bde-search-form-v2__result.is-active {
+  background: #f3f4f6;
+}
+
+.bde-search-form-v2__result--block {
+  display: block;
+  padding: 0;
+}
+
+.bde-search-form-v2__result-image {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.bde-search-form-v2__result-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bde-search-form-v2__result-price {
+  font-size: 0.875em;
+  color: #6b7280;
+}
+
+.bde-search-form-v2__results-empty {
+  padding: 10px 14px;
+  color: #6b7280;
+}
+
+/* Icon on the left: the button moves to the field's left edge and the
+   field's reserved padding flips sides. */
+.bde-search-form-v2__form--icon-left .bde-search-form-v2__field {
+  padding: 10px 14px 10px 44px;
+}
+
+.bde-search-form-v2__form--icon-left .bde-search-form-v2__button {
+  right: auto;
+  left: 0;
+}
+
+/* Functional sizing: an SVG with just a viewBox renders at the browser
+   default of 300x150. 1em and currentColor keep the icon tracking whatever
+   font size and color the button has. */
+.bde-search-form-v2__button svg,
+.bde-search-form-v2__toggle svg,
+.bde-search-form-v2__close svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}
+
+/* Modal mode. The toggle is a bare icon button that inherits the
+   surrounding color; the dialog is a centered top-anchored panel with the
+   inline form inside it. */
+.bde-search-form-v2__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Field-style toggle: a button dressed as the search field (border, radius,
+   placeholder-gray text, icon at the edge), inviting a click the way the
+   real input would. It stays a button; the actual input lives in the modal. */
+.bde-search-form-v2__toggle--field {
+  width: 100%;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #6b7280;
+  text-align: left;
+}
+
+.bde-search-form-v2__toggle--field:hover {
+  border-color: #6b7280;
+}
+
+.bde-search-form-v2__toggle--field.bde-search-form-v2__toggle--icon-left {
+  justify-content: flex-start;
+}
+
+.bde-search-form-v2__toggle--field.bde-search-form-v2__toggle--icon-left svg {
+  order: -1;
+}
+
+.bde-search-form-v2__modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+}
+
+.bde-search-form-v2__modal.is-open,
+.bde-search-form-v2__modal.is-closing {
+  display: block;
+}
+
+.bde-search-form-v2__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.bde-search-form-v2__panel {
+  position: relative;
+  margin: 15vh auto 0;
+  width: calc(100% - 40px);
+  max-width: 560px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+}
+
+/* The close button pins to the viewport's top corner (offset below the WP
+   admin bar when it shows), not to the panel, so it sits where takeover
+   UIs put it regardless of where the panel lands. */
+.bde-search-form-v2__close {
+  position: fixed;
+  top: calc(12px + var(--wp-admin--admin-bar--height, 0px));
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: none;
+  background: none;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Top drawer: the panel becomes a full-width bar sliding in from the top
+   edge (the Farfetch-style search takeover), the form centered inside it
+   and the close button sitting inside the bar. */
+.bde-search-form-v2__modal--top .bde-search-form-v2__panel {
+  /* Keep the bar clear of the WP admin bar when it is showing; the same
+     variable the menu's offcanvas and fullscreen modes use. */
+  margin: var(--wp-admin--admin-bar--height, 0px) 0 0;
+  width: 100%;
+  max-width: none;
+  padding: 40px 24px;
+  border-radius: 0;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+}
+
+.bde-search-form-v2__modal--top .bde-search-form-v2__form {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.bde-search-form-v2__modal--top .bde-search-form-v2__close {
+  color: #374151;
+}
+
+/* Open animation: keyframes fire reliably on the display flip. */
+.bde-search-form-v2__modal.is-open .bde-search-form-v2__backdrop {
+  animation: bde-search-form-v2-fade 0.2s ease-out both;
+}
+
+.bde-search-form-v2__modal.is-open .bde-search-form-v2__panel {
+  animation: bde-search-form-v2-rise 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.bde-search-form-v2__modal--top.is-open .bde-search-form-v2__panel {
+  animation: bde-search-form-v2-drop 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Close animation: the JS swaps is-open for is-closing (which keeps the
+   modal displayed), plays the exit keyframes, and removes is-closing on
+   animationend, at which point display goes back to none. */
+.bde-search-form-v2__modal.is-closing .bde-search-form-v2__backdrop {
+  animation: bde-search-form-v2-fade-out 0.18s ease-in both;
+}
+
+.bde-search-form-v2__modal.is-closing .bde-search-form-v2__panel {
+  animation: bde-search-form-v2-sink 0.18s ease-in both;
+}
+
+.bde-search-form-v2__modal--top.is-closing .bde-search-form-v2__panel {
+  animation: bde-search-form-v2-lift 0.18s ease-in both;
+}
+
+@keyframes bde-search-form-v2-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bde-search-form-v2-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bde-search-form-v2-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes bde-search-form-v2-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes bde-search-form-v2-sink {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+}
+
+@keyframes bde-search-form-v2-lift {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+
+/* is-restoring re-applies the open state after the builder re-rendered the
+   markup mid-design: the modal reappears instantly, no entrance replay.
+   Placed after the entrance rules so it wins at equal specificity. */
+.bde-search-form-v2__modal.is-restoring .bde-search-form-v2__backdrop,
+.bde-search-form-v2__modal.is-restoring .bde-search-form-v2__panel {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bde-search-form-v2__modal.is-open .bde-search-form-v2__backdrop,
+  .bde-search-form-v2__modal.is-open .bde-search-form-v2__panel,
+  .bde-search-form-v2__modal--top.is-open .bde-search-form-v2__panel,
+  .bde-search-form-v2__modal.is-closing .bde-search-form-v2__backdrop,
+  .bde-search-form-v2__modal.is-closing .bde-search-form-v2__panel,
+  .bde-search-form-v2__modal--top.is-closing .bde-search-form-v2__panel,
+  .bde-search-form-v2__results.is-opening,
+  .bde-search-form-v2__results.is-closing {
+    animation: none;
+  }
+}
+
+/* The accessible label, visually hidden by default. It carries an
+   element-owned class rather than WordPress's conventional
+   .screen-reader-text so no theme or user rule for that class collides
+   with it; override this class to show the label. */
+.bde-search-form-v2__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
