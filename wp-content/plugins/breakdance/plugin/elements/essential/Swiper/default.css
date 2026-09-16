@@ -1,0 +1,24 @@
+.bde-swiper {
+  --bde-swiper-height: auto;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  height: var(--bde-swiper-height);
+}
+
+.bde-swiper > .swiper {
+  height: 100%;
+}
+
+.bde-swiper .swiper-slide {
+  height: auto;
+}
+
+/* Images mode: the generated <img> fills its slide. Zoom overrides this to
+   contain when enabled (see css.twig), which is what zoom needs. */
+.bde-swiper__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
