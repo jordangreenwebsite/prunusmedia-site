@@ -7,3 +7,39 @@
 .breakdance-woocommerce .woocommerce-Reviews {
   max-width: 100%;
 }
+
+/* Woo's reviews markup carries ids (#comments, #review_form_wrapper) that themes
+   commonly style, and an id outranks the class rules above. Keep the panel's own
+   layout intact. */
+.bde-wooproducttabs .bde-accordion__panel-content .woocommerce-Reviews,
+.bde-wooproducttabs .bde-accordion__panel-content #comments,
+.bde-wooproducttabs .bde-accordion__panel-content #review_form_wrapper {
+  width: 100%;
+  max-width: 100%;
+  float: none;
+}
+
+/* The woo heading styles are scoped to .bde-tabs__panel-content, so mirror them
+   for accordion panels to keep author-written headings consistent. */
+.breakdance-woocommerce .bde-wooproducttabs .bde-accordion__panel-content h2 {
+  color: var(--bde-woo-base-headings-color);
+  display: flex;
+  font-weight: var(--bde-woo-typography-font-weight-normal);
+  font-size: var(--bde-woo-typography__size-medium);
+  font-family: var(--bde-woo-typography__size-medium-font-family);
+  line-height: var(--bde-woo-base-heading-line-height);
+  text-align: left;
+  padding: 0;
+  margin-bottom: var(--bde-woo-base-medium-gaps);
+}
+
+.bde-wooproducttabs .bde-accordion__tab-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.bde-wooproducttabs .bde-accordion__tab-icon svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}
