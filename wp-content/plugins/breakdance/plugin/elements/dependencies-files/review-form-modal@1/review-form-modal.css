@@ -1,0 +1,191 @@
+.bde-review-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.bde-review-modal.is-open {
+  display: flex;
+}
+.bde-review-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+.bde-review-modal__content {
+  position: relative;
+  background: #fff;
+  width: calc(100% - 40px);
+  max-width: 600px;
+  max-height: calc(100vh - 80px);
+  overflow: auto;
+  padding: 32px;
+  border-radius: 4px;
+}
+.bde-review-modal__close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  padding: 4px 8px;
+  color: #1f2937;
+}
+
+/* The form is moved into the modal from the woo element's DOM, so it would
+   otherwise inherit the site's and the woo global styler's colors, which are
+   designed for the page background, not for the modal's white panel (a dark
+   site leaves near-white labels on white and a dark textarea). The modal is
+   self-contained: it enforces its own light scheme, with !important on the
+   color-critical properties so no site or woo styling bleeds in. */
+.bde-review-modal__content {
+  color: #1f2937 !important;
+  color-scheme: light;
+}
+
+.bde-review-modal__content h1,
+.bde-review-modal__content h2,
+.bde-review-modal__content h3,
+.bde-review-modal__content h4,
+.bde-review-modal__content h5,
+.bde-review-modal__content h6,
+.bde-review-modal__content .comment-reply-title,
+.bde-review-modal__content label,
+.bde-review-modal__content p {
+  color: inherit !important;
+}
+
+.bde-review-modal__content .required {
+  color: #b91c1c !important;
+}
+
+.bde-review-modal__content input:not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
+.bde-review-modal__content textarea,
+.bde-review-modal__content select {
+  background: #fff !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 4px;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.bde-review-modal__content input:focus,
+.bde-review-modal__content textarea:focus,
+.bde-review-modal__content select:focus {
+  border-color: #6b7280 !important;
+  outline: none;
+}
+
+.bde-review-modal__content input[type="submit"],
+.bde-review-modal__content button[type="submit"] {
+  background: #111827 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px;
+  padding: 10px 24px;
+  cursor: pointer;
+}
+
+.bde-review-modal__content input[type="submit"]:hover,
+.bde-review-modal__content button[type="submit"]:hover {
+  background: #374151 !important;
+}
+
+.bde-review-modal__content .stars a {
+  color: #f59e0b !important;
+}
+
+/* Vertical rhythm. The woo review form is a stack of plain <p> rows
+   (.comment-form-*, p.stars, p.form-submit) and the site reset strips their
+   margins, so out of its usual woo context the form renders flush: labels
+   touching fields, "Your review" sitting on the stars. */
+.bde-review-modal__content .comment-reply-title {
+  margin: 0 0 20px !important;
+  padding-right: 32px;
+}
+
+.bde-review-modal__content .comment-notes,
+.bde-review-modal__content .comment-form-rating,
+.bde-review-modal__content .comment-form-comment,
+.bde-review-modal__content .comment-form-author,
+.bde-review-modal__content .comment-form-email,
+.bde-review-modal__content .comment-form-cookies-consent,
+.bde-review-modal__content .stars {
+  margin: 0 0 20px !important;
+}
+
+.bde-review-modal__content .stars {
+  display: block;
+}
+
+.bde-review-modal__content label {
+  display: block;
+  margin-bottom: 8px !important;
+  font-weight: 500;
+}
+
+/* The consent checkbox and its label read as one inline row. */
+.bde-review-modal__content .comment-form-cookies-consent label {
+  display: inline;
+  margin: 0 !important;
+  font-weight: 400;
+}
+
+.bde-review-modal__content .comment-form-cookies-consent input {
+  width: auto !important;
+  margin-right: 8px;
+}
+
+.bde-review-modal__content textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.bde-review-modal__content .form-submit {
+  margin: 4px 0 0 !important;
+}
+
+/* Open animation. The modal toggles display none to flex, which transitions
+   cannot animate; keyframe animations start when the element becomes
+   displayed, so they run reliably on the class flip. Closing stays instant
+   (display is removed in the same frame). */
+.bde-review-modal.is-open .bde-review-modal__backdrop {
+  animation: bde-review-modal-fade 0.2s ease-out both;
+}
+
+.bde-review-modal.is-open .bde-review-modal__content {
+  animation: bde-review-modal-rise 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes bde-review-modal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bde-review-modal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bde-review-modal.is-open .bde-review-modal__backdrop,
+  .bde-review-modal.is-open .bde-review-modal__content {
+    animation: none;
+  }
+}
