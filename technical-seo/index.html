@@ -17,7 +17,7 @@
 <meta property="og:description" content="Technical SEO services for UK businesses. Improve crawling, indexing, site structure, speed, redirects and the technical foundations behind organic search.">
 <meta property="og:url" content="/technical-seo/">
 <meta property="og:site_name" content="Prunus Media">
-<meta property="og:updated_time" content="2026-09-28T11:45:54+01:00">
+<meta property="og:updated_time" content="2026-09-29T17:06:30+01:00">
 <meta property="og:image" content="/wp-content/uploads/2024/08/Prunus-Media-Left-orientation.png">
 <meta property="og:image:width" content="2000">
 <meta property="og:image:height" content="2000">
@@ -67,7 +67,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
 <meta name="generator" content="WordPress 7.1.2">
 <link rel="shortlink" href="/?p=456">
         <meta name="ssp-config-path" content="/wp-content/uploads/simply-static/configs/">
-        <meta name="ssp-config-version" content="1790693149">
+        <meta name="ssp-config-version" content="1790698871">
         <meta name="ssp-origin-url" content="/">
 
 						<!-- [HEADER ASSETS] -->
@@ -86,7 +86,7 @@ img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
 
 <link rel="stylesheet" href="/wp-content/uploads/breakdance/css/post-27.css?v=f5de9a1ebc84bd2097382e7b5c905ba3">
 
-<link rel="stylesheet" href="/wp-content/uploads/breakdance/css/post-456.css?v=62452898b25e63bd680a086bfe3ce611">
+<link rel="stylesheet" href="/wp-content/uploads/breakdance/css/post-456.css?v=35d923542cf2290e5ce76871258b1f4e">
 
 <link rel="stylesheet" href="/wp-content/uploads/breakdance/css/post-26.css?v=15a7de4dba35031cba15601d9f788dba">
 <!-- [/EOF HEADER ASSETS] -->
@@ -1051,9 +1051,9 @@ Changing URLs without redirects.<br><br>Deleting ranking pages.<br><br>Blocking 
 
 </div>
 </div></div>
-</div><div id="freeaudit" class="bde-code-block-456-200 bde-code-block">
+</div><div id="freeaudit" class="bde-code-block-456-201 bde-code-block">
 
-  <!-- PRUNUS MEDIA — FREE WEBSITE AUDIT V5.5 -->
+  <!-- PRUNUS MEDIA — FREE WEBSITE AUDIT V5.6 STATIC-SAFE -->
 <div id="prunus-audit">
 <style>
 #prunus-audit{--d:#171714;--g:#566449;--gd:#3f4b36;--gl:#e9eee5;--t:#24241f;--m:#77776f;--b:rgba(36,36,31,.12);--r:#c85b4b;--rb:#fbefed;--a:#c28b3c;--ab:#fbf5e9;--s:#5c7650;--sb:#edf3e9;font-family:inherit;color:var(--t);width:100%}
@@ -1211,7 +1211,11 @@ function priority(s){return s==='bad'?0:s==='warning'?1:2}
 function compareChecks(a,b){return priority(a.status)-priority(b.status)||(b.weight||0)-(a.weight||0)||(a.checkScore??100)-(b.checkScore??100)}
 function sectionName(item){return SECTION_LABELS[item.section]||legacyCategoryName(item.category)}
 function legacyCategoryName(c){return c==='search'?'SEO':c==='local'?'Local SEO':c==='technical'?'Site Health':'Website'}
-function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,''')}
+function escapeHtml(v){
+const div=document.createElement('div');
+div.textContent=String(v??'');
+return div.innerHTML;
+}
 function setCopy(t,d){$('paResultTitle').textContent=t;$('paResultDescription').textContent=d}
 function animateNumber(id,target){const el=$(id);target=Math.round(Number(target)||0);el.textContent='0';let n=0,step=Math.max(1,Math.ceil(target/35));const timer=setInterval(()=>{n+=step;if(n>=target){n=target;clearInterval(timer)}el.textContent=n},22)}
 function scoreValue(v){return typeof v==='number'&&isFinite(v)?Math.round(v):0}
