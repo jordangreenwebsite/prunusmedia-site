@@ -2,75 +2,75 @@
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd http://www.google.com/schemas/sitemap-image/1.1 http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<url>
 		<loc>/</loc>
-		<lastmod>2026-09-29T16:07:18+00:00</lastmod>
+		<lastmod>2026-09-30T09:21:31+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/website-design/content-creation/</loc>
+		<lastmod>2026-09-30T09:53:27+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/website-design/website-review/</loc>
+		<lastmod>2026-09-30T09:52:40+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/website-design/brand-identity/</loc>
+		<lastmod>2026-09-30T09:51:59+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/website-design/packages/</loc>
+		<lastmod>2026-09-30T09:51:18+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/website-design/website-care-hosting/</loc>
+		<lastmod>2026-09-30T09:50:04+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/website-design/landing-page-design/</loc>
+		<lastmod>2026-09-30T09:47:31+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/website-design/ecommerce-website-design/</loc>
+		<lastmod>2026-09-30T09:46:07+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/website-design/website-redesign/</loc>
+		<lastmod>2026-09-30T09:44:47+00:00</lastmod>
 	</url>
 	<url>
 		<loc>/website-design/</loc>
-		<lastmod>2026-09-29T16:06:43+00:00</lastmod>
+		<lastmod>2026-09-30T09:43:56+00:00</lastmod>
 	</url>
 	<url>
-		<loc>/technical-seo/</loc>
-		<lastmod>2026-09-29T16:06:30+00:00</lastmod>
+		<loc>/social-media-marketing-uk/</loc>
+		<lastmod>2026-09-30T09:42:36+00:00</lastmod>
 	</url>
 	<url>
-		<loc>/seo-content/</loc>
-		<lastmod>2026-09-29T16:06:19+00:00</lastmod>
+		<loc>/seo-agency-uk/technical-seo/</loc>
+		<lastmod>2026-09-30T09:41:29+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/seo-agency-uk/free-seo-audit/</loc>
+		<lastmod>2026-09-30T09:35:22+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/seo-agency-uk/local-seo/</loc>
+		<lastmod>2026-09-30T09:34:09+00:00</lastmod>
+	</url>
+	<url>
+		<loc>/seo-agency-uk/seo-content/</loc>
+		<lastmod>2026-09-30T09:31:05+00:00</lastmod>
 	</url>
 	<url>
 		<loc>/seo-agency-uk/</loc>
-		<lastmod>2026-09-29T16:06:05+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/local-seo/</loc>
-		<lastmod>2026-09-29T16:05:44+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/free-seo-audit/</loc>
-		<lastmod>2026-09-29T16:04:42+00:00</lastmod>
+		<lastmod>2026-09-30T09:28:02+00:00</lastmod>
 	</url>
 	<url>
 		<loc>/industries/</loc>
 		<lastmod>2026-09-28T12:04:30+00:00</lastmod>
 	</url>
 	<url>
-		<loc>/website-design/packages/</loc>
-		<lastmod>2026-09-28T10:47:45+00:00</lastmod>
-	</url>
-	<url>
 		<loc>/contact/</loc>
 		<lastmod>2026-09-28T10:02:43+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/website-design/website-redesign/</loc>
-		<lastmod>2026-09-26T14:17:23+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/website-design/ecommerce-website-design/</loc>
-		<lastmod>2026-09-26T14:17:20+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/website-design/landing-page-design/</loc>
-		<lastmod>2026-09-26T14:17:15+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/social-media-marketing-uk/</loc>
-		<lastmod>2026-09-26T14:17:10+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/website-design/website-review/</loc>
-		<lastmod>2026-09-26T14:17:07+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/website-design/brand-identity/</loc>
-		<lastmod>2026-09-26T14:17:05+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/website-design/content-creation/</loc>
-		<lastmod>2026-09-26T14:17:01+00:00</lastmod>
-	</url>
-	<url>
-		<loc>/website-design/website-care-hosting/</loc>
-		<lastmod>2026-09-24T15:03:48+00:00</lastmod>
 	</url>
 	<url>
 		<loc>/about/</loc>
