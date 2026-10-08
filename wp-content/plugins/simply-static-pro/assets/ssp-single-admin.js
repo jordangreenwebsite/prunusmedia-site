@@ -156,6 +156,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function translatedSingleText(key, fallback) {
+        return typeof ssp_single_ajax !== 'undefined' && ssp_single_ajax[key]
+            ? String(ssp_single_ajax[key])
+            : fallback;
+    }
+
     function sspStartSingleExport(buttonEl) {
         // Do not allow single export on our internal ssp-form post type
         try {
@@ -177,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!buttonEl.dataset.sspOriginalHtml) {
             buttonEl.dataset.sspOriginalHtml = buttonEl.innerHTML;
         }
-        buttonEl.textContent = 'Pushing…';
+        buttonEl.textContent = translatedSingleText('pushing_label', 'Pushing…');
 
         var body = new URLSearchParams();
         body.set('action', 'apply_single');
@@ -228,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'components-button is-primary ssp-export-button';
-        btn.textContent = 'Push';
+        btn.textContent = translatedSingleText('push_label', 'Push');
         btn.addEventListener('click', function(){ sspStartSingleExport(btn); });
         container.insertBefore(btn, container.firstChild);
         return true;
@@ -290,8 +296,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var btn = topDocument.createElement('button');
             btn.type = 'button';
             btn.className = 'ssp-floating-export';
-            btn.setAttribute('aria-label', 'Simply Static Push');
-            btn.textContent = 'Push';
+            btn.setAttribute('aria-label', translatedSingleText('push_aria_label', 'Simply Static Push'));
+            btn.textContent = translatedSingleText('push_label', 'Push');
             btn.addEventListener('click', function(){ sspStartSingleExport(btn); });
             return btn;
         }
