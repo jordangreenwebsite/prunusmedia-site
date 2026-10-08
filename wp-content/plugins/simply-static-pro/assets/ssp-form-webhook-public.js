@@ -29,6 +29,23 @@ if (!window.__sspTurnstileReady) {
         }
     }
 
+    // The public webhook script is printed in the document head before the
+    // config meta tags. Resolve them at request time instead of capturing the
+    // single-site fallback while the browser is still parsing the head.
+    function sspGetFormsConfigUrl() {
+        var configElement = document.querySelector("meta[name='ssp-config-path']");
+        var configPath = configElement ? configElement.getAttribute('content') : '/wp-content/uploads/simply-static/configs/';
+        var versionElement = document.querySelector("meta[name='ssp-config-version']");
+        var versionSuffix = '';
+
+        if (versionElement) {
+            var version = versionElement.getAttribute('content');
+            if (version) { versionSuffix = '?ver=' + encodeURIComponent(version); }
+        }
+
+        return sspBuildConfigUrl(configPath, 'forms.json', versionSuffix);
+    }
+
     // Detect static environment early (before DOM may be fully loaded)
     const isStaticSite = () => {
         const configMeta = document.querySelector("meta[name='ssp-config-path']");
@@ -94,9 +111,14 @@ if (!window.__sspTurnstileReady) {
             : null;
         var key = outcome && outcome.accepted ? 'form_success_message' : 'form_error_message';
         var fallback = outcome && outcome.accepted
-            ? 'Thanks! Your message has been sent.'
-            : 'Sorry, something went wrong. Please try again.';
+            ? localizedFormText('success', 'Thanks! Your message has been sent.')
+            : localizedFormText('error', 'Sorry, something went wrong. Please try again.');
         return settings && settings[key] ? String(settings[key]) : fallback;
+    }
+
+    function localizedFormText(key, fallback) {
+        var translations = window.sspFormI18n || {};
+        return translations[key] ? String(translations[key]) : fallback;
     }
 
     function escapeManagedResponseHtml(value) {
@@ -578,7 +600,8 @@ if (!window.__sspTurnstileReady) {
                             document.querySelector('.forminator-custom-form[data-form-id="' + fmId + '"]') ||
                             document.querySelector('.forminator-custom-form');
                         if (fmEl && window.__SSP_MANAGE_FORM__) {
-                            fmSubmission = window.__SSP_MANAGE_FORM__([fmId, 'forminator-module-' + fmId], fmEl);
+                            var fmOriginalData = (body instanceof FormData) ? body : null;
+                            fmSubmission = window.__SSP_MANAGE_FORM__([fmId, 'forminator-module-' + fmId], fmEl, fmOriginalData);
                         }
                     }
                     completeManagedXhr('forminator', this, fmSubmission, { formId: fmId || '0' });
@@ -696,17 +719,6 @@ if (!window.__sspTurnstileReady) {
         };
     }
 
-    // Get options from JSON file.
-    var form_config_element = document.querySelector("meta[name='ssp-config-path']");
-    var config_path = form_config_element ? form_config_element.getAttribute("content") : '/wp-content/uploads/simply-static/configs/';
-    var version_element = document.querySelector("meta[name='ssp-config-version']");
-    var version_suffix = '';
-    if (version_element) {
-        let v = version_element.getAttribute('content');
-        if (v) { version_suffix = '?ver=' + encodeURIComponent(v); }
-    }
-    var config_url = sspBuildConfigUrl(config_path, 'forms.json', version_suffix);
-
     function isSettingEnabled(value) {
         return String(value) === '1';
     }
@@ -733,8 +745,8 @@ if (!window.__sspTurnstileReady) {
         var message = document.createElement('div');
         message.className = error ? 'ssp-form-message ssp-error' : 'ssp-form-message ssp-success';
         message.style.cssText = 'width:100%;background:' + (error ? '#e24b4b' : '#58b348') + ';color:#fff;text-align:center;padding:10px;border-radius:3px;';
-        var successText = settings && settings.form_success_message ? settings.form_success_message : 'Thanks! Your message has been sent.';
-        var errorText = settings && settings.form_error_message ? settings.form_error_message : 'Sorry, something went wrong. Please try again.';
+        var successText = settings && settings.form_success_message ? settings.form_success_message : localizedFormText('success', 'Thanks! Your message has been sent.');
+        var errorText = settings && settings.form_error_message ? settings.form_error_message : localizedFormText('error', 'Sorry, something went wrong. Please try again.');
         message.textContent = error ? errorText : successText;
         notice.appendChild(message);
 
@@ -1064,7 +1076,7 @@ if (!window.__sspTurnstileReady) {
         }
         label = String(label).replace(/\*/g, '').replace(/\s+/g, ' ').trim();
         if (/^[?\s]+$/.test(label)) { label = ''; }
-        if (!label) { label = 'Field ' + index; }
+        if (!label) { label = localizedFormText('field', 'Field %d').replace('%d', index); }
         return label;
     }
 
@@ -1137,7 +1149,7 @@ if (!window.__sspTurnstileReady) {
         if (__SSP_FORMS_CONFIG__) { return Promise.resolve(__SSP_FORMS_CONFIG__); }
         if (__SSP_FORMS_CONFIG_PROMISE__) { return __SSP_FORMS_CONFIG_PROMISE__; }
 
-        __SSP_FORMS_CONFIG_PROMISE__ = fetch(config_url)
+        __SSP_FORMS_CONFIG_PROMISE__ = fetch(sspGetFormsConfigUrl())
             .then(r => r.ok ? r.json() : Promise.reject(r.status))
             .then(json => {
                 __SSP_FORMS_CONFIG__ = json;
@@ -1473,7 +1485,7 @@ if (!window.__sspTurnstileReady) {
 				);
 				if (captchaUnavailable) {
 					var captchaErrorSettings = Object.assign({}, settings, {
-						form_error_message: 'CAPTCHA protection could not initialize for this form. Please reload the page or contact the site owner.'
+						form_error_message: localizedFormText('captchaError', 'CAPTCHA protection could not initialize for this form. Please reload the page or contact the site owner.')
 					});
 					handleMessage(captchaErrorSettings, true, form);
 					console.error('[SSP] CAPTCHA proxy required but its form widget is unavailable.');
@@ -1540,7 +1552,7 @@ if (!window.__sspTurnstileReady) {
                     return submitForm(targetUrl, settings, data, form);
                 }
             } else {
-                handleMessage({ form_success_message: 'Form submitted (fallback).', form_error_message: 'Mapping error.' }, true, form);
+                handleMessage({ form_error_message: localizedFormText('mappingError', 'The form configuration could not be loaded. Please try again.') }, true, form);
                 return { success: false, settings: null, form: form, error: 'mapping_error' };
             }
 
@@ -1737,12 +1749,38 @@ if (!window.__sspTurnstileReady) {
         renderRecaptchaV2Widgets();
     }
 
+    function prepareForminatorUploads(form) {
+        if (
+            !isStaticSite() || !form || !form.classList ||
+            !form.classList.contains('forminator-custom-form')
+        ) {
+            return;
+        }
+
+        form.querySelectorAll('input[type="file"][data-method="ajax"]').forEach(function (input) {
+            // Forminator's AJAX multi-file mode immediately posts each selected
+            // file to WordPress admin-ajax.php. A static destination cannot accept
+            // that request. Submission mode is a native Forminator mode that keeps
+            // the File objects on the input until our managed form-upload transport
+            // reserves and uploads them during the final submission.
+            input.setAttribute('data-method', 'submission');
+
+            // jQuery caches data-* values after the first read. Update that cache as
+            // well so this remains reliable when Forminator initialized first.
+            if (typeof window.jQuery === 'function') {
+                window.jQuery(input).data('method', 'submission');
+            }
+        });
+    }
+
     function initForms() {
         const allFormRoots = document.querySelectorAll("form[data-ssp-form-connection], .wpcf7 form, .wpcf7-form, .gform_wrapper form, .gform_wrapper, .wpforms-container form, .elementor-form, .wsf-form form, .ws-form form, .frm-fluent-form, .brxe-form, .brxe-brf-pro-forms, .wp-block-kadence-form form, .forminator-custom-form, .ninja-forms-form-wrap form, .nf-form-cont form, .ninja-forms-form-wrap, .nf-form-cont");
 
         allFormRoots.forEach((root) => {
             let form = (root.tagName === 'FORM') ? root : root.querySelector('form');
-            if (!form || form.dataset.sspBound === '1') return;
+            if (!form) return;
+            prepareForminatorUploads(form);
+            if (form.dataset.sspBound === '1') return;
             form.dataset.sspBound = '1';
 
             // Mark aria-required fields as required for HTML5 validation

@@ -254,7 +254,9 @@
                     top.style.cssText = 'width:100%;background:#ffe0e0;color:#7a0000;padding:10px;margin:0 0 12px;border:1px solid #f5b5b5;';
                     form.insertBefore(top, form.firstChild);
                 }
-                top.textContent = 'Please fix the errors highlighted below and try again.';
+                top.textContent = window.sspFormI18n && window.sspFormI18n.validationSummary
+                    ? window.sspFormI18n.validationSummary
+                    : 'Please fix the errors highlighted below and try again.';
             } else {
                 // clear summary if any
                 const top = form.querySelector('.ssp-form-error-summary');
