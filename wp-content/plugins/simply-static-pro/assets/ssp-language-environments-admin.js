@@ -51,6 +51,32 @@
 		return Object.assign( {}, mappings || {} );
 	}
 
+	function getLanguagesUsingEnvironment( mappings, environment ) {
+		return Object.keys( mappings || {} ).filter( ( language ) => mappings[ language ] === environment );
+	}
+
+	function hasDuplicateMappings( mappings ) {
+		const seen = new Set();
+
+		return Object.keys( mappings || {} ).some( ( language ) => {
+			const environment = mappings[ language ];
+			if ( ! environment ) {
+				return false;
+			}
+
+			if ( seen.has( environment ) ) {
+				return true;
+			}
+
+			seen.add( environment );
+			return false;
+		} );
+	}
+
+	function duplicateMappingMessage() {
+		return __( 'Each environment can be mapped to only one language. Choose a different environment for duplicate mappings.', 'simply-static-pro' );
+	}
+
 	function ensureModalRoot() {
 		if ( modalRoot ) {
 			return modalRoot;
@@ -89,18 +115,29 @@
 	}
 
 	function updateDraftMapping( language, environment ) {
+		if ( environment && getLanguagesUsingEnvironment( state.draftMappings, environment ).some( ( mappedLanguage ) => mappedLanguage !== language ) ) {
+			setModalMessage( duplicateMappingMessage(), 'error' );
+			renderModal();
+			return;
+		}
+
 		if ( ! environment ) {
 			delete state.draftMappings[ language ];
 		} else {
 			state.draftMappings[ language ] = environment;
 		}
 
-		setModalMessage( '', '' );
+		const hasDuplicates = hasDuplicateMappings( state.draftMappings );
+		setModalMessage( hasDuplicates ? duplicateMappingMessage() : '', hasDuplicates ? 'error' : '' );
 		renderModal();
 	}
 
 	function saveMappings() {
-		if ( state.isSaving ) {
+		if ( state.isSaving || hasDuplicateMappings( state.draftMappings ) ) {
+			if ( hasDuplicateMappings( state.draftMappings ) ) {
+				setModalMessage( duplicateMappingMessage(), 'error' );
+				renderModal();
+			}
 			return;
 		}
 
@@ -129,7 +166,8 @@
 		state.draftMappings = getMappingsCopy( state.mappings );
 		state.isModalOpen = true;
 		state.isSaving = false;
-		setModalMessage( '', '' );
+		const hasDuplicates = hasDuplicateMappings( state.draftMappings );
+		setModalMessage( hasDuplicates ? duplicateMappingMessage() : '', hasDuplicates ? 'error' : '' );
 		renderModal();
 	}
 
@@ -154,6 +192,7 @@
 
 	function LanguageEnvironmentsModal() {
 		const messageClassName = `ssp-language-environments__message${ state.messageType ? ` ssp-language-environments__message--${ state.messageType }` : '' }`;
+		const hasDuplicates = hasDuplicateMappings( state.draftMappings );
 
 		return createElement(
 			Modal,
@@ -197,7 +236,7 @@
 					createElement(
 						Button,
 						{
-							disabled: state.isSaving,
+							disabled: state.isSaving || hasDuplicates,
 							isBusy: state.isSaving,
 							isPrimary: true,
 							onClick: saveMappings,
@@ -214,6 +253,7 @@
 		const value = language.value || '';
 		const label = language.label || value;
 		const selected = state.draftMappings[ value ] || '';
+		const selectedIsDuplicate = selected && getLanguagesUsingEnvironment( state.draftMappings, selected ).length > 1;
 		const fieldId = `ssp-language-env-${ value.replace( /[^a-zA-Z0-9_-]/g, '-' ) }`;
 
 		return createElement(
@@ -230,6 +270,7 @@
 					className: 'ssp-language-environments__select',
 					disabled: state.isSaving,
 					id: fieldId,
+					'aria-invalid': selectedIsDuplicate ? 'true' : undefined,
 					onChange: ( event ) => updateDraftMapping( value, event.target.value ),
 					value: selected,
 				},
@@ -240,11 +281,13 @@
 				),
 				state.environments.map( ( environment ) => {
 					const envValue = environment.value || '';
+					const usedByAnotherLanguage = getLanguagesUsingEnvironment( state.draftMappings, envValue ).some( ( mappedLanguage ) => mappedLanguage !== value );
+					const labelSuffix = usedByAnotherLanguage ? ` (${ __( 'Already mapped', 'simply-static-pro' ) })` : '';
 
 					return createElement(
 						'option',
-						{ key: envValue, value: envValue },
-						optionLabel( environment )
+						{ disabled: usedByAnotherLanguage, key: envValue, value: envValue },
+						optionLabel( environment ) + labelSuffix
 					);
 				} )
 			)
