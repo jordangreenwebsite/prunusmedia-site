@@ -1,0 +1,21 @@
+---
+import { getCollection, render } from 'astro:content';
+import EditorialLayout from '../../layouts/EditorialLayout.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('work', ({ data }) => !data.draft);
+  return projects.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+<EditorialLayout title={entry.data.title + ' — Project'} description={entry.data.summary} pathname={'/our-work/' + entry.id + '/'} image={entry.data.image}>
+  <p class="pm-editorial__eyebrow">Prunus Media / Selected work</p>
+  <h1>{entry.data.title}</h1>
+  <p class="pm-editorial__intro">{entry.data.summary}</p>
+  {entry.data.services.length > 0 && <p class="pm-editorial__meta">{entry.data.services.join(' · ')}</p>}
+  {entry.data.image && <img src={entry.data.image} alt={entry.data.imageAlt} style="width:100%;max-height:600px;object-fit:contain;border-radius:5px" />}
+  <article class="pm-editorial__article"><Content /></article>
+  {entry.data.website && <a class="pm-editorial__button" href={entry.data.website} target="_blank" rel="noopener noreferrer">Visit the website ↗</a>}
+  <nav class="pm-editorial__nav" aria-label="More from Prunus"><a href="/our-work/">← All projects</a><a href="/contact/">Plan a project</a></nav>
+</EditorialLayout>

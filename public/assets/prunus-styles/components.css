@@ -1,0 +1,55 @@
+
+/* Independent native interaction styles. Loaded after the source design snapshot. */
+.breakdance-dropdown-floater[aria-hidden="true"] { pointer-events: none; }
+.breakdance-dropdown--open .breakdance-dropdown-floater { pointer-events: auto; }
+.breakdance-menu--open .breakdance-menu-list { visibility: visible; }
+.bde-advanced-tabs-content[hidden], .bde-tabs__panel[hidden] { display: none !important; }
+.js-comparison-container { position: relative; overflow: hidden; touch-action: pan-y; cursor: ew-resize; }
+.js-comparison-container .images { position: relative; overflow: hidden; min-height: 270px; }
+.js-comparison-container .js-image-before,
+.js-comparison-container .js-image-after { position: absolute; inset: 0; background-repeat: no-repeat; background-position: center; background-size: cover; }
+.js-comparison-container .dragger { position: absolute; z-index: 4; top: 0; bottom: 0; transform: translateX(-50%); }
+.js-comparison-container .dragger::before { content: ""; position: absolute; height: 100%; width: 2px; background: #fff; left: 50%; box-shadow: 0 0 8px #0007; }
+.js-comparison-container:focus-visible { outline: 3px solid #ECCD82; outline-offset: 3px; }
+.bde-faq__item--active .bde-faq__icon--inactive { display: none; }
+.bde-faq__item:not(.bde-faq__item--active) .bde-faq__icon--active { display: none; }
+@media(prefers-reduced-motion:reduce) {
+  .bde-header-builder { transition: none !important; }
+  .bde-animated-heading__wrapper { animation: none !important; }
+}
+
+
+/* Native reveal and sticky behaviour; reduced-motion aware. */
+.prunus-reveal{transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);opacity:0}
+.prunus-reveal[data-prunus-reveal="slideLeft"]{transform:translateX(-28px)}
+.prunus-reveal[data-prunus-reveal="slideRight"]{transform:translateX(28px)}
+.prunus-reveal[data-prunus-reveal="flipUp"]{transform:perspective(600px) rotateX(12deg) translateY(25px);transform-origin:bottom}
+.prunus-reveal.prunus-revealed{opacity:1;transform:none}
+.prunus-animated-phrase{display:inline-block;transform-origin:50% 0;animation:prunus-flip-phrase 4s ease-in-out infinite}
+@keyframes prunus-flip-phrase{0%,44%,100%{transform:rotateX(0)}49%{transform:rotateX(9deg)}54%{transform:rotateX(0)}}
+@media(min-width:1120px){.prunus-sticky{position:sticky;top:30vh}}
+@media(prefers-reduced-motion:reduce){.prunus-reveal{opacity:1!important;transform:none!important;transition:none!important}.prunus-animated-phrase{animation:none!important}}
+
+/* Approved addition: low-key client sign-in within existing desktop/mobile nav. */
+.breakdance-menu-list > .prunus-client-login .breakdance-menu-link{
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;text-decoration:underline;text-underline-offset:4px;
+  white-space:nowrap;
+}
+.breakdance-menu-list > .prunus-client-login .breakdance-menu-link:focus-visible{
+  outline:2px solid #2E2E2E;outline-offset:3px;
+}
+@media(max-width:1119px){
+  .breakdance-menu-list > .prunus-client-login .breakdance-menu-link{
+    justify-content:flex-start;white-space:normal;
+  }
+}
+
+
+/* Independent no-autoplay-until-click video embed */
+lite-youtube{position:relative;display:block;aspect-ratio:16/9;background-size:cover;background-position:center;cursor:pointer}
+lite-youtube:focus-visible{outline:3px solid #ECCD82;outline-offset:3px}
+lite-youtube.prunus-video-playing{background-image:none!important}
+lite-youtube.prunus-video-playing iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+lite-youtube.prunus-video-playing::before,
+lite-youtube.prunus-video-playing::after{display:none!important}

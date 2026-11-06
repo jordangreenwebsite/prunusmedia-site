@@ -1,0 +1,56 @@
+name: Astro migration build checks
+on:
+  push:
+    branches:
+      - astro-preservation-rebuild-2026-11-06
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'astro.config.mjs'
+      - '.github/workflows/astro-build.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout Prunus Media
+        uses: actions/checkout@v4
+      - name: Configure Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify legacy route inventory
+        run: npm run check:export
+      - name: Build Astro
+        run: npm run build
+      - name: Assert original exported HTML is preserved
+        run: node scripts/assert-export-parity.mjs
+      - name: Install Chromium for browser checks
+        run: npx playwright install chromium --with-deps
+      - name: Capture visual baselines and check browser interactions
+        run: timeout 240s node scripts/visual-smoke.mjs
+        env:
+          COMPARE_LIVE: '1'
+      - name: Upload screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prunus-astro-vs-production-screenshots
+          path: screenshots/
+          if-no-files-found: ignore
+      - name: Assert key output URLs
+        run: |
+          test -f dist/index.html
+          test -f dist/contact/index.html
+          test -f dist/seo-agency-uk/free-seo-audit/index.html
+          test -f dist/blog/index.html
+          test -f dist/our-work/index.html
+          test -f dist/our-work/j-piper-cleaning-services/index.html
+          test -f dist/robots.txt
+          test -f dist/sitemap_index.xml
+          grep -q 'https://prunusmedia.com' dist/page-sitemap.xml

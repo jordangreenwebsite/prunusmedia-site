@@ -1,0 +1,24 @@
+{
+  "name": "prunusmedia-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/postbuild.mjs",
+    "preview": "astro preview",
+    "check:export": "node scripts/check-export.mjs",
+    "predev": "node scripts/prepare-standalone.mjs && node scripts/prepare-dev.mjs",
+    "prebuild": "node scripts/prepare-standalone.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.15.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0",
+    "pixelmatch": "^7.1.0",
+    "pngjs": "^7.0.0"
+  }
+}

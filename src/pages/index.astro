@@ -1,0 +1,7 @@
+---
+import { getLegacyDocument } from '../lib/exported-pages.mjs';
+
+// Stage-one visual fidelity: original homepage document prerendered by Astro.
+const document = getLegacyDocument('index.html');
+---
+<Fragment set:html={document} />

@@ -1,0 +1,82 @@
+# Prunus Media — design.md
+Status: DESIGN LOCK / VISUAL PRESERVATION
+Source of truth: https://prunusmedia.com and `main` at 2026-11-06 (commit `cdc6b63df0bae70e84ab97e82020457068284e08`)
+Implementation branch: `astro-preservation-rebuild-2026-11-06`
+
+## Non-negotiable design contract
+
+This is **a technical migration, NOT a redesign**. Existing pages must remain visually, structurally, and functionally the same. Preserve every approved heading, paragraph, illustration, image, position, scale, animation, button, interaction, typography, breakpoint, and route until Jordan approves a specific change. "Exactly the same" means compare screenshots and real browser interactions rather than trusting visual intuition. Do not rewrite marketing copy or swap photos as part of migration. Do not silently remove odd-looking or repeated elements; flag them for separate approval.
+
+Never overwrite the production `main` or switch Cloudflare configuration while parity is unverified. Preserve existing public URLs and redirects. Stage on an independent branch and use a Cloudflare preview if the repository/Cloudflare connection supports it.
+
+## Original page and brand reference
+
+- Primary URL: `https://prunusmedia.com/`
+- Site HTML source: the Simply Static export currently committed at repository root.
+- Existing colours from Breakdance global settings: warm cream `#FAF4EE`, pale blush `#F8DCDC`, sage `#94A998`, yellow-green `#B4D980`, gold `#ECCD82`, charcoal `#2E2E2E`. Other page-specific colours may occur. Source CSS wins over this abbreviated list.
+- Cursor animation: exact source in the legacy page's `PrunusCursorFX` script. Gold/light gold/sage/cream petals and particles; tiny movement trails and click bursts. Existing script excludes coarse-pointer devices, uses a canvas layer that doesn't intercept clicks and caps particle count. Preserve its drawing shape, colour, lifetime, click response and performance behaviour.
+- Type families already loaded: Space Grotesk, Alegreya Sans, Playfair Display. Keep weights, sizes and letter spacing from legacy styles.
+- Responsive: preserve desktop, tablet and mobile hierarchy, margins, navigation collapse, hover/focus/click behaviour and the sticky/scroll header.
+- Navigation: retain the same order, names, working dropdowns and destinations until asked otherwise.
+- Footer: preserve design, social links, email, existing copy, map, and layout.
+- Industry pages are intentionally distinct in tone and visual design (accountants, private clinics, physiotherapists); never impose a generic shared hero on them.
+
+## Source inventory — must survive
+
+- Home; About; Contact; Industries hub; industry details (accountants, physiotherapists, private clinics).
+- Website Design and its existing detailed routes (redesign, e-commerce, landing-page design, care/hosting, website review, brand identity, content creation, packages).
+- SEO Agency UK, Local SEO, SEO Content, Technical SEO, Free SEO Audit; Social Media Marketing UK.
+- Existing static 404, social share metadata, canonical destinations, redirects and sitemap.
+- Homepage animations, tabs, comparison sliders, rotating headings, entrance effects and FAQs.
+- Contact form: current direct Formspree action (do not change endpoint or fields without a separate decision).
+- **Free SEO auditor**: bespoke inline frontend uses `https://prunus-seo-audit.jordanjpiper.workers.dev/`; GET audit by `?url=` and POST to email report with `auditId,name,email`. This Worker is backend, not a WordPress function. Preserve progress, scoring, reports, accessibility and carbon explanations, email gate, errors, and resend flow. Do not change the Worker URL/contract without testing.
+- Existing homepage project showcase / before-after comparison: preserve until a new connected content workflow is approved.
+
+## Astro target
+
+- Use Astro static output for Cloudflare Pages. Keep `main`/DNS production untouched until parity passed.
+- Migration **phase 1**: preserve all page content/routes in Astro and use the legacy export solely as a design reference. A standalone adapter currently replaces original plugin CSS/JS links with Prunus CSS bundles and independent JavaScript. **Generated bundle declarations still originate from exported Breakdance CSS**, so source-level semantic refactoring is not complete. Do not present an Astro-only bundle as a full clean-source rebuild.
+- Migration **phase 2**: replace generated CSS and builder-era DOM classes with authored semantic Astro layouts/components, focusing on header/footer, hero, reusable content sections and independent styles. Native JavaScript for cursor, menus, tabs, sliders, FAQs and animation now exists; refactor and test it against production. Retire all compiled exporter CSS as design equivalence is proved.
+- Keep forms and backend API contracts explicit. Never expose secrets client-side or proxy arbitrary URLs without validation.
+- Content should be simple to add: `src/content/blog/` for weekly research-led posts; `src/content/work/` for approved project portfolios, with templates in Astro. No invented testimonials or fake results.
+- Preserve permalink slugs; do not build thin SEO doorway pages.
+- Publish editorial content only when approved and supported by measured Search Console/analytics/SERP and conversion information where possible. No promises of ranking.
+
+## New-content design (not a change to existing pages)
+
+Blog and work pages should use existing brand tokens, matching header/footer appearance, a generous reading width, clear editorial headings, readable typography, and responsive image dimensions. Blog: title, description, date, optionally updated date, author, image and alt text, canonical, internal links, useful related links. Work: verified client name, category, service, location where relevant, exact work delivered, before/after if genuinely sourced, image and alt, optional live website link; never claim metrics without evidence.
+
+New navigation links may be inserted after QA and Jordan's approval; preserving the historical header is the default in the interim.
+
+## Acceptance / parity testing
+
+1. Check Astro build succeeds on clean dependency install and that all 22 currently indexed sitemap routes, plus other committed public routes, output valid files.
+2. Compare production vs preview screenshots at 1440px, 1024px, 768px and 390px. Check fonts, image cropping, margins, hero, menu, footer, and industry-specific differences.
+3. Test navigation using mouse, keyboard and touch; sticky header; dropdown close; click/outside-click; animations, before-after sliders, tabs, FAQs and prefers-reduced-motion behaviour.
+4. Confirm flower trail/click burst and absence of canvas on coarse pointers. Check smoothness and no JS console errors.
+5. Run real SEO audit (GET), save/send report (POST), verify Cloudflare Worker CORS, error and loading paths. Test contact form delivery with a non-production test recipient strategy.
+6. Check every internal link, image, form, OG image, canonical, robots and sitemap. Fix stale Local WP links as an **explicit SEO correction** (not as a visual redesign).
+7. Check responsive overflow, headings, contrast, keyboard accessibility, images, Core Web Vitals, Lighthouse and build output. Do not invent passing scores.
+8. Only approve production merge after exact-parity visual/interaction tests and editor workflows for blog/work pass.
+
+## Working style
+
+Jordan can request: "Publish a weekly Prunus post about X" or "We built a new website for Y, add it to Our Work." The assistant should research/verify relevant claims, create a content entry with proper SEO/frontmatter/assets, add internal links intentionally, build/test, open a PR or publish on agreed workflow, and report exact deployed URL and commit when truly confirmed. Do not claim a deployment from a repository write.
+
+Do not inspect or change historical `prunusmedia` / `prunus-media` repositories or Certificates.
+
+## Active migration review — 2026-11-06
+
+- GitHub CI builds Astro and checks all original HTML documents after deterministic standalone transformation.
+- Chromium smoke checks passed on homepage, desktop/mobile routes, contact, SEO audit, sample industries, new blog and work pages, with zero runtime JS exceptions after removing plugin initialisers and fixing a malformed legacy auditor escape function.
+- Snapshot comparison at common viewport sizes: homepage desktop 9.29%, homepage mobile 19.52%, contact mobile 13.85%, accountants desktop 9.73%, clinics desktop 9.60%, auditor desktop 0% pixel difference. These differences are unreviewed potential regressions; **do not merge solely because CI builds green**.
+- Browser sweep across all original routes and region-by-region visual diagnostics are being added; check current CI outcomes rather than assuming successful completion.
+- Native frontend paths exist for blog and `/our-work/` with case-study links. SEO Worker and Formspree destinations remain untouched.
+- Production stays on `main` with the old deployment. PR #1 remains draft until source cleanup and browser parity are complete.
+
+### Whole-site runtime check (2026-11-06)
+
+- GitHub Actions run [42184445665](https://github.com/jordangreenwebsite/prunusmedia-site/actions/runs/42184445665): **SUCCESS**. Chrome checks all **25 original routes**, with **0 page JavaScript exceptions**; homepage/auditor/contact/industry/blog/portfolio smoke pages also passed.
+- Removed the lingering `lozad()` call from Social Media Marketing and replaced its lazy-media and embedded YouTube behaviour with independent JavaScript.
+- First controlled screenshot comparisons still show differences requiring review. They are concentrated in dynamic page areas and particularly the mobile hero/header. This is **not** permission to merge or promise pixel-identical output.
+- Source CSS remains generated from the original exported design; replacing that compiled stylesheet with semantic authored CSS is the remaining core migration requirement.
