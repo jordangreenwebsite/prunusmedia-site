@@ -17,3 +17,6 @@
 .lead-workflow label{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:750}
 .lead-workflow .error{color:#9c3d34}
 @media(max-width:680px){.dashboard-actions{justify-content:flex-start;align-items:stretch;flex-direction:column;gap:12px}.site-return{justify-content:center}.pipeline-toolbar{display:grid;gap:8px}.contact-actions .contact-action{flex:1 1 auto}}
+
+/* Explicitly honour hidden state on links and all layout elements. */
+[hidden]{display:none!important}
