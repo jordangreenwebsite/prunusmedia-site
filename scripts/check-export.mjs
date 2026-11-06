@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { getLegacyRoutes } from '../src/lib/exported-pages.mjs';
+import { getLegacyRoutes, getLegacyDocument } from '../src/lib/exported-pages.mjs';
 
 const root = process.cwd();
 const required = ['index.html','404.html','wp-content','wp-includes','seo-agency-uk/free-seo-audit/index.html','contact/index.html'];
@@ -19,6 +19,16 @@ for (const important of ['about','contact','industries/accountants','industries/
   if (!slugs.includes(important)) {
     console.error('Missing important route: ' + important);
     process.exit(1);
+  }
+}
+// The newly approved login entry point must be rendered without disturbing
+// the existing menu or its primary project CTA.
+for (const route of ['index.html','about/index.html','website-design/index.html']) {
+  const html=getLegacyDocument(route);
+  if (!html.includes('class="breakdance-menu-item prunus-client-login"') ||
+      !html.includes('href="/client-login/"') ||
+      !html.includes('Start a Project')) {
+    throw new Error('Client login or existing CTA missing from ' + route);
   }
 }
 console.log('Export preflight: ' + pages.length + ' preserved paths, main assets and critical routes present.');
