@@ -49,9 +49,12 @@
           <h1 id="business-title">Your website</h1>
           <p id="business-subtitle">Website enquiries and requests, together in one place.</p>
         </div>
-        <label class="account-picker" for="client-picker">Business
-          <select id="client-picker"></select>
-        </label>
+        <div class="dashboard-actions">
+          <a id="back-to-website" class="site-return" href="https://prunusmedia.com/" rel="noopener noreferrer" hidden>Back to my website</a>
+          <label class="account-picker" for="client-picker">Business
+            <select id="client-picker"></select>
+          </label>
+        </div>
       </div>
       <div class="tabs" role="navigation" aria-label="Workspace sections">
         <a href="#enquiries">Enquiries</a><a href="#changes">Website changes</a><a href="#blogs">Blog submissions</a><a href="#profile">Business profile</a>
@@ -59,7 +62,18 @@
       <div class="two-col">
         <section id="enquiries" class="panel">
           <div class="panel-heading"><div><p class="eyebrow">INCOMING ENQUIRIES</p><h2>Form submissions</h2></div><span id="lead-count" class="counter"></span></div>
-          <p class="subtle">These are new enquiries saved from connected website forms. Your usual email notifications continue.</p>
+          <p class="subtle">New enquiries saved from connected website forms. Your usual email notifications continue. Contact each customer, then update the enquiry's progress.</p>
+          <div class="pipeline-toolbar">
+            <label for="lead-filter">Show enquiries
+              <select id="lead-filter">
+                <option value="all">All enquiries</option>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="dealt-with">Dealt with</option>
+              </select>
+            </label>
+            <p id="pipeline-summary" class="pipeline-summary" aria-live="polite"></p>
+          </div>
           <div id="lead-list" class="item-list"></div>
         </section>
         <div class="stack">
