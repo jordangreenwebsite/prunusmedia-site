@@ -346,5 +346,16 @@ export default {
       console.error('Portal request failed',path,clean(e.message,150));
       return error('Unable to complete the request.',500);
     }
+  },
+  // Daily cleanup of short-lived authentication data. Leads/uploads are retained only
+  // under the separately agreed customer data-retention policy, never auto-deleted here.
+  async scheduled(_event,env) {
+    if (!env.DB) return;
+    const now=Date.now();
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM sessions WHERE expires_at<?').bind(now),
+      env.DB.prepare('DELETE FROM login_codes WHERE expires_at<?').bind(now),
+      env.DB.prepare('DELETE FROM otp_ip_limits WHERE window_start<?').bind(Math.floor(now/3600000)-48)
+    ]);
   }
 };
