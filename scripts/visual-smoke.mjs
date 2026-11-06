@@ -105,7 +105,27 @@ try {
           const changed = pixelmatch(localImage.data, liveImage.data, diff.data,
             localImage.width, localImage.height, { threshold: .12, includeAA: false });
           const ratio = Number((100 * changed / (localImage.width * localImage.height)).toFixed(2));
-          visualMetrics.push({ route: test.route, viewport: test.label, pixelDifferencePercent: ratio });
+
+          const bands = [];
+          const rowsPerBand = Math.ceil(localImage.height / 6);
+          for (let y=0; y<localImage.height; y+=rowsPerBand) {
+            const end = Math.min(localImage.height, y + rowsPerBand);
+            const startByte = y * localImage.width * 4;
+            const endByte = end * localImage.width * 4;
+            const count = pixelmatch(
+              localImage.data.subarray(startByte,endByte),
+              liveImage.data.subarray(startByte,endByte),
+              null, localImage.width, end-y, {threshold:.12,includeAA:false}
+            );
+            bands.push({
+              startY:y,endY:end,
+              differencePercent:Number((100*count/(localImage.width*(end-y))).toFixed(2))
+            });
+          }
+          visualMetrics.push({ route:test.route,viewport:test.label,pixelDifferencePercent:ratio,bands });
+          console.log('VISUAL BANDS ' + test.label + ': ' +
+            bands.map(b => b.startY + '-' + b.endY + '=' + b.differencePercent + '%').join(' | '));
+
           writeFileSync(path.join(output, test.label + '-diff.png'), PNG.sync.write(diff));
           console.log('VISUAL DIFFERENCE ' + test.label + ': ' + ratio + '% of pixels (manual review required)');
         }
