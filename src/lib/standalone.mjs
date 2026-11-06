@@ -45,13 +45,16 @@ export function cleanPageHtml(originalHtml, filename) {
   html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, (script) => {
     if (/<script\b[^>]*\bsrc=["'](?:\/wp-content\/plugins\/breakdance\/|\/wp-includes\/|https:\/\/unpkg\.com\/gsap)/i.test(script)) return '';
     if (/id=["']wp-emoji-settings["']/i.test(script)) return '';
-    if (/wp-emoji-settings|BreakdanceFrontend\.data|new\s+(?:Breakdance|AwesomeMenu)\b|window\._wpemojiSettings/i.test(script)) return '';
+    if (/wp-emoji-settings|BreakdanceFrontend\.data|new\s+(?:Breakdance[A-Za-z]+|AwesomeMenu)\s*\(|window\._wpemojiSettings/i.test(script)) return '';
     if (/window\.PrunusCursorFX/.test(script)) return '';
     return script;
   });
   html = html.replace(/<meta[^>]*(?:name=["']generator["']|name=["']ssp-config-path["'])[^>]*>/gi, '');
   html = html.replace(/<link[^>]*href=["']\/xmlrpc\.php[^>]*>/gi, '');
   html = html.replaceAll('http://prunus-media.local', 'https://prunusmedia.com');
+  // Three legacy industry exports contain a broken single-quote escape in
+  // the SEO auditor's escapeHtml helper. Correct the syntax, not the UI.
+  html = html.replaceAll(".replace(/'/g,''')", ".replace(/'/g,'&#39;')");
 
   // Add publishing destinations inside EXISTING dropdowns, using the same
   // structure/classes as the menu currently uses. No header redesign.

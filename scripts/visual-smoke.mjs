@@ -81,7 +81,8 @@ try {
       console.log('PASS local page ' + test.route + ': ' + title + ' | header links=' + visibleLinks +
         (consoleErrors.length ? ' | JS exceptions=' + consoleErrors.length : ''));
       if (consoleErrors.length) {
-        console.log('Browser exceptions, for parity review: ' + consoleErrors.slice(0,4).join(' | '));
+        console.error('Browser exceptions: ' + consoleErrors.slice(0,6).join(' | '));
+        failures.push(test.label + ': ' + consoleErrors.length + ' JavaScript exceptions');
       }
     } catch (error) {
       failures.push(test.label + ': ' + String(error));
@@ -106,9 +107,12 @@ try {
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');
+  server.stdout.destroy();
+  server.stderr.destroy();
 }
 if (failures.length) {
   console.error('Browser smoke failures:\n' + failures.join('\n'));
   process.exit(1);
 }
 console.log('Browser smoke checks passed; screenshots captured for visual comparison.');
+process.exit(0);
