@@ -4,7 +4,9 @@
  */
 import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import pixelmatch from 'pixelmatch';
+import { PNG } from 'pngjs';
 import path from 'node:path';
 
 const port = 4322;
@@ -33,6 +35,7 @@ let failures = [];
 try {
   await waitForServer();
   browser = await chromium.launch({ headless: true });
+  const visualMetrics = [];
   const cases = [
     { route: '/', label: 'homepage-desktop', width: 1440, height: 900 },
     { route: '/', label: 'homepage-mobile', width: 390, height: 844, mobile: true },
@@ -93,12 +96,25 @@ try {
         await Promise.race([page.evaluate(() => document.fonts.ready), new Promise((r) => setTimeout(r, 4000))]);
         await page.waitForTimeout(350);
         await page.screenshot({ path: path.join(output, test.label + '-live.png'), fullPage: false, animations:'disabled', timeout: 12000 });
+        // Same viewport and reduced-motion preference on both sites.
+        const localImage = PNG.sync.read(readFileSync(path.join(output, test.label + '-astro.png')));
+        const liveImage = PNG.sync.read(readFileSync(path.join(output, test.label + '-live.png')));
+        if (localImage.width === liveImage.width && localImage.height === liveImage.height) {
+          const diff = new PNG({ width: localImage.width, height: localImage.height });
+          const changed = pixelmatch(localImage.data, liveImage.data, diff.data,
+            localImage.width, localImage.height, { threshold: .12, includeAA: false });
+          const ratio = Number((100 * changed / (localImage.width * localImage.height)).toFixed(2));
+          visualMetrics.push({ route: test.route, viewport: test.label, pixelDifferencePercent: ratio });
+          writeFileSync(path.join(output, test.label + '-diff.png'), PNG.sync.write(diff));
+          console.log('VISUAL DIFFERENCE ' + test.label + ': ' + ratio + '% of pixels (manual review required)');
+        }
       } else console.log('Production screenshot unavailable: ' + test.route);
     } catch (error) {
       console.log('Production comparison could not be captured for ' + test.route + ': ' + String(error).slice(0,200));
     }
     await ctx.close();
   }
+  writeFileSync(path.join(output, 'visual-metrics.json'), JSON.stringify(visualMetrics,null,2) + '\n');
   writeFileSync(path.join(output, 'readme.txt'),
     'Prunus Media screenshot evidence. *-astro.png = staged Astro build; *-live.png = production website where reachable.\n' +
     'Viewport sizes and page route labels are recorded in scripts/visual-smoke.mjs.\n' +

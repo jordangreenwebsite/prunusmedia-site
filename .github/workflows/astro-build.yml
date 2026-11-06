@@ -33,7 +33,9 @@ jobs:
       - name: Install Chromium for browser checks
         run: npx playwright install chromium --with-deps
       - name: Capture visual baselines and check browser interactions
-        run: timeout 180s node scripts/visual-smoke.mjs
+        run: timeout 240s node scripts/visual-smoke.mjs
+        env:
+          COMPARE_LIVE: '1'
       - name: Upload screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
