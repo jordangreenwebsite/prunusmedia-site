@@ -4,6 +4,7 @@
   "main": "src/index.js",
   "compatibility_date": "2026-11-01",
   "workers_dev": true,
+  "routes": [{ "pattern": "portal.prunusmedia.com", "custom_domain": true }],
   "triggers": { "crons": ["13 3 * * *"] },
   "assets": {
     "directory": "./public",
