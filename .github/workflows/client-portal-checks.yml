@@ -1,0 +1,31 @@
+name: Client portal checks
+on:
+  pull_request:
+    paths:
+      - 'client-portal/**'
+      - '.github/workflows/client-portal-checks.yml'
+  push:
+    paths:
+      - 'client-portal/**'
+      - '.github/workflows/client-portal-checks.yml'
+jobs:
+  test-portal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Worker and browser JS syntax
+        working-directory: client-portal
+        run: |
+          node --check src/index.js
+          node --check public/app.js
+      - name: Security and tenant isolation tests
+        working-directory: client-portal
+        run: node --experimental-sqlite --test tests/*.test.mjs
+      - name: Check portal remains independently deployable
+        run: |
+          test -f client-portal/wrangler.jsonc
+          test -f client-portal/migrations/0001_initial.sql
+          test -f client-portal/public/index.html
