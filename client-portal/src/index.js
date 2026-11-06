@@ -279,6 +279,21 @@ async function updateTicket(request,env,user,id) {
   await audit(env,user.email,'request.status_changed',row.client_id,id);
   return response({ok:true});
 }
+async function updateLeadStatus(request, env, user, leadId) {
+  let data;
+  try { data = await parseJson(request, 500); }
+  catch { return error('Invalid update.'); }
+  const status = clean(data.status, 30);
+  if (!['new', 'contacted', 'dealt-with'].includes(status)) return error('Invalid lead status.');
+  const lead = await env.DB.prepare('SELECT id, client_id FROM leads WHERE id=?').bind(leadId).first();
+  // Return the same result for missing and unauthorised leads to avoid revealing another tenant's IDs.
+  if (!lead || !(await access(env, user, lead.client_id))) return error('Not found.', 404);
+  await env.DB.prepare('UPDATE leads SET status=? WHERE id=? AND client_id=?')
+    .bind(status, leadId, lead.client_id).run();
+  await audit(env, user.email, 'lead.status_changed', lead.client_id, leadId);
+  return response({ ok: true, id: leadId, status });
+}
+
 async function ingest(request, env) {
   const bearer = request.headers.get('authorization') || '';
   if (!/^Bearer [a-f0-9]{64}$/.test(bearer)) return error('Unauthorized.',401);
@@ -326,6 +341,8 @@ export default {
       }
       if (path==='/api/session' && method==='GET') return response({ok:true,email:user.email,admin:user.admin,clients:await listClients(env,user)});
       if (path==='/api/dashboard' && method==='GET') return await getDashboard(env,user,url);
+      const leadStatus=path.match(/^\/api\/leads\/([a-f0-9-]{36})\/status$/);
+      if (leadStatus && method==='PATCH') return await updateLeadStatus(request,env,user,leadStatus[1]);
       if (path==='/api/requests/change' && method==='POST') return await createRequest(request,env,user,context,false);
       if (path==='/api/requests/blog' && method==='POST') return await createRequest(request,env,user,context,true);
       const file = path.match(/^\/api\/files\/([a-f0-9-]{36})$/);
