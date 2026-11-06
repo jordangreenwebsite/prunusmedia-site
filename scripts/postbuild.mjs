@@ -13,7 +13,7 @@ for (const dir of ['wp-content', 'wp-includes']) {
   const source = path.join(root, dir);
   if (existsSync(source)) cpSync(source, path.join(dist, dir), { recursive: true });
 }
-for (const filename of ['_redirects', 'main-sitemap.xsl', 'CNAME']) {
+for (const filename of ['_redirects', 'main-sitemap.xsl', 'CNAME', 'wp-sitemap.xml']) {
   const source = path.join(root, filename);
   if (existsSync(source)) cpSync(source, path.join(dist, filename));
 }

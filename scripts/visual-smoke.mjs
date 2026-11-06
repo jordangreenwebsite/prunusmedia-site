@@ -59,9 +59,9 @@ try {
       const response = await page.goto(local + test.route, { waitUntil: 'domcontentloaded', timeout: 30000 });
       localStatus = response.status();
       if (localStatus !== 200) throw new Error('Local HTTP status ' + localStatus);
-      await page.evaluate(() => document.fonts.ready);
-      await page.waitForTimeout(750);
-      await page.screenshot({ path: path.join(output, test.label + '-astro.png'), fullPage: true, animations:'disabled' });
+      await Promise.race([page.evaluate(() => document.fonts.ready), new Promise((r) => setTimeout(r, 4000))]);
+      await page.waitForTimeout(350);
+      await page.screenshot({ path: path.join(output, test.label + '-astro.png'), fullPage: false, animations:'disabled', timeout: 12000 });
       const title = await page.title();
       const visibleLinks = await page.locator('header a[href]').count();
       if (!title || visibleLinks < 4) failures.push(test.label + ': missing title or expected header navigation');
@@ -86,11 +86,11 @@ try {
       failures.push(test.label + ': ' + String(error));
     }
     try {
-      const prodResponse = await page.goto(production + test.route, { waitUntil: 'domcontentloaded', timeout: 20000 });
+      const prodResponse = await page.goto(production + test.route, { waitUntil: 'domcontentloaded', timeout: 9000 });
       if (prodResponse && prodResponse.ok()) {
-        await page.evaluate(() => document.fonts.ready);
-        await page.waitForTimeout(750);
-        await page.screenshot({ path: path.join(output, test.label + '-live.png'), fullPage: true, animations:'disabled' });
+        await Promise.race([page.evaluate(() => document.fonts.ready), new Promise((r) => setTimeout(r, 4000))]);
+        await page.waitForTimeout(350);
+        await page.screenshot({ path: path.join(output, test.label + '-live.png'), fullPage: false, animations:'disabled', timeout: 12000 });
       } else console.log('Production screenshot unavailable: ' + test.route);
     } catch (error) {
       console.log('Production comparison could not be captured for ' + test.route + ': ' + String(error).slice(0,200));
