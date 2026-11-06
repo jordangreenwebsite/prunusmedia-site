@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build && node scripts/postbuild.mjs",
     "preview": "astro preview",
-    "check:export": "node scripts/check-export.mjs"
+    "check:export": "node scripts/check-export.mjs",
+    "predev": "node scripts/prepare-dev.mjs"
   },
   "dependencies": {
     "astro": "^5.15.0"

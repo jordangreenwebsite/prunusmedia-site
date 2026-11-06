@@ -4,3 +4,7 @@ dist/
 .env
 .env.*
 !.env.example
+
+# Generated copies for Astro's local dev server
+public/wp-content/
+public/wp-includes/

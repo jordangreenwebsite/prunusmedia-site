@@ -15,6 +15,7 @@ This branch introduces an Astro static-site build and a repeatable blog/portfoli
 
 \`\`\`bash
 npm install
+npm run dev       # copies original assets into local public/ automatically
 npm run check:export
 npm run build
 npm run preview
