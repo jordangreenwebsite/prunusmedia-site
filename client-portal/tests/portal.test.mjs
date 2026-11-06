@@ -36,7 +36,7 @@ function environment() {
     async get(key) { const v=files.get(key); return v ? {body:new Blob([v])} : null; },
     async delete(key) { files.delete(key); }
   };
-  return { DB:db,UPLOADS:uploads,ASSETS:{fetch:async()=>new Response('portal')},
+  return { DB:db,UPLOADS:uploads,__files:files,ASSETS:{fetch:async()=>new Response('portal')},
     ADMIN_EMAILS:'admin@prunusmedia.com',ADMIN_NOTIFY_EMAIL:'admin@prunusmedia.com',
     AUTH_PEPPER:'test pepper must be securely generated in production',
     RESEND_API_KEY:'fake',OTP_FROM_EMAIL:'portal@contact.prunusmedia.com' };
@@ -73,7 +73,7 @@ function harness(env) {
     assert.match(cookie,/^__Host-prunus_session=/);
     return {cookie,code};
   }
-  return {call,login,outbound,pending,files};
+  return {call,login,outbound,pending,files:env.__files};
 }
 test('tenant isolation, invited email codes, private PDFs and trusted lead intake',async()=>{
   const env=environment(),h=harness(env);
