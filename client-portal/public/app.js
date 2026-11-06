@@ -34,12 +34,26 @@ function busy(button, isBusy) {
 function openLogin() {
   $('login-panel').hidden = false; $('dashboard-panel').hidden = true; $('logout').hidden = true;
 }
+async function loadNotifications() {
+  const root=$('notification-errors');root.replaceChildren();
+  try {
+    const result=await api('/api/admin/notifications');
+    if(!result.failed.length){add(root,'p','No failed email alerts recorded.','empty');return;}
+    for(const n of result.failed){
+      const box=add(root,'div',null,'item');
+      add(box,'strong',(n.client_name||'Prunus')+' · '+n.event);
+      add(box,'p',n.error_message||'Email delivery failed');
+      add(box,'span',date(n.created_at),'meta');
+    }
+  } catch(err) {add(root,'p','Unable to load delivery alerts.','empty');}
+}
 async function loadSession() {
   try {
     state.session = await api('/api/session');
     if (!state.session.clients.length) { openLogin();showMessage('login-message','Your account has no active business assigned.',true);return; }
     $('login-panel').hidden = true; $('dashboard-panel').hidden = false; $('logout').hidden = false;
     $('admin-panel').hidden = !state.session.admin;
+    if(state.session.admin) await loadNotifications();
     const picker = $('client-picker'); picker.replaceChildren();
     for (const client of state.session.clients) {
       const option = element('option', client.name);
