@@ -1,0 +1,201 @@
+
+/**
+ * Prunus Media interactions.
+ * No Breakdance/WordPress JavaScript runtime is required.
+ * Keep this small; preserve existing markup until reviewed in browser.
+ */
+(function () {
+  'use strict';
+  const ready = (fn) => document.readyState === 'loading' ?
+    document.addEventListener('DOMContentLoaded', fn, { once: true }) : fn();
+  ready(() => {
+    const mobileQuery = matchMedia('(max-width: 1119px)');
+    const menu = document.querySelector('.breakdance-menu');
+    const toggle = menu?.querySelector('.breakdance-menu-toggle');
+    const close = menu?.querySelector('.breakdance-menu-close-button');
+    const list = menu?.querySelector('.breakdance-menu-list');
+    const dropdowns = [...(menu?.querySelectorAll('.breakdance-dropdown') || [])];
+
+    function dropdownOpen(item, open) {
+      item.classList.toggle('breakdance-dropdown--open', open);
+      item.closest('.breakdance-menu-item')?.classList.toggle('breakdance-menu-item--dropdown-active', open);
+      item.querySelectorAll('.breakdance-dropdown-toggle button').forEach((b) =>
+        b.setAttribute('aria-expanded', String(open)));
+      const panel = item.querySelector('.breakdance-dropdown-floater');
+      if (panel) panel.setAttribute('aria-hidden', String(!open));
+    }
+    function menuOpen(open) {
+      if (!menu) return;
+      menu.classList.toggle('breakdance-menu--open', open);
+      document.documentElement.classList.toggle('prunus-menu-open', open);
+      toggle?.setAttribute('aria-expanded', String(open));
+      toggle?.setAttribute('aria-label', open ? 'Close Menu' : 'Open Menu');
+      if (!open) dropdowns.forEach((item) => dropdownOpen(item, false));
+    }
+    toggle?.addEventListener('click', () => menuOpen(!menu.classList.contains('breakdance-menu--open')));
+    close?.addEventListener('click', () => menuOpen(false));
+    menu?.querySelectorAll('.breakdance-dropdown-toggle').forEach((area) => {
+      const drop = area.closest('.breakdance-dropdown');
+      area.querySelectorAll('button').forEach((button) => button.addEventListener('click', (event) => {
+        event.preventDefault();
+        const active = drop.classList.contains('breakdance-dropdown--open');
+        dropdowns.forEach((item) => dropdownOpen(item, false));
+        dropdownOpen(drop, !active);
+      }));
+      if (drop) {
+        drop.addEventListener('mouseenter', () => {
+          if (!mobileQuery.matches) { dropdowns.forEach((item) => dropdownOpen(item, false)); dropdownOpen(drop, true); }
+        });
+        drop.addEventListener('mouseleave', () => {
+          if (!mobileQuery.matches) dropdownOpen(drop, false);
+        });
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') { menuOpen(false); dropdowns.forEach((d) => dropdownOpen(d, false)); }
+    });
+    document.addEventListener('click', (event) => {
+      if (menu && !menu.contains(event.target)) {
+        menuOpen(false);
+        dropdowns.forEach((d) => dropdownOpen(d, false));
+      }
+    });
+    list?.querySelectorAll('a[href]').forEach((a) => a.addEventListener('click', () => {
+      if (mobileQuery.matches) menuOpen(false);
+    }));
+    mobileQuery.addEventListener?.('change', () => menuOpen(false));
+
+    // FAQ accordion: original accessible buttons and panels, no plugin.
+    document.querySelectorAll('.bde-faq__question').forEach((button) => {
+      const controls = button.getAttribute('aria-controls');
+      const panel = controls ? document.getElementById(controls) : null;
+      if (panel) {
+        panel.hidden = button.getAttribute('aria-expanded') !== 'true';
+      }
+      button.addEventListener('click', () => {
+        const next = button.getAttribute('aria-expanded') !== 'true';
+        button.setAttribute('aria-expanded', String(next));
+        button.closest('.bde-faq__item')?.classList.toggle('bde-faq__item--active', next);
+        if (panel) panel.hidden = !next;
+      });
+    });
+
+    // Tabbed project showcase, retaining the precise DOM/content.
+    document.querySelectorAll('.bde-advanced-tabs').forEach((tabs) => {
+      const buttons = [...tabs.querySelectorAll('[role="tab"]')];
+      const panels = [...tabs.querySelectorAll('.bde-tabs-content-container > .bde-advanced-tabs-content')];
+      if (!buttons.length || !panels.length) return;
+      const activate = (index) => {
+        buttons.forEach((button, i) => {
+          const selected = i === index;
+          button.setAttribute('aria-selected', String(selected));
+          button.classList.toggle('bde-tabs__tab--active', selected);
+          button.tabIndex = selected ? 0 : -1;
+        });
+        panels.forEach((panel, i) => {
+          const selected = i === index;
+          panel.hidden = !selected;
+          panel.classList.toggle('bde-advanced-tabs-content--active', selected);
+        });
+      };
+      buttons.forEach((button, index) => {
+        button.addEventListener('click', () => activate(index));
+        button.addEventListener('keydown', (event) => {
+          const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+          if (step) {
+            event.preventDefault();
+            const next = (index + step + buttons.length) % buttons.length;
+            activate(next); buttons[next].focus();
+          }
+        });
+      });
+      activate(0);
+    });
+
+    // Slider built around the existing before/after DOM and original assets.
+    document.querySelectorAll('.js-comparison-container').forEach((root) => {
+      const images = root.querySelector('.images');
+      const before = root.querySelector('.js-image-before');
+      const after = root.querySelector('.js-image-after');
+      const handle = root.querySelector('.dragger');
+      if (!images || !before || !after) return;
+      before.style.backgroundImage = 'url("' + before.dataset.src + '")';
+      after.style.backgroundImage = 'url("' + after.dataset.src + '")';
+      let fraction = .5;
+      const update = (value) => {
+        fraction = Math.min(.98, Math.max(.02, value));
+        before.style.clipPath = 'inset(0 ' + (100 - fraction * 100) + '% 0 0)';
+        after.style.clipPath = 'inset(0 0 0 ' + (fraction * 100) + '%)';
+        if (handle) handle.style.left = (fraction * 100) + '%';
+      };
+      root.setAttribute('role', 'slider');
+      root.setAttribute('aria-label', 'Compare the website before and after');
+      root.setAttribute('aria-valuemin', '0');
+      root.setAttribute('aria-valuemax', '100');
+      root.tabIndex = 0;
+      const adjust = (value) => {
+        update(value);
+        root.setAttribute('aria-valuenow', String(Math.round(fraction * 100)));
+      };
+      function fromPointer(event) {
+        const rect = root.getBoundingClientRect();
+        adjust((event.clientX - rect.left) / rect.width);
+      }
+      root.addEventListener('pointerdown', (event) => {
+        root.setPointerCapture?.(event.pointerId);
+        fromPointer(event);
+      });
+      root.addEventListener('pointermove', (event) => {
+        if (event.buttons) fromPointer(event);
+      });
+      root.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        event.preventDefault();
+        const value = event.key === 'Home' ? 0 : event.key === 'End' ? 1 :
+          fraction + (event.key === 'ArrowRight' ? .05 : -.05);
+        adjust(value);
+      });
+      adjust(.5);
+    });
+
+    // Animated heading: use original provided fallback phrase until a
+    // verified native word-animation implementation is approved.
+    document.querySelectorAll('.bde-animated-heading').forEach((root) => {
+      const wrapper = root.querySelector('.bde-animated-heading__wrapper');
+      if (wrapper && !wrapper.textContent.trim()) wrapper.textContent = 'started in business,';
+    });
+
+    // Native reveal interactions should never leave content invisible when
+    // JavaScript, intersection observers or reduced motion settings differ.
+    document.querySelectorAll('[data-interactions]').forEach((item) => {
+      item.style.visibility = 'visible';
+    });
+    // Original sticky-scroll header and transparent hero overlay.
+    const header = document.querySelector('.bde-header-builder');
+    if (header) {
+      let previous = window.scrollY;
+      const onScroll = () => {
+        const current = window.scrollY;
+        header.classList.toggle('bde-header-builder--overlay', current < 48);
+        const scrollDown = current > previous + 5;
+        const scrollUp = current < previous - 5;
+        if (current < 120 || scrollUp) header.style.transform = '';
+        else if (scrollDown) header.style.transform = 'translateY(-100%)';
+        previous = current;
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+
+    // Deep links to the new case studies without modifying their labels.
+    const routes = {
+      'View J Piper Case Study': '/our-work/j-piper-cleaning-services/',
+      'View Case Study': ''
+    };
+    document.querySelectorAll('.bde-advanced-tabs button.button-atom').forEach((button) => {
+      if (button.textContent.includes('J Piper')) {
+        button.addEventListener('click', () => { location.href = routes['View J Piper Case Study']; });
+      }
+    });
+  });
+})();
