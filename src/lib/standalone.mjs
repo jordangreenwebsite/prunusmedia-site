@@ -52,6 +52,24 @@ export function cleanPageHtml(originalHtml, filename) {
   html = html.replace(/<meta[^>]*(?:name=["']generator["']|name=["']ssp-config-path["'])[^>]*>/gi, '');
   html = html.replace(/<link[^>]*href=["']\/xmlrpc\.php[^>]*>/gi, '');
   html = html.replaceAll('http://prunus-media.local', 'https://prunusmedia.com');
+
+  // Add publishing destinations inside EXISTING dropdowns, using the same
+  // structure/classes as the menu currently uses. No header redesign.
+  function dropdownEntry(href, label) {
+    return '<li class="breakdance-dropdown-item">' +
+      '<a class="breakdance-link breakdance-dropdown-link" href="' + href + '" target="_self">' +
+      '<span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">' +
+      label + '</span></span></a></li>';
+  }
+  html = html.replace(
+    /(<li class="breakdance-dropdown-item">\s*<a class="breakdance-link breakdance-dropdown-link" href="\/industries\/")/i,
+    dropdownEntry('/our-work/', 'Websites We Have Built') + '$1'
+  );
+  html = html.replace(
+    /(<li class="breakdance-dropdown-item">\s*<a class="breakdance-link breakdance-dropdown-link" href="\/about\/")/i,
+    dropdownEntry('/blog/', 'Journal & SEO Insights') + '$1'
+  );
+
   // Preserve exact text and DOM layouts. Native interactions operate on the
   // original class names pending verified semantic component conversion.
   const scripts = '<script defer src="/assets/prunus-scripts/prunus-interactions.js"></script>' +

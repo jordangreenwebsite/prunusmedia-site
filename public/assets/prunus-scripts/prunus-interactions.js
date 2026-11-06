@@ -187,15 +187,21 @@
       onScroll();
     }
 
-    // Deep links to the new case studies without modifying their labels.
-    const routes = {
-      'View J Piper Case Study': '/our-work/j-piper-cleaning-services/',
-      'View Case Study': ''
-    };
-    document.querySelectorAll('.bde-advanced-tabs button.button-atom').forEach((button) => {
-      if (button.textContent.includes('J Piper')) {
-        button.addEventListener('click', () => { location.href = routes['View J Piper Case Study']; });
-      }
+
+    // All existing case-study buttons lead to verified editorial entries.
+    // The three project showcases remain in their original visual order.
+    const caseStudyPaths = [
+      '/our-work/j-piper-cleaning-services/',
+      '/our-work/caring-companions-pet-care/',
+      '/our-work/car-care-tlc/'
+    ];
+    document.querySelectorAll('.bde-advanced-tabs').forEach((tabs) => {
+      const panels = [...tabs.querySelectorAll('.bde-tabs-content-container > .bde-advanced-tabs-content')];
+      panels.forEach((panel, index) => {
+        const button = [...panel.querySelectorAll('button')].find((el) => /view (?:.* )?case study/i.test(el.textContent));
+        if (!button || !caseStudyPaths[index]) return;
+        button.addEventListener('click', () => { window.location.href = caseStudyPaths[index]; });
+      });
     });
   });
 })();
