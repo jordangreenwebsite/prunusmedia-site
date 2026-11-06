@@ -35,5 +35,11 @@ if (!cursor) throw new Error('The approved flower cursor implementation is missi
 const scriptDir = path.join(root, 'public', 'assets', 'prunus-scripts');
 mkdirSync(scriptDir, { recursive: true });
 writeFileSync(path.join(scriptDir, 'prunus-cursor.js'), cursor);
+const auditor = [...home.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
+  .map((m) => m[1]).find((script) =>
+    script.includes("const WORKER='https://prunus-seo-audit.jordanjpiper.workers.dev/'"));
+if (!auditor) throw new Error('Original free SEO audit JavaScript missing');
+writeFileSync(path.join(scriptDir, 'prunus-auditor.js'), auditor);
+
 console.log('Prepared owned CSS assets for ' + pages.length + ' original page documents; ' +
   totalSize + ' CSS characters. Compiled source still requires semantic refactor.');
