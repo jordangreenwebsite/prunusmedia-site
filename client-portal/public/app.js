@@ -73,29 +73,86 @@ async function loadDashboard() {
     state.dashboard=data;
     $('business-title').textContent=data.client.name;
     $('business-subtitle').textContent='Your website: '+data.client.domain;
+    const back=$('back-to-website');
+    // Domain comes from the authorised account record, never from a URL query string.
+    const domain=String(data.client.domain||'').toLowerCase();
+    const validDomain=/^(?=.{4,200}$)[a-z0-9]+(?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/.test(domain) && !domain.includes('..');
+    back.hidden=!validDomain;
+    if(validDomain) back.href='https://'+domain+'/';
     renderLeads(data.leads);
     renderRequests(data.requests);
     renderProfile(data);
   } catch (e) { showMessage('change-message',e.message,true); }
 }
+function ukWhatsApp(phone) {
+  let digits=String(phone||'').replace(/\D/g,'');
+  if (digits.startsWith('0044')) digits=digits.slice(2);
+  else if (/^07\d{9}$/.test(digits)) digits='44'+digits.slice(1);
+  return /^447\d{9}$/.test(digits) ? digits : null;
+}
+function contactAction(parent, title, href, className, newWindow = false) {
+  const a=add(parent,'a',title,'contact-action '+className);
+  a.href=href;
+  if(newWindow) {a.target='_blank';a.rel='noopener noreferrer';}
+  return a;
+}
 function renderLeads(leads) {
+  const statuses=['new','contacted','dealt-with'];
+  const totals=Object.fromEntries(statuses.map(s=>[s,leads.filter(l=>l.status===s).length]));
   $('lead-count').textContent=String(leads.length);
+  $('pipeline-summary').textContent=totals.new+' new · '+totals.contacted+' contacted · '+totals['dealt-with']+' dealt with';
+  const filter=$('lead-filter').value;
+  const shown=filter==='all'?leads:leads.filter(l=>l.status===filter);
   const root=$('lead-list'); root.replaceChildren();
-  if (!leads.length) { add(root,'p','No saved enquiries yet. New submissions will appear when the website form is connected.','empty');return; }
-  for (const lead of leads) {
-    const box=add(root,'article',null,'item');
+  if (!shown.length) {
+    add(root,'p',leads.length?'No enquiries in this stage.':'No saved enquiries yet. New submissions will appear when the website form is connected.','empty');
+    return;
+  }
+  for (const lead of shown) {
+    const box=add(root,'article',null,'item lead-card');
     const top=add(box,'div',null,'row');
     add(top,'strong',lead.full_name);
-    add(top,'span',lead.status||'new','tag');
+    add(top,'span',(lead.status||'new').replace(/-/g,' '),'tag');
     add(box,'div',date(lead.created_at)+' · '+(lead.service||'Website enquiry')+(lead.postcode?' · '+lead.postcode:''),'meta');
-    const contacts=add(box,'div',null,'meta');
-    if(lead.phone) { const phone=add(contacts,'a',lead.phone);phone.href='tel:'+lead.phone.replace(/[^+\d]/g,''); }
-    if(lead.email) {
-      add(contacts,'span',' · ');
-      const link=add(contacts,'a',lead.email);link.href='mailto:'+lead.email;
-    }
     if(lead.message) add(box,'p',lead.message);
     if(lead.source_page) add(box,'div','Page: '+lead.source_page,'meta');
+    const contacts=add(box,'div',null,'contact-actions');
+    const phone=String(lead.phone||'').trim();
+    const phoneHref=phone.replace(/[^+\d]/g,'');
+    const email=String(lead.email||'').trim();
+    const wa=ukWhatsApp(phone);
+    if (wa) contactAction(contacts,'WhatsApp','https://wa.me/'+wa,'whatsapp',true);
+    if (/^\+?\d{9,15}$/.test(phoneHref)) contactAction(contacts,'Call','tel:'+phoneHref,'call');
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      contactAction(contacts,'Email','mailto:'+encodeURIComponent(email).replace(/%40/g,'@')+'?subject='+encodeURIComponent('Re: Your website enquiry'),'email');
+    if (!contacts.children.length) add(contacts,'span','No direct contact details supplied.','meta');
+    const workflow=add(box,'div',null,'lead-workflow');
+    const label=add(workflow,'label','Progress');
+    const select=add(label,'select');
+    select.setAttribute('aria-label','Progress for '+lead.full_name);
+    for(const status of statuses){
+      const option=element('option',status.replace(/-/g,' '));
+      option.value=status;
+      select.append(option);
+    }
+    select.value=statuses.includes(lead.status)?lead.status:'new';
+    const message=add(workflow,'span','','meta');
+    select.addEventListener('change',async()=>{
+      const previous=lead.status;
+      select.disabled=true;
+      message.textContent='Saving…';
+      try {
+        await jsonPost('/api/leads/'+encodeURIComponent(lead.id)+'/status',{status:select.value},'PATCH');
+        lead.status=select.value;
+        message.textContent='Saved';
+        renderLeads(state.dashboard.leads);
+      } catch(err) {
+        select.value=previous;
+        message.textContent=err.message;
+        message.classList.add('error');
+        select.disabled=false;
+      }
+    });
   }
 }
 function renderRequests(requests) {
@@ -183,6 +240,7 @@ $('logout').addEventListener('click',async()=>{
   state.session=null;state.clientId=null;openLogin();showMessage('login-message','Signed out.');
 });
 $('client-picker').addEventListener('change',async e=>{state.clientId=e.target.value;await loadDashboard();});
+$('lead-filter').addEventListener('change',()=>{if(state.dashboard)renderLeads(state.dashboard.leads);});
 $('change-form').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');
   busy(btn,true);
