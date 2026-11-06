@@ -50,10 +50,24 @@ async function loadNotifications() {
 async function loadSession() {
   try {
     state.session = await api('/api/session');
-    if (!state.session.clients.length) { openLogin();showMessage('login-message','Your account has no active business assigned.',true);return; }
+    if (!state.session.clients.length && !state.session.admin) {
+      openLogin();showMessage('login-message','Your account has no active business assigned.',true);return;
+    }
     $('login-panel').hidden = true; $('dashboard-panel').hidden = false; $('logout').hidden = false;
     $('admin-panel').hidden = !state.session.admin;
     if(state.session.admin) await loadNotifications();
+    const hasClients=state.session.clients.length>0;
+    $('client-picker').disabled=!hasClients;
+    $('back-to-website').hidden=!hasClients;
+    document.querySelector('.tabs').hidden=!hasClients;
+    document.querySelector('.two-col').hidden=!hasClients;
+    $('requests-panel').hidden=!hasClients;
+    $('profile').hidden=!hasClients;
+    if(!hasClients) {
+      $('business-title').textContent='Create your first client';
+      $('business-subtitle').textContent='No websites have been connected yet. Use the Prunus admin form below to add your first client.';
+      return;
+    }
     const picker = $('client-picker'); picker.replaceChildren();
     for (const client of state.session.clients) {
       const option = element('option', client.name);
