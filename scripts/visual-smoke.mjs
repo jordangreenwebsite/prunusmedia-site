@@ -44,6 +44,7 @@ try {
     { route: '/our-work/', label: 'portfolio-desktop', width: 1440, height: 900 }
   ];
   for (const test of cases) {
+    console.log('Checking ' + test.label + ' on local Astro build');
     const ctx = await browser.newContext({
       viewport: { width: test.width, height: test.height },
       deviceScaleFactor: 1,
@@ -59,9 +60,9 @@ try {
       const response = await page.goto(local + test.route, { waitUntil: 'domcontentloaded', timeout: 30000 });
       localStatus = response.status();
       if (localStatus !== 200) throw new Error('Local HTTP status ' + localStatus);
-      await Promise.race([page.evaluate(() => document.fonts.ready), new Promise((r) => setTimeout(r, 4000))]);
+      await Promise.race([page.evaluate(() => document.fonts.ready), new Promise((r) => setTimeout(r, 1200))]);
       await page.waitForTimeout(350);
-      await page.screenshot({ path: path.join(output, test.label + '-astro.png'), fullPage: false, animations:'disabled', timeout: 12000 });
+      await page.screenshot({ path: path.join(output, test.label + '-astro.png'), fullPage: false, animations:'disabled', timeout: 6500 });
       const title = await page.title();
       const visibleLinks = await page.locator('header a[href]').count();
       if (!title || visibleLinks < 4) failures.push(test.label + ': missing title or expected header navigation');
@@ -85,7 +86,7 @@ try {
     } catch (error) {
       failures.push(test.label + ': ' + String(error));
     }
-    try {
+    if (process.env.COMPARE_LIVE === '1') try {
       const prodResponse = await page.goto(production + test.route, { waitUntil: 'domcontentloaded', timeout: 9000 });
       if (prodResponse && prodResponse.ok()) {
         await Promise.race([page.evaluate(() => document.fonts.ready), new Promise((r) => setTimeout(r, 4000))]);
