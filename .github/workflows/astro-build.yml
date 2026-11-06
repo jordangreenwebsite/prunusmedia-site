@@ -28,6 +28,8 @@ jobs:
         run: npm run check:export
       - name: Build Astro
         run: npm run build
+      - name: Assert original exported HTML is preserved
+        run: node scripts/assert-export-parity.mjs
       - name: Assert key output URLs
         run: |
           test -f dist/index.html
