@@ -3,6 +3,7 @@
  * endpoint or sends a production contact enquiry.
  */
 import { chromium } from 'playwright';
+import { getLegacyRoutes } from '../src/lib/exported-pages.mjs';
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import pixelmatch from 'pixelmatch';
@@ -114,6 +115,40 @@ try {
     }
     await ctx.close();
   }
+
+  // Independently exercise every original Astro route, not just the eight
+  // screenshot targets. Catch hidden plugin initializers or malformed inline
+  // scripts on individual service/industry pages.
+  const sweep = await browser.newContext({
+    viewport: { width: 1240, height: 900 },
+    reducedMotion: 'reduce'
+  });
+  const sweepPage = await sweep.newPage();
+  const routeErrors = [];
+  let pageErrors = [];
+  sweepPage.on('pageerror', (error) => pageErrors.push(error.message));
+  let visited = 0;
+  for (const { slug } of getLegacyRoutes()) {
+    const url = '/' + slug + '/';
+    pageErrors = [];
+    try {
+      const response = await sweepPage.goto(local + url, { waitUntil: 'domcontentloaded', timeout: 16000 });
+      if (!response || response.status() !== 200) {
+        routeErrors.push(url + ': invalid status ' + (response?.status() ?? 'no response'));
+      }
+      await sweepPage.waitForTimeout(90);
+      if (pageErrors.length) routeErrors.push(url + ': ' + pageErrors.slice(0, 3).join(' | '));
+      visited++;
+    } catch (error) {
+      routeErrors.push(url + ': ' + String(error));
+    }
+  }
+  await sweep.close();
+  writeFileSync(path.join(output, 'route-smoke.json'),
+    JSON.stringify({ inspected: visited, errors: routeErrors }, null, 2) + '\n');
+  console.log('ALL-ROUTE BROWSER SWEEP ' + visited + ' legacy pages, ' + routeErrors.length + ' errors');
+  if (routeErrors.length) failures.push(...routeErrors);
+
   writeFileSync(path.join(output, 'visual-metrics.json'), JSON.stringify(visualMetrics,null,2) + '\n');
   writeFileSync(path.join(output, 'readme.txt'),
     'Prunus Media screenshot evidence. *-astro.png = staged Astro build; *-live.png = production website where reachable.\n' +
