@@ -35,8 +35,8 @@ Never overwrite the production `main` or switch Cloudflare configuration while p
 ## Astro target
 
 - Use Astro static output for Cloudflare Pages. Keep `main`/DNS production untouched until parity passed.
-- Migration **phase 1**: render all committed export pages through Astro at the same routes while retaining their original HTML/CSS/JS/assets as a pixel-fidelity baseline; this remains a deliberate **compatibility bridge**, not a finished dependency-free refactor.
-- Migration **phase 2**: extract header/footer, hero, cursor, menus, tabs, sliders, FAQs and SEO auditor as small, tested Astro or framework-free components. Replace Breakdance export dependencies one feature at a time, with before/after screenshots and interaction checks. Retire WordPress CSS/JS assets only when parity has been proved.
+- Migration **phase 1**: preserve all page content/routes in Astro and use the legacy export solely as a design reference. A standalone adapter currently replaces original plugin CSS/JS links with Prunus CSS bundles and independent JavaScript. **Generated bundle declarations still originate from exported Breakdance CSS**, so source-level semantic refactoring is not complete. Do not present an Astro-only bundle as a full clean-source rebuild.
+- Migration **phase 2**: replace generated CSS and builder-era DOM classes with authored semantic Astro layouts/components, focusing on header/footer, hero, reusable content sections and independent styles. Native JavaScript for cursor, menus, tabs, sliders, FAQs and animation now exists; refactor and test it against production. Retire all compiled exporter CSS as design equivalence is proved.
 - Keep forms and backend API contracts explicit. Never expose secrets client-side or proxy arbitrary URLs without validation.
 - Content should be simple to add: `src/content/blog/` for weekly research-led posts; `src/content/work/` for approved project portfolios, with templates in Astro. No invented testimonials or fake results.
 - Preserve permalink slugs; do not build thin SEO doorway pages.
@@ -64,3 +64,12 @@ New navigation links may be inserted after QA and Jordan's approval; preserving 
 Jordan can request: "Publish a weekly Prunus post about X" or "We built a new website for Y, add it to Our Work." The assistant should research/verify relevant claims, create a content entry with proper SEO/frontmatter/assets, add internal links intentionally, build/test, open a PR or publish on agreed workflow, and report exact deployed URL and commit when truly confirmed. Do not claim a deployment from a repository write.
 
 Do not inspect or change historical `prunusmedia` / `prunus-media` repositories or Certificates.
+
+## Active migration review — 2026-11-06
+
+- GitHub CI builds Astro and checks all original HTML documents after deterministic standalone transformation.
+- Chromium smoke checks passed on homepage, desktop/mobile routes, contact, SEO audit, sample industries, new blog and work pages, with zero runtime JS exceptions after removing plugin initialisers and fixing a malformed legacy auditor escape function.
+- Snapshot comparison at common viewport sizes: homepage desktop 9.29%, homepage mobile 19.52%, contact mobile 13.85%, accountants desktop 9.73%, clinics desktop 9.60%, auditor desktop 0% pixel difference. These differences are unreviewed potential regressions; **do not merge solely because CI builds green**.
+- Browser sweep across all original routes and region-by-region visual diagnostics are being added; check current CI outcomes rather than assuming successful completion.
+- Native frontend paths exist for blog and `/our-work/` with case-study links. SEO Worker and Formspree destinations remain untouched.
+- Production stays on `main` with the old deployment. PR #1 remains draft until source cleanup and browser parity are complete.
