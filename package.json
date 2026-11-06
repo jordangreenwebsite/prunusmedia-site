@@ -1,0 +1,17 @@
+{
+  "name": "prunusmedia-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/postbuild.mjs",
+    "preview": "astro preview",
+    "check:export": "node scripts/check-export.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.15.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,39 @@
+# Prunus Media Astro migration
+
+This branch introduces an Astro static-site build and a repeatable blog/portfolio publishing system **without altering the original exported pages**. Read \`design.md\` first.
+
+## Stage-one fidelity architecture
+
+- \`src/pages/index.astro\`, \`src/pages/[...slug].astro\` and \`src/pages/404.astro\` prerender the original exported HTML verbatim. They are real Astro routes.
+- \`src/lib/exported-pages.mjs\` enumerates all public export pages in the original repository. New legacy routes in listed directories are picked up automatically at build time.
+- \`scripts/postbuild.mjs\` adds all current WordPress-exported static assets (CSS, JS, images) from the repository to \`dist/\` after the Astro build. There is no PHP execution or live WordPress server in this setup.
+- Existing page appearance and interactive functionality are protected at this stage, but **the legacy pages still use exported Breakdance frontend CSS/JS**. This bridge is not the final dependency-free refactor. Replace each component after tested visual and behavioural parity per \`design.md\`.
+- Separate editorial routes (\`/blog/\`, \`/our-work/\`) use editable Astro content collections.
+- The original \`main\` deploy stays untouched unless review explicitly approves merging this branch.
+
+## Local and Cloudflare Pages build
+
+\`\`\`bash
+npm install
+npm run check:export
+npm run build
+npm run preview
+\`\`\`
+
+For Cloudflare Pages set build command \`npm run build\`, output directory \`dist\`, and Node 20 or later (Node 22 recommended). Do **not** change the production Pages project or custom-domain/DNS setting until the preview is tested.
+
+## Publish a Prunus blog post
+
+Create \`src/content/blog/my-search-topic.md\` with YAML frontmatter (see \`src/content/blog/_example.md\` for an unpublished template). Set \`draft: false\` only for ready-to-publish content; commit, build, review and merge. It appears under \`/blog/my-search-topic/\`, \`/blog/\` and in the generated sitemap.
+
+## Add a new client website
+
+Create \`src/content/work/client-slug.md\` (see \`_example.md\`). Use real client name, approved work description, services, screenshot and a verified live website URL. Set \`draft: false\` to publish on \`/our-work/\` and \`/our-work/client-slug/\`. The current homepage portfolio remains unchanged until Jordan separately approves connecting the new data-driven cards to the existing tabs.
+
+## Publishing quality controls
+
+For every post or case study: verify facts, use real/approved assets, add descriptive alt text, correct canonical and page metadata, link naturally to existing services, and run the link/visual/sitemap tests. No invented review, ROI or ranking evidence. Design stays identical on legacy pages.
+
+## Unverified matters
+
+No clean install/build, browser screenshot comparison, Worker test, form delivery, or Cloudflare preview deployment has yet been confirmed by this document. Record actual results before authorising production.
