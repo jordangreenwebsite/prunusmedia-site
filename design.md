@@ -73,3 +73,10 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Browser sweep across all original routes and region-by-region visual diagnostics are being added; check current CI outcomes rather than assuming successful completion.
 - Native frontend paths exist for blog and `/our-work/` with case-study links. SEO Worker and Formspree destinations remain untouched.
 - Production stays on `main` with the old deployment. PR #1 remains draft until source cleanup and browser parity are complete.
+
+### Whole-site runtime check (2026-11-06)
+
+- GitHub Actions run [42184445665](https://github.com/jordangreenwebsite/prunusmedia-site/actions/runs/42184445665): **SUCCESS**. Chrome checks all **25 original routes**, with **0 page JavaScript exceptions**; homepage/auditor/contact/industry/blog/portfolio smoke pages also passed.
+- Removed the lingering `lozad()` call from Social Media Marketing and replaced its lazy-media and embedded YouTube behaviour with independent JavaScript.
+- First controlled screenshot comparisons still show differences requiring review. They are concentrated in dynamic page areas and particularly the mobile hero/header. This is **not** permission to merge or promise pixel-identical output.
+- Source CSS remains generated from the original exported design; replacing that compiled stylesheet with semantic authored CSS is the remaining core migration requirement.
