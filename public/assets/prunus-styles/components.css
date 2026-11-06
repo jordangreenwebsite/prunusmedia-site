@@ -29,3 +29,18 @@
 @keyframes prunus-flip-phrase{0%,44%,100%{transform:rotateX(0)}49%{transform:rotateX(9deg)}54%{transform:rotateX(0)}}
 @media(min-width:1120px){.prunus-sticky{position:sticky;top:30vh}}
 @media(prefers-reduced-motion:reduce){.prunus-reveal{opacity:1!important;transform:none!important;transition:none!important}.prunus-animated-phrase{animation:none!important}}
+
+/* Approved addition: low-key client sign-in within existing desktop/mobile nav. */
+.breakdance-menu-list > .prunus-client-login .breakdance-menu-link{
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;text-decoration:underline;text-underline-offset:4px;
+  white-space:nowrap;
+}
+.breakdance-menu-list > .prunus-client-login .breakdance-menu-link:focus-visible{
+  outline:2px solid #2E2E2E;outline-offset:3px;
+}
+@media(max-width:1119px){
+  .breakdance-menu-list > .prunus-client-login .breakdance-menu-link{
+    justify-content:flex-start;white-space:normal;
+  }
+}
