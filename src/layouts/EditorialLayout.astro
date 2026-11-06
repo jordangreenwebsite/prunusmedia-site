@@ -1,0 +1,11 @@
+---
+import { getEditorialShell } from '../lib/editorial-shell.mjs';
+const shell = getEditorialShell(Astro.props);
+---
+<Fragment set:html={shell.opening} />
+<main class="pm-editorial" id="main-content">
+  <div class="pm-editorial__wrap">
+    <slot />
+  </div>
+</main>
+<Fragment set:html={shell.closing} />

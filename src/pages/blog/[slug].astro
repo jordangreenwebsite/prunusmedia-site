@@ -1,0 +1,21 @@
+---
+import { getCollection, render } from 'astro:content';
+import EditorialLayout from '../../layouts/EditorialLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  return posts.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const date = entry.data.publishedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+<EditorialLayout title={entry.data.title} description={entry.data.description} pathname={'/blog/' + entry.id + '/'} type="BlogPosting" image={entry.data.image} date={entry.data.publishedAt.toISOString()}>
+  <p class="pm-editorial__eyebrow">Prunus Media / Journal</p>
+  <h1>{entry.data.title}</h1>
+  <p class="pm-editorial__intro">{entry.data.description}</p>
+  <p class="pm-editorial__meta">By {entry.data.author} · <time datetime={entry.data.publishedAt.toISOString()}>{date}</time></p>
+  {entry.data.image && <img src={entry.data.image} alt={entry.data.imageAlt} style="width:100%;max-height:500px;object-fit:cover;border-radius:6px" />}
+  <article class="pm-editorial__article"><Content /></article>
+  <nav class="pm-editorial__nav" aria-label="More from Prunus"><a href="/blog/">← All articles</a><a href="/contact/">Talk to us</a></nav>
+</EditorialLayout>
