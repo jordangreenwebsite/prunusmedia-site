@@ -160,19 +160,36 @@
       adjust(.5);
     });
 
-    // Animated heading: use original provided fallback phrase until a
-    // verified native word-animation implementation is approved.
+
+    // One original changing phrase: re-create its subtle flip in native CSS.
+    const motionDisabled = matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.querySelectorAll('.bde-animated-heading').forEach((root) => {
       const wrapper = root.querySelector('.bde-animated-heading__wrapper');
-      if (wrapper && !wrapper.textContent.trim()) wrapper.textContent = 'started in business,';
+      if (!wrapper) return;
+      wrapper.textContent = 'started in business,';
+      if (!motionDisabled) wrapper.classList.add('prunus-animated-phrase');
     });
 
-    // Native reveal interactions should never leave content invisible when
-    // JavaScript, intersection observers or reduced motion settings differ.
-    document.querySelectorAll('[data-interactions]').forEach((item) => {
-      item.style.visibility = 'visible';
+    // Preserve the original configured reveal types, without the animation
+    // plugin or a heavy animation framework.
+    const reveals = [...document.querySelectorAll('[data-prunus-reveal]')];
+    if (reveals.length && !motionDisabled && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('prunus-revealed');
+          observer.unobserve(entry.target);
+        }
+      }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+      reveals.forEach((element) => {
+        element.classList.add('prunus-reveal');
+        observer.observe(element);
+      });
+    }
+    document.querySelectorAll('[data-prunus-sticky]').forEach((element) => {
+      element.classList.add('prunus-sticky');
     });
-    // Original sticky-scroll header and transparent hero overlay.
+
     const header = document.querySelector('.bde-header-builder');
     if (header) {
       let previous = window.scrollY;
@@ -188,7 +205,6 @@
       window.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
     }
-
 
     // All existing case-study buttons lead to verified editorial entries.
     // The three project showcases remain in their original visual order.

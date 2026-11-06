@@ -33,6 +33,25 @@ export function cssWithAbsoluteUrls(css, sourcePath) {
 export function cleanPageHtml(originalHtml, filename) {
   let html = originalHtml;
   const styles = extractCssPaths(html);
+
+  // Translate the approved entrance/sticky configuration to native
+  // declarative attributes before deleting the old plugin initializers.
+  for (const [, className, animation] of originalHtml.matchAll(
+    /new BreakdanceEntrance\(\s*['"]\.([^'"]+)['"]\s*,\s*\{\s*"animation_type"\s*:\s*"([^"]+)"\s*\}\s*\)/g
+  )) {
+    if (!/^[a-zA-Z0-9_-]+$/.test(className)) continue;
+    if (!['flipUp', 'slideLeft', 'slideRight'].includes(animation)) continue;
+    const pattern = new RegExp('(class="[^"]*\\b' + className + '\\b[^"]*")');
+    html = html.replace(pattern, '$1 data-prunus-reveal="' + animation + '"');
+  }
+  for (const [, className] of originalHtml.matchAll(
+    /new BreakdanceSticky\(\s*['"]\.([^'"]+)['"]/g
+  )) {
+    if (!/^[a-zA-Z0-9_-]+$/.test(className)) continue;
+    const pattern = new RegExp('(class="[^"]*\\b' + className + '\\b[^"]*")');
+    html = html.replace(pattern, '$1 data-prunus-sticky');
+  }
+
   if (styles.length) {
     let inserted = false;
     const link = '<link rel="stylesheet" href="/assets/prunus-styles/' + routeAssetName(filename) + '.css">';

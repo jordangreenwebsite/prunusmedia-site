@@ -17,3 +17,15 @@
   .bde-header-builder { transition: none !important; }
   .bde-animated-heading__wrapper { animation: none !important; }
 }
+
+
+/* Native reveal and sticky behaviour; reduced-motion aware. */
+.prunus-reveal{transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);opacity:0}
+.prunus-reveal[data-prunus-reveal="slideLeft"]{transform:translateX(-28px)}
+.prunus-reveal[data-prunus-reveal="slideRight"]{transform:translateX(28px)}
+.prunus-reveal[data-prunus-reveal="flipUp"]{transform:perspective(600px) rotateX(12deg) translateY(25px);transform-origin:bottom}
+.prunus-reveal.prunus-revealed{opacity:1;transform:none}
+.prunus-animated-phrase{display:inline-block;transform-origin:50% 0;animation:prunus-flip-phrase 4s ease-in-out infinite}
+@keyframes prunus-flip-phrase{0%,44%,100%{transform:rotateX(0)}49%{transform:rotateX(9deg)}54%{transform:rotateX(0)}}
+@media(min-width:1120px){.prunus-sticky{position:sticky;top:30vh}}
+@media(prefers-reduced-motion:reduce){.prunus-reveal{opacity:1!important;transform:none!important;transition:none!important}.prunus-animated-phrase{animation:none!important}}
