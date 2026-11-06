@@ -24,6 +24,12 @@ jobs:
       - name: Security and tenant isolation tests
         working-directory: client-portal
         run: node --experimental-sqlite --test tests/*.test.mjs
+      - name: Validate Cloudflare Worker bundle (dry run; no deployment)
+        working-directory: client-portal
+        run: |
+          npm install --no-audit --no-fund
+          sed -i 's/REPLACE_WITH_REAL_CLOUDFLARE_D1_DATABASE_ID/00000000-0000-0000-0000-000000000000/' wrangler.jsonc
+          npx wrangler deploy --dry-run --outdir /tmp/prunus-portal-dry-run
       - name: Check portal remains independently deployable
         run: |
           test -f client-portal/wrangler.jsonc
