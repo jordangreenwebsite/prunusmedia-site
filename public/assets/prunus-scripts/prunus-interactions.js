@@ -67,6 +67,57 @@
     }));
     mobileQuery.addEventListener?.('change', () => menuOpen(false));
 
+
+    // Browser-native lazy loading for any future data-src media assets.
+    const lazyElements = [...document.querySelectorAll('img[data-src], iframe[data-src]')];
+    const loadLazy = (element) => {
+      if (element.dataset.src) element.src = element.dataset.src;
+      if (element.dataset.srcset) element.srcset = element.dataset.srcset;
+      element.removeAttribute('data-src');
+    };
+    if ('IntersectionObserver' in window) {
+      const lazyObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            loadLazy(entry.target);
+            lazyObserver.unobserve(entry.target);
+          }
+        }
+      }, { rootMargin: '300px' });
+      lazyElements.forEach((element) => lazyObserver.observe(element));
+    } else lazyElements.forEach(loadLazy);
+
+    // Former lite-youtube custom elements work without the builder's plugin.
+    // No video is loaded until the visitor explicitly activates it.
+    document.querySelectorAll('lite-youtube[videoid]').forEach((element) => {
+      const id = element.getAttribute('videoid');
+      if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return;
+      let playing = false;
+      element.setAttribute('role', 'button');
+      element.setAttribute('tabindex', '0');
+      element.setAttribute('aria-label', 'Play video');
+      const play = () => {
+        if (playing) return;
+        playing = true;
+        const frame = document.createElement('iframe');
+        frame.src = 'https://www.youtube-nocookie.com/embed/' + id +
+          '?autoplay=1&playsinline=1&rel=0';
+        frame.title = 'Video player';
+        frame.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
+        frame.allowFullscreen = true;
+        frame.referrerPolicy = 'strict-origin-when-cross-origin';
+        element.classList.add('prunus-video-playing');
+        element.replaceChildren(frame);
+        frame.focus();
+      };
+      element.addEventListener('click', play);
+      element.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault(); play();
+        }
+      });
+    });
+
     // FAQ accordion: original accessible buttons and panels, no plugin.
     document.querySelectorAll('.bde-faq__question').forEach((button) => {
       const controls = button.getAttribute('aria-controls');

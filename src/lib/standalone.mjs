@@ -66,6 +66,7 @@ export function cleanPageHtml(originalHtml, filename) {
     if (/id=["']wp-emoji-settings["']/i.test(script)) return '';
     if (/wp-emoji-settings|BreakdanceFrontend\.data|new\s+(?:Breakdance[A-Za-z]+|AwesomeMenu)\s*\(|window\._wpemojiSettings/i.test(script)) return '';
     if (/window\.PrunusCursorFX/.test(script)) return '';
+    if (/\blozad\s*\(\s*\)/.test(script)) return '';
     if (/const\s+WORKER\s*=\s*['\"]https:\/\/prunus-seo-audit\.jordanjpiper\.workers\.dev\//.test(script)) {
       return '<script defer src="/assets/prunus-scripts/prunus-auditor.js"></script>';
     }
