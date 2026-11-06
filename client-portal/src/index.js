@@ -330,6 +330,11 @@ export default {
       if (path==='/api/requests/blog' && method==='POST') return await createRequest(request,env,user,context,true);
       const file = path.match(/^\/api\/files\/([a-f0-9-]{36})$/);
       if (file && method==='GET') return await privatePdf(request,env,user,file[1]);
+      if (path==='/api/admin/notifications' && method==='GET') {
+        if (!user.admin) return error('Forbidden.',403);
+        const failed=(await env.DB.prepare("SELECT n.event,n.error_message,n.created_at,c.name AS client_name FROM notifications n LEFT JOIN clients c ON c.id=n.client_id WHERE n.status='failed' ORDER BY n.created_at DESC LIMIT 25").all()).results;
+        return response({ok:true,failed});
+      }
       if (path==='/api/admin/clients' && method==='POST') return await createClient(request,env,user);
       if (path==='/api/admin/members' && method==='POST') return await addMember(request,env,user);
       const rotate=path.match(/^\/api\/admin\/sites\/([a-f0-9-]{36})\/rotate$/);
