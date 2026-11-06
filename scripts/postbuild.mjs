@@ -9,9 +9,11 @@ const root = process.cwd();
 const dist = path.join(root, 'dist');
 if (!existsSync(dist)) throw new Error('Run astro build before postbuild');
 
-for (const dir of ['wp-content', 'wp-includes']) {
-  const source = path.join(root, dir);
-  if (existsSync(source)) cpSync(source, path.join(dist, dir), { recursive: true });
+// Only actual brand/media assets are retained; do not deploy old plugin
+// implementations, WordPress core files or Breakdance generated CSS.
+for (const year of ['2024', '2025', '2026']) {
+  const source = path.join(root, 'wp-content', 'uploads', year);
+  if (existsSync(source)) cpSync(source, path.join(dist, 'wp-content', 'uploads', year), { recursive: true });
 }
 for (const filename of ['_redirects', 'main-sitemap.xsl', 'CNAME', 'wp-sitemap.xml']) {
   const source = path.join(root, filename);

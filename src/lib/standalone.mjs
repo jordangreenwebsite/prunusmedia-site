@@ -57,5 +57,6 @@ export function cleanPageHtml(originalHtml, filename) {
   const scripts = '<script defer src="/assets/prunus-scripts/prunus-interactions.js"></script>' +
     '<script defer src="/assets/prunus-scripts/prunus-cursor.js"></script>';
   if (html.includes('</body>')) html = html.replace('</body>', scripts + '\n</body>');
+  if (html.includes('</head>')) html = html.replace('</head>', '<link rel="stylesheet" href="/assets/prunus-styles/components.css">\n</head>');
   return html;
 }

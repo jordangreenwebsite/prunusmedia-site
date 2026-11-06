@@ -38,3 +38,7 @@ For every post or case study: verify facts, use real/approved assets, add descri
 ## Unverified matters
 
 No clean install/build, browser screenshot comparison, Worker test, form delivery, or Cloudflare preview deployment has yet been confirmed by this document. Record actual results before authorising production.
+
+## Standalone frontend migration in progress
+
+Astro now transforms committed exported pages to replace WordPress/Breakdance runtime script and stylesheet **links** with generated Prunus-owned CSS bundles and authored JavaScript. Media remains at its existing URLs. The former CSS is **compiled from original exported designs** for visual compatibility and therefore is not yet a clean semantic hand-written design system. It must be refactored section-by-section and verified in real browsers before this PR is merged. Separate forms/auditor remain unchanged. Do not confuse removal of runtime plugin URL references with full source-level elimination of builder-era styling.

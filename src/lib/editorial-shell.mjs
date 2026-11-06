@@ -5,9 +5,10 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { cleanPageHtml } from './standalone.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const original = readFileSync(path.join(root, 'index.html'), 'utf8');
+const original = cleanPageHtml(readFileSync(path.join(root, 'index.html'), 'utf8'), 'index.html');
 const headerEnd = original.indexOf('</header>');
 const footerStart = original.indexOf('<section class="bde-section-26-100');
 if (headerEnd === -1 || footerStart === -1 || footerStart < headerEnd) {

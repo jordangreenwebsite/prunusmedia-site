@@ -6,6 +6,7 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { cleanPageHtml } from './standalone.mjs';
 
 const root = path.resolve(fileURLToPath(new URL('../../', import.meta.url)));
 const publicDirs = [
@@ -25,7 +26,7 @@ export function getLegacyDocument(filename) {
   if (!absolute.startsWith(root + path.sep) && absolute !== path.resolve(root)) {
     throw new Error('Invalid exported page path: ' + filename);
   }
-  return readFileSync(absolute, 'utf8');
+  return cleanPageHtml(readFileSync(absolute, 'utf8'), filename);
 }
 
 export function getLegacyRoutes() {
