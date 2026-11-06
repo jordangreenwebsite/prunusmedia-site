@@ -59,3 +59,17 @@ Work requests are suggestions for Prunus review; converting a blog PDF into an a
 This is an implemented **candidate**, not a claim of deployed functionality. Keep the client-side navigation integration in a separate PR until the Worker is reachable and a real OTP/lead/PDF test has passed. GitHub Actions test completion alone cannot verify live Cloudflare bindings, deliverability, WAF rules, malware scanning or legal/privacy documents.
 
 Future: lead contacted/dealt-with UI, staff permissions with assigned tenants, comment threads, upload virus-scanning pipeline, audited retention/erasure/export, admin queue across tenants, automated backup & restore drills.
+
+
+## Client login links and enquiry pipeline (added 2026-11-06)
+
+- Clients enter from https://prunusmedia.com/client-login/ on the new Astro site and their own website. The roofing link passes a ?site=residential-roofing-fascias hint to preselect only an account the email is authorised to see.
+- Astro Cloudflare Pages redirects /client-login/ to the independently hosted portal.prunusmedia.com Worker. Both sites must be deployed before this route works.
+- The account-scoped Back to my website button links to the selected tenant's registered HTTPS domain. Query-string return URL overrides are not supported.
+- Stored enquiry cards offer WhatsApp (for recognisable UK mobile numbers only), Call and Email actions like the lead notification emails. These open apps without sending any message automatically.
+- Clients can update their own leads using New, Contacted, and Dealt with stages and filter the pipeline. Server-side permissions and auditing enforce tenant separation.
+- The first Prunus admin from ADMIN_EMAILS can sign in and provision the first customer even when the database is empty.
+
+RELEASE GATE: Do not merge login links while the Worker is unreachable. Before enabling the roofing lead-integration secret, add the verified owner email and run an end-to-end form -> email -> lead list -> contact action -> status change test.
+
+Cloudflare Worker custom domain is declared in wrangler.jsonc. It requires a Cloudflare zone owned by the account, authorised deploy credentials, no conflicting CNAME, D1/R2 bindings and secrets.
