@@ -95,6 +95,16 @@ export function cleanPageHtml(originalHtml, filename) {
     dropdownEntry('/blog/', 'Journal & SEO Insights') + '$1'
   );
 
+  // Approved addition: discreet client login in the existing Breakdance
+  // desktop/mobile navigation, without redesigning or reordering site links.
+  // The central /client-login/ route redirects to the independently hosted Worker.
+  const clientLogin='<li class="breakdance-menu-item prunus-client-login">' +
+    '<a class="breakdance-link breakdance-menu-link" href="/client-login/" target="_self" data-type="url">Client login</a></li>';
+  if (!html.includes('prunus-client-login')) {
+    const cta=/<li class="bde-button-27-146 bde-button breakdance-menu-item">/i;
+    if (cta.test(html)) html=html.replace(cta,clientLogin+'  // Preserve exact text and DOM layouts. Native interactions operate on the');
+  }
+
   // Preserve exact text and DOM layouts. Native interactions operate on the
   // original class names pending verified semantic component conversion.
   const scripts = '<script defer src="/assets/prunus-scripts/prunus-interactions.js"></script>' +
