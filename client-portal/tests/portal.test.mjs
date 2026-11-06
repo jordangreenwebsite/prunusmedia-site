@@ -119,6 +119,19 @@ test('tenant isolation, invited email codes, private PDFs and trusted lead intak
   const aview=await h.call('/api/dashboard?client='+a,{cookie:roofer.cookie});
   assert.equal(aview.json.leads.length,0,'Tenant A cannot read tenant B leads');
   assert.equal(aview.json.requests.length,1);
+  // A client may move only their own leads through the pipeline.
+  const forbiddenLead=await h.call('/api/leads/'+bview.json.leads[0].id+'/status',{method:'PATCH',cookie:roofer.cookie,data:{status:'contacted'}});
+  assert.equal(forbiddenLead.res.status,404,'Cannot change another tenant lead status');
+  const ownLead=await h.call('/api/leads/'+bview.json.leads[0].id+'/status',{method:'PATCH',cookie:florist.cookie,data:{status:'contacted'}});
+  assert.equal(ownLead.res.status,200);
+  assert.equal(ownLead.json.status,'contacted');
+  const invalidLead=await h.call('/api/leads/'+bview.json.leads[0].id+'/status',{method:'PATCH',cookie:florist.cookie,data:{status:'deleted'}});
+  assert.equal(invalidLead.res.status,400,'Only documented pipeline statuses are allowed');
+  const updatedB=await h.call('/api/dashboard?client='+b,{cookie:florist.cookie});
+  assert.equal(updatedB.json.leads[0].status,'contacted');
+  const crossOrigin=await h.call('/api/leads/'+bview.json.leads[0].id+'/status',{method:'PATCH',cookie:florist.cookie,origin:'https://external.invalid',data:{status:'dealt-with'}});
+  assert.equal(crossOrigin.res.status,403,'Pipeline status writes require a same-origin request');
+
   const validLead=await h.call('/api/ingest/lead',{method:'POST',origin:null,
     headers:{authorization:'Bearer '+first.json.ingest_token},
     data:{external_id:'roofing-form-124',name:'Roofer Lead',phone:'07700900123',postcode:'GL7 1AA',source_page:'/contact/',message:'Please call me'}});
