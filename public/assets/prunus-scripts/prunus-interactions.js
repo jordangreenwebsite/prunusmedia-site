@@ -15,6 +15,7 @@
     const close = menu?.querySelector('.breakdance-menu-close-button');
     const list = menu?.querySelector('.breakdance-menu-list');
     const dropdowns = [...(menu?.querySelectorAll('.breakdance-dropdown') || [])];
+    menu?.classList.add('breakdance-menu--enabled');
 
     function dropdownOpen(item, open) {
       item.classList.toggle('breakdance-dropdown--open', open);
@@ -27,6 +28,7 @@
     function menuOpen(open) {
       if (!menu) return;
       menu.classList.toggle('breakdance-menu--open', open);
+      menu.classList.toggle('breakdance-responsive-menu--open', open);
       document.documentElement.classList.toggle('prunus-menu-open', open);
       toggle?.setAttribute('aria-expanded', String(open));
       toggle?.setAttribute('aria-label', open ? 'Close Menu' : 'Open Menu');
