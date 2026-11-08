@@ -21,14 +21,23 @@ for (const important of ['about','contact','industries/accountants','industries/
     process.exit(1);
   }
 }
-// The newly approved login entry point must be rendered without disturbing
-// the existing menu or its primary project CTA.
+// The approved client portal link now lives in the shared footer; the header
+// must retain its original four dropdowns, primary CTA and room for its logo.
 for (const route of ['index.html','about/index.html','website-design/index.html']) {
   const html=getLegacyDocument(route);
-  if (!html.includes('class="breakdance-menu-item prunus-client-login"') ||
+  if (!html.includes('class="bde-text-link prunus-footer-login breakdance-link"') ||
       !html.includes('href="/client-login/"') ||
       !html.includes('Start a Project')) {
-    throw new Error('Client login or existing CTA missing from ' + route);
+    throw new Error('Footer client login or original CTA missing from ' + route);
+  }
+  if (html.includes('class="breakdance-menu-item prunus-client-login"') ||
+      html.includes('prunus-editorial-nav-item')) {
+    throw new Error('Old oversized header still present in ' + route);
+  }
+  for (const href of ['/blog/', '/our-work/']) {
+    if (!html.includes('href="' + href + '"')) {
+      throw new Error('Dropdown link missing ' + href + ' from ' + route);
+    }
   }
 }
 console.log('Export preflight: ' + pages.length + ' preserved paths, main assets and critical routes present.');
