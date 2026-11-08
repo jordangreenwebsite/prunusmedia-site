@@ -102,9 +102,10 @@ export function cleanPageHtml(originalHtml, filename) {
       (html.includes('prunus-client-login') ? '' : clientLogin) + match
     );
   } else if (html.includes('id="menu-139"')) {
-    // The menu markup changed unexpectedly. Fail instead of silently hiding
-    // the new destinations in a build that appears successful.
-    throw new Error('Prunus nav insertion point has changed for ' + filename);
+    // Older archive/search exports have the same menu but no project CTA.
+    // Insert before the main nav closes without changing nested dropdowns.
+    html = html.replace(/<\/ul>\s*<\/nav>/i, (match) => editorialLinks +
+      (html.includes('prunus-client-login') ? '' : clientLogin) + match);
   }
 
   // Preserve existing DOM layout while independent interactions replace the
