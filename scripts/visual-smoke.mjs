@@ -90,7 +90,13 @@ try {
             const result = await page.request.get(local + url);
             if (!result.ok()) failures.push(test.label + ': link ' + url + ' returns ' + result.status());
           }
-          if (test.mobile) await page.locator('.breakdance-menu-close-button').click();
+          if (test.mobile) {
+            // Escape is the accessible close path; the legacy rotated
+            // close-icon hitbox is not reliable in headless Chromium.
+            await page.keyboard.press('Escape');
+            const expanded = await page.locator('.breakdance-menu-toggle').getAttribute('aria-expanded');
+            if (expanded !== 'false') failures.push(test.label + ': mobile menu did not close with Escape');
+          }
         }
       }
       if (!test.mobile && test.route === '/') {
