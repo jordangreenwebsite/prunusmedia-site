@@ -30,6 +30,8 @@ jobs:
         run: npm run build
       - name: Assert original exported HTML is preserved
         run: node scripts/assert-export-parity.mjs
+      - name: Verify every original scroll animation and footer/navigation structure
+        run: node scripts/check-animation-coverage.mjs
       - name: Install Chromium for browser checks
         run: npx playwright install chromium --with-deps
       - name: Capture visual baselines and check browser interactions
