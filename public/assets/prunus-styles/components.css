@@ -19,32 +19,51 @@
 }
 
 
-/* Native reveal and sticky behaviour; reduced-motion aware. */
-.prunus-reveal{transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1);opacity:0}
-.prunus-reveal[data-prunus-reveal="slideLeft"]{transform:translateX(-28px)}
-.prunus-reveal[data-prunus-reveal="slideRight"]{transform:translateX(28px)}
-.prunus-reveal[data-prunus-reveal="flipUp"]{transform:perspective(600px) rotateX(12deg) translateY(25px);transform-origin:bottom}
-.prunus-reveal.prunus-revealed{opacity:1;transform:none}
+/* Port of the original entrance settings: 500ms, 100px/deg,
+   trigger as the element approaches the lower viewport (120px margin). */
+[data-prunus-reveal] { visibility: visible !important; }
+html.prunus-motion-active [data-prunus-reveal]:not(.prunus-revealed) {
+  opacity: 0;
+  visibility: hidden !important;
+}
+html.prunus-motion-active [data-prunus-reveal] {
+  transition: transform .5s ease-out, opacity .5s ease-out,
+    visibility 0s linear .5s;
+  will-change: transform, opacity;
+}
+html.prunus-motion-active [data-prunus-reveal].prunus-revealed {
+  opacity: 1;
+  visibility: visible !important;
+  transform: none !important;
+  transition: transform .5s ease-out, opacity .5s ease-out;
+  will-change: auto;
+}
+html.prunus-motion-active [data-prunus-reveal="slideLeft"]:not(.prunus-revealed) {transform:translate3d(-100px,0,0)}
+html.prunus-motion-active [data-prunus-reveal="slideRight"]:not(.prunus-revealed) {transform:translate3d(100px,0,0)}
+html.prunus-motion-active [data-prunus-reveal="slideUp"]:not(.prunus-revealed) {transform:translate3d(0,100px,0)}
+html.prunus-motion-active [data-prunus-reveal="slideDown"]:not(.prunus-revealed) {transform:translate3d(0,-100px,0)}
+html.prunus-motion-active [data-prunus-reveal="flipUp"]:not(.prunus-revealed) {transform:perspective(2500px) rotateX(-100deg)}
+html.prunus-motion-active [data-prunus-reveal="flipDown"]:not(.prunus-revealed) {transform:perspective(2500px) rotateX(100deg)}
+html.prunus-motion-active [data-prunus-reveal="flipLeft"]:not(.prunus-revealed) {transform:perspective(2500px) rotateY(-100deg)}
+html.prunus-motion-active [data-prunus-reveal="flipRight"]:not(.prunus-revealed) {transform:perspective(2500px) rotateY(100deg)}
+html.prunus-motion-active [data-prunus-reveal="zoomIn"]:not(.prunus-revealed) {transform:scale(.6)}
+html.prunus-motion-active [data-prunus-reveal="zoomOut"]:not(.prunus-revealed) {transform:scale(1.2)}
 .prunus-animated-phrase{display:inline-block;transform-origin:50% 0;animation:prunus-flip-phrase 4s ease-in-out infinite}
 @keyframes prunus-flip-phrase{0%,44%,100%{transform:rotateX(0)}49%{transform:rotateX(9deg)}54%{transform:rotateX(0)}}
 @media(min-width:1120px){.prunus-sticky{position:sticky;top:30vh}}
-@media(prefers-reduced-motion:reduce){.prunus-reveal{opacity:1!important;transform:none!important;transition:none!important}.prunus-animated-phrase{animation:none!important}}
-
-/* Approved addition: low-key client sign-in within existing desktop/mobile nav. */
-.breakdance-menu-list > .prunus-client-login .breakdance-menu-link{
-  display:flex;align-items:center;justify-content:center;
-  font-weight:600;text-decoration:underline;text-underline-offset:4px;
-  white-space:nowrap;
-}
-.breakdance-menu-list > .prunus-client-login .breakdance-menu-link:focus-visible{
-  outline:2px solid #2E2E2E;outline-offset:3px;
-}
-@media(max-width:1119px){
-  .breakdance-menu-list > .prunus-client-login .breakdance-menu-link{
-    justify-content:flex-start;white-space:normal;
-  }
+@media(prefers-reduced-motion:reduce){
+  html.prunus-motion-active [data-prunus-reveal]{opacity:1!important;visibility:visible!important;transform:none!important;transition:none!important}
+  .prunus-animated-phrase{animation:none!important}
 }
 
+/* Client portal access is understated and placed with the existing footer links. */
+.bde-div-26-113 .prunus-footer-login{
+  display:inline-block;color:#526458;text-decoration:underline;text-underline-offset:4px;
+  font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:14px;
+}
+.bde-div-26-113 .prunus-footer-login:hover{color:#2E2E2E}
+.bde-div-26-113 .prunus-footer-login:focus-visible{outline:2px solid #2E2E2E;outline-offset:4px}
+@media(max-width:1023px){.bde-div-26-113 .prunus-footer-login{font-size:15px}}
 
 /* Independent no-autoplay-until-click video embed */
 lite-youtube{position:relative;display:block;aspect-ratio:16/9;background-size:cover;background-position:center;cursor:pointer}
@@ -55,28 +74,8 @@ lite-youtube.prunus-video-playing::before,
 lite-youtube.prunus-video-playing::after{display:none!important}
 
 
-/* Publishing links are first-class header items, not hidden in dropdowns. */
-.breakdance-menu-list > .prunus-editorial-nav-item .breakdance-menu-link{
-  white-space:nowrap;
-  font-weight:500;
-}
-.breakdance-menu-list > .prunus-editorial-nav-item .breakdance-menu-link:hover,
-.breakdance-menu-list > .prunus-editorial-nav-item .breakdance-menu-link:focus-visible{
-  text-decoration:underline;
-  text-underline-offset:5px;
-}
-.breakdance-menu-list > .prunus-editorial-nav-item .breakdance-menu-link:focus-visible{
+/* No additional top-level menu items: protect the original logo and spacing. */
+.bde-image-27-105{flex-shrink:0}
+.breakdance-dropdown-links > .prunus-added-dropdown-item .breakdance-dropdown-link:focus-visible{
   outline:2px solid #2E2E2E;outline-offset:3px;
-}
-@media (min-width:1120px) and (max-width:1390px){
-  .breakdance-menu-list > .prunus-editorial-nav-item .breakdance-menu-link{
-    font-size:14px;
-    padding-left:6px;
-    padding-right:6px;
-  }
-}
-@media(max-width:1119px){
-  .breakdance-menu-list > .prunus-editorial-nav-item .breakdance-menu-link{
-    white-space:normal;
-  }
 }

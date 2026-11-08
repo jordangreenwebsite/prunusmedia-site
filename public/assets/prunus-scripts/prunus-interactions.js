@@ -221,21 +221,32 @@
       if (!motionDisabled) wrapper.classList.add('prunus-animated-phrase');
     });
 
-    // Preserve the original configured reveal types, without the animation
-    // plugin or a heavy animation framework.
+    // Original exported sections carry data-entrance; Astro renames that
+    // marker to data-prunus-reveal. Respect preferred reduced motion, keep
+    // all content visible if observers/JS aren't supported, and animate once
+    // on arrival at the viewport (the source builder's play-on-enter rule).
     const reveals = [...document.querySelectorAll('[data-prunus-reveal]')];
     if (reveals.length && !motionDisabled && 'IntersectionObserver' in window) {
+      document.documentElement.classList.add('prunus-motion-active');
       const observer = new IntersectionObserver((entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
           entry.target.classList.add('prunus-revealed');
           observer.unobserve(entry.target);
         }
-      }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
-      reveals.forEach((element) => {
-        element.classList.add('prunus-reveal');
-        observer.observe(element);
-      });
+      }, { threshold: 0, rootMargin: '0px 0px -120px 0px' });
+      reveals.forEach((element) => observer.observe(element));
+      // Fail-safe: never leave important content invisible permanently.
+      // The observer itself owns reveal timing; the reduced-motion path
+      // never sets the hide state at all.
+      addEventListener('pageshow', () => {
+        reveals.forEach((element) => {
+          if (element.getBoundingClientRect().top < innerHeight - 120) {
+            element.classList.add('prunus-revealed');
+            observer.unobserve(element);
+          }
+        });
+      }, { once:true });
     }
     document.querySelectorAll('[data-prunus-sticky]').forEach((element) => {
       element.classList.add('prunus-sticky');

@@ -34,16 +34,14 @@ export function cleanPageHtml(originalHtml, filename) {
   let html = originalHtml;
   const styles = extractCssPaths(html);
 
-  // Translate the approved entrance/sticky configuration to native
-  // declarative attributes before deleting the old plugin initializers.
-  for (const [, className, animation] of originalHtml.matchAll(
-    /new BreakdanceEntrance\(\s*['"]\.([^'"]+)['"]\s*,\s*\{\s*"animation_type"\s*:\s*"([^"]+)"\s*\}\s*\)/g
-  )) {
-    if (!/^[a-zA-Z0-9_-]+$/.test(className)) continue;
-    if (!['flipUp', 'slideLeft', 'slideRight'].includes(animation)) continue;
-    const pattern = new RegExp('(class="[^"]*\\b' + className + '\\b[^"]*")');
-    html = html.replace(pattern, '$1 data-prunus-reveal="' + animation + '"');
-  }
+  // The original exported DOM already records the exact per-section effect.
+  // Breakdance's entrance.css hides [data-entrance] until its removed runtime
+  // fires; transfer the marker rather than relying on a fragile class regex.
+  // Browser-native IntersectionObserver handles the animation independently.
+  html = html.replace(/\sdata-entrance=(["'])([a-zA-Z]+)\1/g,
+    (_, quote, effect) => ' data-prunus-reveal="' + effect + '"');
+
+  // Preserve explicitly configured sticky elements without the old script.
   for (const [, className] of originalHtml.matchAll(
     /new BreakdanceSticky\(\s*['"]\.([^'"]+)['"]/g
   )) {
@@ -80,32 +78,37 @@ export function cleanPageHtml(originalHtml, filename) {
   html = html.replaceAll(".replace(/'/g,''')", ".replace(/'/g,'&#39;')");
 
 
-  // Visible, accessible top-level navigation for the blog and portfolio.
-  // Use the original menu list item/anchor classes so that the existing
-  // desktop and mobile layouts style these links consistently.
-  function primaryLink(href, label) {
-    return '<li class="breakdance-menu-item prunus-editorial-nav-item">' +
-      '<a class="breakdance-link breakdance-menu-link" href="' + href +
-      '" target="_self" data-type="url">' + label + '</a></li>';
+
+  // Preserve the original four-dropdown header, leaving room for the logo.
+  // Place Our Work as the first item of the existing "Our Work" dropdown
+  // (before Industries) and Blog under "About / Contact".
+  function dropdownEntry(href, label) {
+    return '<li class="breakdance-dropdown-item prunus-added-dropdown-item">' +
+      '<a class="breakdance-link breakdance-dropdown-link" href="' + href +
+      '" target="_self" data-type="url"><span class="breakdance-dropdown-link__label">' +
+      '<span class="breakdance-dropdown-link__text">' + label +
+      '</span></span></a></li>';
   }
-  const editorialLinks = primaryLink('/our-work/', 'Our Work') +
-    primaryLink('/blog/', 'Blog');
-  // Keep the approved central client-login entry and existing "Start a Project"
-  // CTA; do not accidentally replace either one.
-  const clientLogin = '<li class="breakdance-menu-item prunus-client-login">' +
-    '<a class="breakdance-link breakdance-menu-link" href="/client-login/" ' +
-    'target="_self" data-type="url">Client login</a></li>';
-  const contactCta = /<li class="bde-button-27-146 bde-button breakdance-menu-item">/i;
-  if (contactCta.test(html)) {
-    html = html.replace(contactCta, (match) =>
-      (html.includes('prunus-editorial-nav-item') ? '' : editorialLinks) +
-      (html.includes('prunus-client-login') ? '' : clientLogin) + match
-    );
-  } else if (html.includes('id="menu-139"')) {
-    // Older archive/search exports have the same menu but no project CTA.
-    // Insert before the main nav closes without changing nested dropdowns.
-    html = html.replace(/<\/ul>\s*<\/nav>/i, (match) => editorialLinks +
-      (html.includes('prunus-client-login') ? '' : clientLogin) + match);
+  function prependToDropdown(number, href, label) {
+    const pattern = new RegExp('(<li class="bde-menu-dropdown-27-' + number +
+      '\\b[\\s\\S]*?<ul class="breakdance-dropdown-links">)', 'i');
+    if (pattern.test(html)) html = html.replace(pattern, (match) =>
+      match + dropdownEntry(href, label));
+    else if (html.includes('class="bde-menu-dropdown-27-' + number)) {
+      throw new Error('Cannot insert ' + label + ' into the existing header on ' + filename);
+    }
+  }
+  prependToDropdown('153', '/our-work/', 'Our Work');
+  prependToDropdown('152', '/blog/', 'Blog');
+
+  // The central client login belongs in the shared footer, never the header.
+  // This transformation also runs on the Astro editorial shell, which reuses
+  // the approved original header and footer from the exported homepage.
+  const footerLogin = '<a class="bde-text-link prunus-footer-login breakdance-link"' +
+    ' href="/client-login/" target="_self" data-type="url">Client login</a>';
+  const footerColumn = /(<div class="bde-div-26-113 bde-div">)/i;
+  if (footerColumn.test(html) && !html.includes('class="bde-text-link prunus-footer-login')) {
+    html = html.replace(footerColumn, '$1' + footerLogin);
   }
 
   // Preserve existing DOM layout while independent interactions replace the
