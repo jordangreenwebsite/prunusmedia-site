@@ -119,9 +119,12 @@ export function cleanPageHtml(originalHtml, filename) {
   // the approved original header and footer from the exported homepage.
   const footerLogin = '<a class="bde-text-link prunus-footer-login breakdance-link"' +
     ' href="/client-login/" target="_self" data-type="url">Client login</a>';
+  // Keep original footer links in order; Client login is a discreet final link.
+  const footerContact = /(<a class="bde-text-link-26-116[^"]*"[^>]*>[\s\S]*?<\/a>)/i;
   const footerColumn = /(<div class="bde-div-26-113 bde-div">)/i;
-  if (footerColumn.test(html) && !html.includes('class="bde-text-link prunus-footer-login')) {
-    html = html.replace(footerColumn, '$1' + footerLogin);
+  if (!html.includes('class="bde-text-link prunus-footer-login')) {
+    if (footerContact.test(html)) html = html.replace(footerContact, '$1' + footerLogin);
+    else if (footerColumn.test(html)) html = html.replace(footerColumn, '$1' + footerLogin);
   }
   else if (!html.includes('prunus-footer-login') && html.includes('</body>')) {
     // Older WP archive and 404 exports have no standard shared footer.
