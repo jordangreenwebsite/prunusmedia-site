@@ -71,32 +71,45 @@ try {
       const visibleLinks = await page.locator('header a[href]').count();
       if (!title || visibleLinks < 4) failures.push(test.label + ': missing title or expected header navigation');
 
-      if (test.route === '/') {
-        const blogLink = page.locator('header .prunus-editorial-nav-item a[href="/blog/"]');
-        const workLink = page.locator('header .prunus-editorial-nav-item a[href="/our-work/"]');
-        if (await blogLink.count() !== 1 || await workLink.count() !== 1) {
-          failures.push(test.label + ': Blog or Our Work missing from main navigation');
-        } else {
+
+      // The editorial links live inside the ORIGINAL Our Work and
+      // About/Contact dropdowns, not as new top-level menu items.
+      const workItem = page.locator('header .bde-menu-dropdown-27-153 .prunus-added-dropdown-item a[href="/our-work/"]');
+      const blogItem = page.locator('header .bde-menu-dropdown-27-152 .prunus-added-dropdown-item a[href="/blog/"]');
+      if (await workItem.count() !== 1 || await blogItem.count() !== 1) {
+        failures.push(test.label + ': required Work / Blog dropdown links absent');
+      } else {
+        const firstWork = await page.locator('header .bde-menu-dropdown-27-153 .breakdance-dropdown-links > li:first-child a').getAttribute('href');
+        if (firstWork !== '/our-work/') failures.push(test.label + ': Our Work must be first in its dropdown');
+        for (const url of ['/blog/', '/our-work/']) {
+          const result = await page.request.get(local + url);
+          if (!result.ok()) failures.push(test.label + ': ' + url + ' returns ' + result.status());
+        }
+        if (test.route === '/') {
           if (test.mobile) {
-            await page.locator('.breakdance-menu-toggle').click();
+            await page.locator('.breakdance-menu-toggle').click({ timeout:5000 });
             await page.waitForTimeout(100);
           }
-          const blogVisible = await blogLink.isVisible();
-          const workVisible = await workLink.isVisible();
-          if (!blogVisible || !workVisible) {
-            failures.push(test.label + ': Blog or Our Work navigation link is not visible');
+          for (const [id, anchor] of [['153',workItem],['152',blogItem]]) {
+            const button = page.locator('header .bde-menu-dropdown-27-' + id + ' .breakdance-dropdown-toggle > button.breakdance-menu-link');
+            await button.click({ timeout:5000 });
+            if (!await anchor.isVisible()) failures.push(test.label + ': submenu link not visible ' + id);
           }
-          for (const url of ['/blog/', '/our-work/']) {
-            const result = await page.request.get(local + url);
-            if (!result.ok()) failures.push(test.label + ': link ' + url + ' returns ' + result.status());
-          }
-          if (test.mobile) {
-            // Escape is the accessible close path; the legacy rotated
-            // close-icon hitbox is not reliable in headless Chromium.
-            await page.keyboard.press('Escape');
-            const expanded = await page.locator('.breakdance-menu-toggle').getAttribute('aria-expanded');
-            if (expanded !== 'false') failures.push(test.label + ': mobile menu did not close with Escape');
-          }
+          if (test.mobile) await page.keyboard.press('Escape');
+        }
+      }
+      if (await page.locator('header .prunus-client-login').count()) {
+        failures.push(test.label + ': client login incorrectly still in header');
+      }
+      const footerLogin = page.locator('.prunus-footer-login');
+      if (await footerLogin.count() !== 1 || await footerLogin.getAttribute('href') !== '/client-login/') {
+        failures.push(test.label + ': client login missing from footer');
+      }
+      if (test.route === '/') {
+        const logo = page.locator('header .bde-image-27-105 img');
+        const dimensions = await logo.boundingBox();
+        if (!dimensions || dimensions.width < 30 || dimensions.height < 30) {
+          failures.push(test.label + ': header logo hidden or collapsed');
         }
       }
       if (!test.mobile && test.route === '/') {
@@ -164,6 +177,33 @@ try {
     }
     await ctx.close();
   }
+
+
+  // In normal motion, source-marked sections must start hidden and then
+  // actually reveal as they scroll into view. Previous tests used reduced
+  // motion and failed to exercise this critical migration requirement.
+  const motion = await browser.newContext({
+    viewport:{width:1280,height:780},reducedMotion:'no-preference'
+  });
+  const motionPage = await motion.newPage();
+  for (const route of ['/', '/industries/', '/website-design/']) {
+    await motionPage.goto(local + route, {waitUntil:'domcontentloaded', timeout:16000});
+    const reveals = motionPage.locator('[data-prunus-reveal]');
+    const count = await reveals.count();
+    console.log('SCROLL REVEALS ' + route + ': ' + count + ' original section markers');
+    if (!count) failures.push(route + ': no migrated entrance effects found');
+    if (count) {
+      const target = reveals.last();
+      await target.scrollIntoViewIfNeeded({ timeout:8000 });
+      try {
+        await motionPage.waitForFunction((node) => node?.classList.contains('prunus-revealed'),
+          await target.elementHandle(), {timeout:4000});
+      } catch {
+        failures.push(route + ': reveal failed to animate during scroll');
+      }
+    }
+  }
+  await motion.close();
 
   // Independently exercise every original Astro route, not just the eight
   // screenshot targets. Catch hidden plugin initializers or malformed inline

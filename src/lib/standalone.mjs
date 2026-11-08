@@ -110,6 +110,15 @@ export function cleanPageHtml(originalHtml, filename) {
   if (footerColumn.test(html) && !html.includes('class="bde-text-link prunus-footer-login')) {
     html = html.replace(footerColumn, '$1' + footerLogin);
   }
+  else if (!html.includes('prunus-footer-login') && html.includes('</body>')) {
+    // Older WP archive and 404 exports have no standard shared footer.
+    html = html.replace('</body>',
+      '<footer class="prunus-fallback-footer">' + footerLogin + '</footer></body>');
+  }
+  // The header logo should never be deferred behind other lazy images.
+  html = html.replace(/(<header\b[\s\S]*?<img\b[^>]*class="breakdance-image-object"[^>]*?)loading="lazy"/i,
+    '$1loading="eager" fetchpriority="high"');
+
 
   // Preserve existing DOM layout while independent interactions replace the
   // exported builder's runtime.

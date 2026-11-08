@@ -51,7 +51,9 @@ jobs:
           test -f dist/blog/index.html
           grep -q 'href="/blog/"' dist/index.html
           grep -q 'href="/our-work/"' dist/index.html
-          grep -q 'prunus-editorial-nav-item' dist/index.html
+          grep -q 'prunus-added-dropdown-item' dist/index.html
+          grep -q 'prunus-footer-login' dist/index.html
+          if grep -q 'prunus-editorial-nav-item' dist/index.html; then echo "Old expanded nav still present"; exit 1; fi
           test -f dist/our-work/index.html
           test -f dist/our-work/j-piper-cleaning-services/index.html
           test -f dist/robots.txt
