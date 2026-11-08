@@ -50,7 +50,10 @@
       const drop = area.closest('.breakdance-dropdown');
       area.querySelectorAll('button').forEach((button) => button.addEventListener('click', (event) => {
         event.preventDefault();
-        const active = drop.classList.contains('breakdance-dropdown--open');
+        // Desktop pointer hover may already have opened the dropdown before
+        // the click event; clicking must not immediately close it again.
+        // On touch/mobile, clicking the same heading does toggle it.
+        const active = mobileQuery.matches && drop.classList.contains('breakdance-dropdown--open');
         dropdowns.forEach((item) => dropdownOpen(item, false));
         dropdownOpen(drop, !active);
       }));
