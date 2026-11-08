@@ -16,6 +16,16 @@
     const list = menu?.querySelector('.breakdance-menu-list');
     const dropdowns = [...(menu?.querySelectorAll('.breakdance-dropdown') || [])];
     menu?.classList.add('breakdance-menu--enabled');
+    // The original responsive menu plugin added these offcanvas state
+    // classes at mobile breakpoints. Without them the dropdown panel
+    // sits behind the page hero and cannot receive taps.
+    function syncResponsiveMenu() {
+      menu?.classList.toggle('breakdance-menu--offcanvas', mobileQuery.matches);
+      menu?.classList.toggle('breakdance-menu--offcanvas-right', mobileQuery.matches);
+    }
+    syncResponsiveMenu();
+    mobileQuery.addEventListener?.('change', syncResponsiveMenu);
+
 
     function dropdownOpen(item, open) {
       item.classList.toggle('breakdance-dropdown--open', open);

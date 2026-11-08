@@ -79,3 +79,22 @@ lite-youtube.prunus-video-playing::after{display:none!important}
 .breakdance-dropdown-links > .prunus-added-dropdown-item .breakdance-dropdown-link:focus-visible{
   outline:2px solid #2E2E2E;outline-offset:3px;
 }
+
+
+/* Original mobile offcanvas stacking: independent of the removed builder JS. */
+@media(max-width:1119px){
+  .bde-header-builder-27-100{z-index:1000;isolation:isolate}
+  .bde-menu-27-139{position:relative;z-index:1001}
+  .bde-menu-27-139 .breakdance-menu--offcanvas.breakdance-responsive-menu--open .breakdance-menu-list{
+    z-index:1005;
+    visibility:visible;
+    pointer-events:auto;
+    opacity:1;
+  }
+  .bde-menu-27-139 .breakdance-dropdown-floater[aria-hidden="true"]{
+    pointer-events:none;display:none;
+  }
+  .bde-menu-27-139 .breakdance-dropdown-floater[aria-hidden="false"]{
+    pointer-events:auto;display:block;visibility:visible;opacity:1;
+  }
+}
