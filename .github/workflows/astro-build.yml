@@ -49,6 +49,9 @@ jobs:
           test -f dist/contact/index.html
           test -f dist/seo-agency-uk/free-seo-audit/index.html
           test -f dist/blog/index.html
+          grep -q 'href="/blog/"' dist/index.html
+          grep -q 'href="/our-work/"' dist/index.html
+          grep -q 'prunus-editorial-nav-item' dist/index.html
           test -f dist/our-work/index.html
           test -f dist/our-work/j-piper-cleaning-services/index.html
           test -f dist/robots.txt

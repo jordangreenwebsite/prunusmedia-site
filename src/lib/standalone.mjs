@@ -79,35 +79,37 @@ export function cleanPageHtml(originalHtml, filename) {
   // the SEO auditor's escapeHtml helper. Correct the syntax, not the UI.
   html = html.replaceAll(".replace(/'/g,''')", ".replace(/'/g,'&#39;')");
 
-  // Add publishing destinations inside EXISTING dropdowns, using the same
-  // structure/classes as the menu currently uses. No header redesign.
-  function dropdownEntry(href, label) {
-    return '<li class="breakdance-dropdown-item">' +
-      '<a class="breakdance-link breakdance-dropdown-link" href="' + href + '" target="_self">' +
-      '<span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">' +
-      label + '</span></span></a></li>';
-  }
-  html = html.replace(
-    /(<li class="breakdance-dropdown-item">\s*<a class="breakdance-link breakdance-dropdown-link" href="\/industries\/")/i,
-    dropdownEntry('/our-work/', 'Websites We Have Built') + '$1'
-  );
-  html = html.replace(
-    /(<li class="breakdance-dropdown-item">\s*<a class="breakdance-link breakdance-dropdown-link" href="\/about\/")/i,
-    dropdownEntry('/blog/', 'Journal & SEO Insights') + '$1'
-  );
 
-  // Approved addition: discreet client login in the existing Breakdance
-  // desktop/mobile navigation, without redesigning or reordering site links.
-  // The central /client-login/ route redirects to the independently hosted Worker.
-  const clientLogin='<li class="breakdance-menu-item prunus-client-login">' +
-    '<a class="breakdance-link breakdance-menu-link" href="/client-login/" target="_self" data-type="url">Client login</a></li>';
-  if (!html.includes('prunus-client-login')) {
-    const cta=/<li class="bde-button-27-146 bde-button breakdance-menu-item">/i;
-    if (cta.test(html)) html=html.replace(cta,clientLogin+'  // Preserve exact text and DOM layouts. Native interactions operate on the');
+  // Visible, accessible top-level navigation for the blog and portfolio.
+  // Use the original menu list item/anchor classes so that the existing
+  // desktop and mobile layouts style these links consistently.
+  function primaryLink(href, label) {
+    return '<li class="breakdance-menu-item prunus-editorial-nav-item">' +
+      '<a class="breakdance-link breakdance-menu-link" href="' + href +
+      '" target="_self" data-type="url">' + label + '</a></li>';
+  }
+  const editorialLinks = primaryLink('/our-work/', 'Our Work') +
+    primaryLink('/blog/', 'Blog');
+  // Keep the approved central client-login entry and existing "Start a Project"
+  // CTA; do not accidentally replace either one.
+  const clientLogin = '<li class="breakdance-menu-item prunus-client-login">' +
+    '<a class="breakdance-link breakdance-menu-link" href="/client-login/" ' +
+    'target="_self" data-type="url">Client login</a></li>';
+  const contactCta = /<li class="bde-button-27-146 bde-button breakdance-menu-item">/i;
+  if (contactCta.test(html)) {
+    html = html.replace(contactCta, (match) =>
+      (html.includes('prunus-editorial-nav-item') ? '' : editorialLinks) +
+      (html.includes('prunus-client-login') ? '' : clientLogin) + match
+    );
+  } else if (html.includes('id="menu-139"')) {
+    // The menu markup changed unexpectedly. Fail instead of silently hiding
+    // the new destinations in a build that appears successful.
+    throw new Error('Prunus nav insertion point has changed for ' + filename);
   }
 
-  // Preserve exact text and DOM layouts. Native interactions operate on the
-  // original class names pending verified semantic component conversion.
+  // Preserve existing DOM layout while independent interactions replace the
+  // exported builder's runtime.
+
   const scripts = '<script defer src="/assets/prunus-scripts/prunus-interactions.js"></script>' +
     '<script defer src="/assets/prunus-scripts/prunus-cursor.js"></script>';
   if (html.includes('</body>')) html = html.replace('</body>', scripts + '\n</body>');
