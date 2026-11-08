@@ -50,6 +50,19 @@ export function cleanPageHtml(originalHtml, filename) {
     html = html.replace(pattern, '$1 data-prunus-sticky');
   }
 
+
+  // Preserve each page's original animated heading phrase (not just the
+  // homepage phrase). Both the homepage and SEO page have distinct copy.
+  for (const [, className, changingText] of originalHtml.matchAll(
+    /new BreakdanceAnimatedHeading\(\s*['"]\.([\w-]+)['"]\s*,[\s\S]*?"changing_text":\s*\[\s*\{\s*"text":\s*"([^"]+)"/g
+  )) {
+    const label = changingText.replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const pattern = new RegExp('(<div class="' + className +
+      '[^"]*bde-animated-heading")', 'i');
+    html = html.replace(pattern, '$1 data-prunus-changing-text="' + label + '"');
+  }
+
   if (styles.length) {
     let inserted = false;
     const link = '<link rel="stylesheet" href="/assets/prunus-styles/' + routeAssetName(filename) + '.css">';

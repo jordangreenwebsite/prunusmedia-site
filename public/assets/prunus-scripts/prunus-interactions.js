@@ -227,7 +227,7 @@
     document.querySelectorAll('.bde-animated-heading').forEach((root) => {
       const wrapper = root.querySelector('.bde-animated-heading__wrapper');
       if (!wrapper) return;
-      wrapper.textContent = 'started in business,';
+      wrapper.textContent = root.getAttribute('data-prunus-changing-text') || 'started in business,';
       if (!motionDisabled) wrapper.classList.add('prunus-animated-phrase');
     });
 
