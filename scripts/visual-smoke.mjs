@@ -70,6 +70,29 @@ try {
       const title = await page.title();
       const visibleLinks = await page.locator('header a[href]').count();
       if (!title || visibleLinks < 4) failures.push(test.label + ': missing title or expected header navigation');
+
+      if (test.route === '/') {
+        const blogLink = page.locator('header .prunus-editorial-nav-item a[href="/blog/"]');
+        const workLink = page.locator('header .prunus-editorial-nav-item a[href="/our-work/"]');
+        if (await blogLink.count() !== 1 || await workLink.count() !== 1) {
+          failures.push(test.label + ': Blog or Our Work missing from main navigation');
+        } else {
+          if (test.mobile) {
+            await page.locator('.breakdance-menu-toggle').click();
+            await page.waitForTimeout(100);
+          }
+          const blogVisible = await blogLink.isVisible();
+          const workVisible = await workLink.isVisible();
+          if (!blogVisible || !workVisible) {
+            failures.push(test.label + ': Blog or Our Work navigation link is not visible');
+          }
+          for (const url of ['/blog/', '/our-work/']) {
+            const result = await page.request.get(local + url);
+            if (!result.ok()) failures.push(test.label + ': link ' + url + ' returns ' + result.status());
+          }
+          if (test.mobile) await page.locator('.breakdance-menu-close-button').click();
+        }
+      }
       if (!test.mobile && test.route === '/') {
         const canvas = await page.locator('#prunus-cursor-fx').count();
         if (!canvas) failures.push(test.label + ': Prunus flower canvas not mounted');
