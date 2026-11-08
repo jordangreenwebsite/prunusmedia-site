@@ -126,7 +126,7 @@ export function cleanPageHtml(originalHtml, filename) {
     if (footerContact.test(html)) html = html.replace(footerContact, '$1' + footerLogin);
     else if (footerColumn.test(html)) html = html.replace(footerColumn, '$1' + footerLogin);
   }
-  else if (!html.includes('prunus-footer-login') && html.includes('</body>')) {
+  if (!html.includes('prunus-footer-login') && html.includes('</body>')) {
     // Older WP archive and 404 exports have no standard shared footer.
     html = html.replace('</body>',
       '<footer class="prunus-fallback-footer">' + footerLogin + '</footer></body>');
