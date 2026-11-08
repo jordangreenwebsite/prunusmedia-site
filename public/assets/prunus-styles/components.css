@@ -94,6 +94,13 @@ lite-youtube.prunus-video-playing::after{display:none!important}
   .bde-menu-27-139 .breakdance-dropdown-floater[aria-hidden="true"]{
     pointer-events:none;display:none;
   }
+  /* Expanded submenus flow under their own label; absolute positioning
+     would cover the next menu's toggle and steal mobile taps. */
+  .bde-menu-27-139 .breakdance-dropdown-floater{
+    position:static!important;top:auto!important;left:auto!important;
+    right:auto!important;min-width:0!important;width:100%!important;
+    transform:none!important;transition:none!important;
+  }
   .bde-menu-27-139 .breakdance-dropdown-floater[aria-hidden="false"]{
     pointer-events:auto;display:block;visibility:visible;opacity:1;
   }
