@@ -89,7 +89,11 @@ try {
             firstFollowSection:inspect('.bde-section-35-109')};
         });
       };
-      if(test.route==='/')console.log('LAYOUT HOME LOCAL '+test.label+': '+JSON.stringify(await layoutProbe()));
+      var localHeroLayout=null;
+      if(test.route==='/'){
+        localHeroLayout=await layoutProbe();
+        console.log('LAYOUT HOME LOCAL '+test.label+': '+JSON.stringify(localHeroLayout));
+      }
 
       const title = await page.title();
       const visibleLinks = await page.locator('header a[href]').count();
@@ -258,7 +262,21 @@ try {
         await Promise.race([page.evaluate(() => document.fonts.ready), new Promise((r) => setTimeout(r, 4000))]);
         await page.waitForTimeout(350);
         await page.screenshot({ path: path.join(output, test.label + '-live.png'), fullPage: false, animations:'disabled', timeout: 12000 });
-        if(test.route==='/')console.log('LAYOUT HOME LIVE '+test.label+': '+JSON.stringify(await layoutProbe()));
+        if(test.route==='/'){
+          const liveHeroLayout=await layoutProbe();
+          console.log('LAYOUT HOME LIVE '+test.label+': '+JSON.stringify(liveHeroLayout));
+          for (const [component,dimension] of [
+            ['heading','height'], ['heroImage','width'], ['heroImage','height'],
+            ['heroSection','height'], ['firstFollowSection','top']
+          ]) {
+            const actual=localHeroLayout?.[component]?.[dimension];
+            const original=liveHeroLayout?.[component]?.[dimension];
+            if(typeof actual==='number'&&typeof original==='number'&&Math.abs(actual-original)>4){
+              failures.push(test.label+': visual geometry changed for '+component+'.'+dimension+
+                ' '+original+' -> '+actual+'px');
+            }
+          }
+        }
         // Same viewport and reduced-motion preference on both sites.
         const localImage = PNG.sync.read(readFileSync(path.join(output, test.label + '-astro.png')));
         const liveImage = PNG.sync.read(readFileSync(path.join(output, test.label + '-live.png')));

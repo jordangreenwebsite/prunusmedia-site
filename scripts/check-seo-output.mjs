@@ -15,6 +15,8 @@ const homeH1=tags(homepage,/<h1\b[^>]*>[\s\S]*?<\/h1>/gi);
 assert(homeH1.length===1,'Homepage must contain exactly one H1, got '+homeH1.length);
 assert(/Websites built/.test(homeH1[0]) && /best source of new business/.test(homeH1[0]),
   'The existing approved homepage wording and animation nodes must remain in H1');
+assert(/class="[^"]*bde-h2/.test(homeH1[0]),
+  'The real homepage H1 must retain the old H2 typography preset to preserve layout');
 assert(tags(contact,/<h1\b/gi).length===1,'Contact page must have one H1, not two');
 
 function description(html){return (html.match(/<meta name="description" content="([^"]+)"/i)||[])[1];}
@@ -59,6 +61,8 @@ assert(/loading="eager"/.test(heroTag)&&/fetchpriority="high"/.test(heroTag),
   'Homepage hero artwork should load with priority');
 assert(/width="\d+"/.test(heroTag)&&/height="\d+"/.test(heroTag),
   'Homepage hero artwork must reserve its intrinsic aspect ratio');
+assert(Number((heroTag.match(/width="(\d+)"/)||[])[1]) >= 1500,
+  'Hero intrinsic width must not be mistakenly set to thumbnail width');
 assert(/srcset=/.test(homepage),'Responsive srcset must be retained');
 const seoCss=readFileSync('dist/assets/prunus-styles/components.css','utf8');
 assert(seoCss.includes('aspect-ratio:2000/1414'),'Reserved hero aspect ratio missing');
