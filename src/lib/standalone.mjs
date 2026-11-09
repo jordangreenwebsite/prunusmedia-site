@@ -9,6 +9,7 @@
  */
 import path from 'node:path';
 import { footerMarkup } from './footer.mjs';
+import { enhanceLegacyPage } from './seo-enhancements.mjs';
 export function routeAssetName(filename) {
   if (filename === 'index.html') return 'home';
   if (filename === '404.html') return 'not-found';
@@ -158,5 +159,5 @@ export function cleanPageHtml(originalHtml, filename) {
     '<link rel="stylesheet" href="/assets/prunus-styles/components.css?v=white-headings-20261109">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/portfolio.css">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/footer.css">\n</head>');
-  return html;
+  return enhanceLegacyPage(html,filename);
 }
