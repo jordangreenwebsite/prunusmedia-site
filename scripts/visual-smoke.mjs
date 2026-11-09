@@ -105,6 +105,38 @@ try {
       if (await footerLogin.count() !== 1 || await footerLogin.getAttribute('href') !== '/client-login/') {
         failures.push(test.label + ': client login missing from footer');
       }
+
+      // The homepage is now fed by the same Astro content collection as the
+      // full portfolio. The first verified project is the roofing rebuild.
+      if (test.route === '/') {
+        const cards=page.locator('#recent-work .pm-project-card');
+        if(await cards.count()!==3)failures.push(test.label+': homepage must have 3 recent work cards');
+        const first=await cards.first().locator('h3 a').getAttribute('href');
+        if(first!=='/our-work/residential-roofing-and-fascias/'){
+          failures.push(test.label+': most recent featured roofing project not first');
+        }
+        const more=page.locator('#recent-work .pm-home-work__more');
+        if(await more.getAttribute('href')!=='/our-work/'){
+          failures.push(test.label+': Recent Work missing link to complete portfolio');
+        }
+        const highlight=page.locator('.bde-dual-heading-35-625 .dual-heading--secondary.js-annotate');
+        if(await highlight.count()!==1)failures.push(test.label+': original gold highlighter phrase missing');
+      }
+      if (test.route === '/our-work/') {
+        const cards=page.locator('.pm-project-card');
+        if(await cards.count()<14)failures.push(test.label+': expanded portfolio not published');
+        if(await page.locator('a[href="/our-work/residential-roofing-and-fascias/"]').count()===0){
+          failures.push(test.label+': residential roofing portfolio entry missing');
+        }
+      }
+      if(await page.locator('.pm-site-footer').count()!==1){
+        failures.push(test.label+': redesigned shared footer missing');
+      }
+      if(await page.locator('.pm-site-footer a[href="/seo-agency-uk/free-seo-audit/"]').count()===0){
+        failures.push(test.label+': footer internal SEO audit link missing');
+      }
+      const loginResponse=await page.request.get(local+'/client-login/');
+      if(!loginResponse.ok())failures.push(test.label+': client-login route returns '+loginResponse.status());
       if (test.route === '/') {
         const logo = page.locator('header .bde-image-27-105 img');
         const dimensions = await logo.boundingBox();
@@ -203,6 +235,22 @@ try {
       }
     }
   }
+
+  // Validate scroll-up recovery below the ~1,100px threshold, after the
+  // visitor has scrolled down and left the navigation.
+  await motionPage.goto(local+'/',{waitUntil:'domcontentloaded',timeout:16000});
+  await motionPage.evaluate(()=>{document.activeElement?.blur();window.scrollTo(0,1400);});
+  await motionPage.waitForTimeout(500);
+  const hidden=await motionPage.locator('.bde-header-builder').evaluate(
+    node=>node.classList.contains('pm-header-hidden'));
+  if(!hidden)failures.push('Sticky header failed to hide beyond 1100px on scroll down');
+  await motionPage.evaluate(()=>{window.scrollTo(0,1230);});
+  await motionPage.waitForTimeout(350);
+  const visible=await motionPage.locator('.bde-header-builder').evaluate(
+    node=>!node.classList.contains('pm-header-hidden'));
+  if(!visible)failures.push('Sticky header failed to reveal after scrolling up');
+  console.log('STICKY HEADER: hidden-down='+hidden+' revealed-up='+visible);
+
   await motion.close();
 
   // Independently exercise every original Astro route, not just the eight
