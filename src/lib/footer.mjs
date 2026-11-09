@@ -21,7 +21,7 @@ export const footerMarkup = String.raw`
           <span>Prunus <span>Media.</span></span>
         </a>
         <p>Websites and SEO built for businesses that want to be <strong>found, trusted and chosen.</strong></p>
-        <p class="pm-footer-geography">Independent website design &amp; SEO for UK businesses.</p>
+        <p class="pm-footer-geography">Based around UK clients, working with businesses worldwide.</p>
         <div class="pm-footer-social">
           <a href="https://www.facebook.com/people/Prunusmedia/61564233269657/" target="_blank" rel="noopener noreferrer" aria-label="Prunus Media on Facebook">Facebook <span aria-hidden="true">↗</span></a>
           <a href="https://www.instagram.com/prunus.media/" target="_blank" rel="noopener noreferrer" aria-label="Prunus Media on Instagram">Instagram <span aria-hidden="true">↗</span></a>
@@ -53,7 +53,7 @@ export const footerMarkup = String.raw`
       </nav>
     </div>
     <div class="pm-footer-contact">
-      <span>Have a project in mind? We'd love to hear about it.</span>
+      <span>Have a project in mind? We'd love to hear about it. <small>Enquiries: Monday–Friday, 9am–5pm UK time.</small></span>
       <a href="mailto:contactprunusmedia@gmail.com">contactprunusmedia@gmail.com <span aria-hidden="true">↗</span></a>
     </div>
     <div class="pm-footer-bottom">

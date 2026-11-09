@@ -118,7 +118,7 @@ try {
         const heroImage=page.locator('img.bde-image2-35-620');
         if(await heroImage.count()===1){
           const dims=await heroImage.evaluate(el=>({w:el.getAttribute('width'),h:el.getAttribute('height'),src:el.getAttribute('src')}));
-          if(!dims.w||!dims.h||!dims.src.includes('768x543'))failures.push(test.label+': hero image sizing/accessibility regression');
+          if(!dims.w||!dims.h||!/\/assets\/prunus-images\/hero-768\.webp$/.test(dims.src))failures.push(test.label+': hero image sizing/accessibility regression');
         }
       }
 

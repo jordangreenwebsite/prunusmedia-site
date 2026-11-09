@@ -37,78 +37,176 @@ const imageDimensions = new Map(Object.entries({
 function escapeAttribute(value){
   return String(value).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 }
-function optimizeImage(tag,offset,headerEnd,filename){
-  const match=tag.match(/\bsrc=["']([^"']+)["']/i);
-  const source=match?.[1]||'';
-  const basename=decodeURIComponent(source.split('/').pop().split('?')[0]).toLowerCase();
-  const isHeader=offset<headerEnd;
-  if(!/\balt\s*=/i.test(tag)){
-    // An unverified stock/abstract/duplicate visual is decorative, not
-    // keyword-stuffed. Known informative images have human-readable alts.
-    const meaning=altDescriptions.get(basename)||
-      (/^screenshot-/.test(basename)?'Website design project preview':'');
-    tag=tag.replace(/\/?>$/,m=>' alt="'+escapeAttribute(meaning)+'"'+m);
+function imageLabelFromFilename(filename) {
+  // Use only recognisable subjects. Filename hashes, icons and textures remain
+  // decorative: an invented keyword-heavy label is worse for screen readers.
+  const cleaned = filename
+    .replace(/\.[^.]+$/, '')
+    .replace(/-\d+x\d+$/i, '')
+    .replace(/-scaled$/i, '')
+    .replace(/^(?:screenshot|image|img|photo)-\d{4}[^-]*-?/i, '')
+    .replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!cleaned || cleaned.length < 5 || /\b(?:unsplash|pexels|pixabay|background|pattern|icon|shape|arrow|texture|decorative|flower|petal|swirl)\b/i.test(cleaned)) return '';
+  if (/^[a-f0-9]{8,}$/i.test(cleaned) || /^[a-z]+[\d_]+$/i.test(cleaned)) return '';
+  if (cleaned.split(' ').length > 6 || /^[A-Z]{2,4}$/i.test(cleaned)) return '';
+  // A label based on a descriptive asset name, never a claim about conversions.
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+const cardImageNames = new Set([
+  'accountants-scaled.jpg', 'private-clinic-scaled.jpg', 'architect-scaled.jpg',
+  'physiotherapist-scaled.jpg', 'lawyer-scaled.jpg', 'financial-services-scaled.jpg',
+  'coaching-scaled.jpg', 'high-end-trades-scaled.jpg', 'branding.jpg',
+  'content-scaled.jpg', 'keyord-research-scaled.jpg',
+  'competitor-research-scaled.jpg', 'site-architecture-scaled.jpg',
+  'internal-linking-scaled.jpg', 'seo-scaled.jpg'
+]);
+function optimizeImage(tag, offset, headerEnd, filename) {
+  const match = tag.match(/\bsrc=["']([^"']+)["']/i);
+  const source = match?.[1] || '';
+  const basename = decodeURIComponent(source.split('/').pop().split('?')[0]).toLowerCase();
+  const isHeader = offset < headerEnd;
+  const isHero = basename === 'hero-image.png';
+  const isLogo = basename === 'copy-of-prunus-media.png';
+  const meaningfulAlt = altDescriptions.get(basename) ||
+    (/^screenshot-/.test(basename) ? 'Website project screenshot' : '') ||
+    imageLabelFromFilename(basename);
+  if (!/\balt\s*=/i.test(tag)) {
+    tag = tag.replace(/\/?>$/, m => ' alt="' + escapeAttribute(meaningfulAlt) + '"' + m);
+  } else if (/\balt\s*=\s*(?:""|'')/i.test(tag) && meaningfulAlt && !/icon|flower|petal|background|pattern/i.test(basename)) {
+    tag = tag.replace(/\balt\s*=\s*(?:""|'')/i, 'alt="' + escapeAttribute(meaningfulAlt) + '"');
   }
-  const dimension=imageDimensions.get(basename);
-  if(dimension){
-    if(!/\bwidth\s*=/i.test(tag))tag=tag.replace(/\/?>$/,m=>' width="'+dimension[0]+'"'+m);
-    if(!/\bheight\s*=/i.test(tag))tag=tag.replace(/\/?>$/,m=>' height="'+dimension[1]+'"'+m);
+  const dimension = imageDimensions.get(basename);
+  if (dimension) {
+    if (!/\bwidth\s*=/i.test(tag)) tag = tag.replace(/\/?>$/, m => ' width="' + dimension[0] + '"' + m);
+    if (!/\bheight\s*=/i.test(tag)) tag = tag.replace(/\/?>$/, m => ' height="' + dimension[1] + '"' + m);
   }
-  if(basename==='copy-of-prunus-media.png' && isHeader){
-    tag=tag.replace(/\bsrc=["'][^"']+["']/i,
+  if (isLogo && isHeader) {
+    tag = tag.replace(/\bsrc=["'][^"']+["']/i,
       'src="/wp-content/uploads/2024/08/Copy-of-PRUNUS-MEDIA-300x300.png"');
-    tag=tag.replace(/\bsizes=["'][^"']+["']/i,
+    tag = tag.replace(/\bsizes=["'][^"']+["']/i,
       'sizes="(max-width:767px) 90px, 140px"');
+    // The header logo is a navigational asset; don't mark it as decorative.
+    tag = tag.replace(/\balt\s*=\s*(?:""|'')/i, 'alt="Prunus Media home"');
   }
-  if(basename==='hero-image.png'){
-    // The original src was 1.3 MB and sizes="100vw" forced oversized files.
-    tag=tag.replace(/\bsrc=["'][^"']+["']/i,
-      'src="/wp-content/uploads/2026/09/Hero-image-768x543.png"');
-    tag=tag.replace(/\bsizes=["'][^"']+["']/i,
+  if (isHero) {
+    tag = tag.replace(/\bsrc=["'][^"']+["']/i,
+      'src="/assets/prunus-images/hero-768.webp"');
+    tag = tag.replace(/\bsrcset=["'][^"']+["']/i,
+      'srcset="/assets/prunus-images/hero-768.webp 768w, /assets/prunus-images/hero-1024.webp 1024w"');
+    tag = tag.replace(/\bsizes=["'][^"']+["']/i,
       'sizes="(max-width:767px) 90vw, (max-width:1199px) 58vw, 620px"');
-    if(filename==='index.html' || filename==='seo-agency-uk/index.html'){
-      tag=tag.replace(/\bloading=["']lazy["']/i,'loading="eager" fetchpriority="high"');
-    }
   }
+  if (filename === 'index.html' && cardImageNames.has(basename) && /\bsrcset\s*=/.test(tag)) {
+    // The original export often declared cards as 2560px-wide images; these
+    // actually occupy one column. Let the browser choose existing small files.
+    tag = tag.replace(/\bsizes=["'][^"']+["']/i,
+      'sizes="(max-width: 700px) 92vw, (max-width: 1100px) 44vw, 390px"');
+  }
+  const highPriority = isHeader || (isHero && (filename === 'index.html' || filename === 'seo-agency-uk/index.html'));
+  tag = tag.replace(/\bloading=["'][^"']+["']/i, '');
+  if (highPriority) {
+    tag = tag.replace(/\/?>$/, m => ' loading="eager"' + m);
+    if (isHero && !/\bfetchpriority\s*=/.test(tag)) tag = tag.replace(/\/?>$/, m => ' fetchpriority="high"' + m);
+  } else {
+    tag = tag.replace(/\/?>$/, m => ' loading="lazy"' + m);
+  }
+  if (!/\bdecoding\s*=/.test(tag)) tag = tag.replace(/\/?>$/, m => ' decoding="async"' + m);
   return tag;
 }
 const officialProfiles=[
   'https://www.facebook.com/people/Prunusmedia/61564233269657/',
   'https://www.instagram.com/prunus.media/'
 ];
-function improveSchema(html, filename){
+const siteOrigin = 'https://prunusmedia.com';
+const serviceAreas = [
+  { '@type': 'Country', name: 'United Kingdom' },
+  { '@type': 'Place', name: 'Worldwide' }
+];
+const ukOfficeHours = {
+  '@type': 'OpeningHoursSpecification',
+  dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+  opens: '09:00',
+  closes: '17:00',
+  description: 'UK time (Europe/London)'
+};
+const servicePages = new Map(Object.entries({
+  'index.html': ['Website design and SEO', 'Website design and search engine optimisation'],
+  'website-design/index.html': ['Website design', 'Website design'],
+  'seo-agency-uk/index.html': ['Search engine optimisation', 'SEO'],
+  'seo-agency-uk/local-seo/index.html': ['Local SEO', 'Local search engine optimisation'],
+  'seo-agency-uk/technical-seo/index.html': ['Technical SEO', 'Technical search engine optimisation'],
+  'seo-agency-uk/seo-content/index.html': ['SEO content', 'SEO content strategy and writing'],
+  'social-media-marketing-uk/index.html': ['Social media marketing', 'Social media marketing'],
+  'website-design/content-creation/index.html': ['Website content creation', 'Website content creation'],
+  'website-design/website-redesign/index.html': ['Website redesign', 'Website redesign'],
+  'website-design/website-care-hosting/index.html': ['Website care and hosting', 'Website maintenance and hosting'],
+  'website-design/landing-page-design/index.html': ['Landing page design', 'Landing page design'],
+  'website-design/brand-identity/index.html': ['Brand identity', 'Brand identity design']
+}));
+function improveSchema(html, filename) {
+  const path = filename === 'index.html' ? '/' : '/' + filename.replace(/index\.html$/, '');
+  const pageUrl = siteOrigin + path;
   return html.replace(
     /(<script\b[^>]*type=["']application\/ld\+json["'][^>]*class=["']rank-math-schema["'][^>]*>)([\s\S]*?)(<\/script>)/gi,
-    (full,open,source,close)=>{
+    (full, open, source, close) => {
       let graph;
-      try{graph=JSON.parse(source);}catch{return full;}
-      if(!Array.isArray(graph['@graph']))return full;
-      const org=graph['@graph'].find(n=>n['@type']==='Organization');
-      if(!org)return full;
-      // The published footer already lists these first-party identity links.
-      org.url='https://prunusmedia.com/';
-      org.sameAs=officialProfiles;
-      org.contactPoint={
-        '@type':'ContactPoint',
-        contactType:'customer support',
-        email:'contactprunusmedia@gmail.com',
-        availableLanguage:'en-GB'
+      try { graph = JSON.parse(source); } catch { return full; }
+      if (!Array.isArray(graph['@graph'])) return full;
+      const nodes = graph['@graph'];
+      const org = nodes.find(n => n['@type'] === 'Organization');
+      if (!org) return full;
+      org.url = siteOrigin + '/';
+      org.name = 'Prunus Media';
+      org.sameAs = officialProfiles;
+      org.areaServed = serviceAreas;
+      org.contactPoint = {
+        '@type': 'ContactPoint',
+        contactType: 'customer enquiries',
+        email: 'contactprunusmedia@gmail.com',
+        availableLanguage: ['en-GB'],
+        areaServed: serviceAreas,
+        hoursAvailable: ukOfficeHours
       };
-      // The agency works nationally: describe this on a Service node.
-      // No fictional postal address, telephone number or opening hours.
-      if(filename==='index.html' && !graph['@graph'].some(n=>n['@id']==='/#design-seo-service')){
-        graph['@graph'].push({
-          '@type':'Service',
-          '@id':'/#design-seo-service',
-          name:'Website design and search engine optimisation',
-          serviceType:['Website design','SEO'],
-          url:'https://prunusmedia.com/website-design/',
-          provider:{'@id':'/#organization'},
-          areaServed:{'@type':'Country',name:'United Kingdom'}
+      if (org.logo && typeof org.logo === 'object') {
+        org.logo.url = siteOrigin + '/wp-content/uploads/2024/08/Copy-of-PRUNUS-MEDIA-300x300.png';
+        org.logo.contentUrl = org.logo.url;
+        org.logo.width = 300;
+        org.logo.height = 300;
+      }
+      const website = nodes.find(n => n['@type'] === 'WebSite');
+      if (website) {
+        website.url = siteOrigin + '/';
+        // A legacy WordPress search endpoint no longer exists on this static site.
+        delete website.potentialAction;
+      }
+      const webpage = nodes.find(n => n['@type'] === 'WebPage');
+      if (webpage) {
+        webpage.url = pageUrl;
+        // The export date is not an actual editorial update date.
+        delete webpage.dateModified;
+      }
+      for (const node of nodes) {
+        if (node['@type'] === 'ImageObject' && typeof node.url === 'string' && node.url.startsWith('/')) {
+          node.url = siteOrigin + node.url;
+        }
+      }
+      const service = servicePages.get(filename);
+      if (service) {
+        const existing = nodes.find(n => n['@type'] === 'Service' && n['@id'] === pageUrl + '#service');
+        if (!existing) nodes.push({
+          '@type': 'Service',
+          '@id': pageUrl + '#service',
+          name: service[0],
+          serviceType: service[1],
+          url: pageUrl,
+          provider: { '@id': '/#organization' },
+          areaServed: serviceAreas,
+          hoursAvailable: ukOfficeHours
         });
       }
-      const safe=JSON.stringify(graph).replace(/</g,'\\u003c');
-      return open+safe+close;
+      // Keep page-specific validated schema; no made-up address, rating or
+      // LocalBusiness node for a remote-first international agency.
+      return open + JSON.stringify(graph).replace(/</g, '\\u003c') + close;
     }
   );
 }

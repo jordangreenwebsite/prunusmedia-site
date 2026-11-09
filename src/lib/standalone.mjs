@@ -88,6 +88,12 @@ export function cleanPageHtml(originalHtml, filename) {
   html = html.replace(/<meta[^>]*(?:name=["']generator["']|name=["']ssp-config-path["'])[^>]*>/gi, '');
   html = html.replace(/<link[^>]*href=["']\/xmlrpc\.php[^>]*>/gi, '');
   html = html.replaceAll('http://prunus-media.local', 'https://prunusmedia.com');
+  // The live Astro site does not need WordPress's exported editor metadata,
+  // emoji/plugin styles, or its obsolete XML-RPC/RSD discovery links.
+  html = html.replace(/<style\b[^>]*id=["'](?:wp-img-auto-sizes-contain-inline-css|wp-emoji-styles-inline-css|wp-block-library-inline-css|classic-theme-styles-inline-css)["'][^>]*>[\s\S]*?<\/style>/gi, '');
+  html = html.replace(/<link\b[^>]*rel=["'](?:EditURI|shortlink)["'][^>]*>/gi, '');
+  html = html.replace(/<meta\b[^>]*name=["'](?:ssp-config-version|ssp-origin-url)["'][^>]*>/gi, '');
+
   // Three legacy industry exports contain a broken single-quote escape in
   // the SEO auditor's escapeHtml helper. Correct the syntax, not the UI.
   html = html.replaceAll(".replace(/'/g,''')", ".replace(/'/g,'&#39;')");
@@ -127,8 +133,8 @@ export function cleanPageHtml(originalHtml, filename) {
   // The homepage gallery is generated from exactly the same Markdown
   // collection as /our-work/, not the unmaintainable builder tabs.
   if (filename === 'index.html') {
-    const oldGallery = /<section class="bde-section-35-477\b[\s\S]*?<\/section>/i;
-    if (!oldGallery.test(html)) throw new Error('Original Recent Work section not found');
+    const oldGallery = /<!--PRUNUS_LEGACY_HOME_WORK_SLOT-->|<section class="bde-section-35-477\b[\s\S]*?<\/section>/i;
+    if (!oldGallery.test(html)) throw new Error('Homepage Recent Work slot not found');
     html = html.replace(oldGallery,
       '<section class="pm-home-work" id="recent-work" aria-labelledby="recent-work-title">' +
       '<div class="pm-home-work__inner"><div class="pm-home-work__top"><div>' +
@@ -142,6 +148,17 @@ export function cleanPageHtml(originalHtml, filename) {
     // to Industries. Direct it to the actual portfolio.
     html = html.replace(/(class="bde-button-35-359\b[\s\S]*?<a\b[^>]*\bhref=")\/industries\//i,
       '$1/our-work/');
+  }
+
+  // Real keyboard skip link and target; the original export had neither.
+  if (/<body\b/i.test(html) && !/class=["'][^"']*pm-skip-link/.test(html)) {
+    html = html.replace(/<body\b([^>]*)>/i, (match,attrs) =>
+      '<body' + attrs + (/\bid=["']/.test(attrs) ? '' : ' id="top"') + '>' +
+      '<a class="pm-skip-link" href="#main-content">Skip to main content</a>');
+  }
+  if (!/\bid=["']main-content["']/.test(html)) {
+    html = html.replace(/(<\/header>[\s\S]*?<section\b)([^>]*>)/i,
+      (match,begin,end) => begin + (/\bid=/.test(end) ? end.replace(/\bid=["'][^"']+["']/, 'id="main-content"') : ' id="main-content"' + end));
   }
 
   // Search semantics, non-fabricated structured data, and image accessibility.
