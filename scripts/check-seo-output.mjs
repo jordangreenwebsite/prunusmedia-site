@@ -26,7 +26,7 @@ for(const {name,source} of pages){
  const heading=(source.match(/<h1\b/gi)||[]).length;
  if(isPublic&&name!=='//'&&heading!==1){
   failures.push(name+' expected 1 H1, found '+heading);
-  console.error('HEADINGS '+name+': '+JSON.stringify([...source.matchAll(/<h1\\b[^>]*>[\\s\\S]*?<\\/h1>/gi)].map(m=>m[0].replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').slice(0,160))));
+  console.error('HEADINGS '+name+': '+JSON.stringify(source.match(/<h1[^>]*>/gi)));
 }
  const images=[...source.matchAll(/<img\b[^>]*>/gi)].map(x=>x[0]);
  totalImages+=images.length;
@@ -46,7 +46,7 @@ else{
  if(!h1||!h1[0].includes('UK businesses more enquiries')){
    failures.push('homepage SEO H1 missing');
    console.error('HOME DEBUG '+JSON.stringify({
-     h1tags:[...homepage.matchAll(/<h1\\b[^>]*>[\\s\\S]*?<\\/h1>/gi)].map(m=>m[0].slice(0,450)),
+     h1tags:homepage.match(/<h1[^>]*>/gi),
      dual:homepage.slice(homepage.indexOf('bde-dual-heading-35-625')-100,homepage.indexOf('bde-dual-heading-35-625')+350)
    }));
  }
