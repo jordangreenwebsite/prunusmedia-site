@@ -33,7 +33,7 @@ export const footerMarkup = String.raw`
         <a href="/website-design/website-redesign/">Website redesign</a>
         <a href="/website-design/ecommerce-website-design/">Ecommerce websites</a>
         <a href="/website-design/website-care-hosting/">Website care &amp; hosting</a>
-        <a href="/website-design/packages/">Packages</a>
+        <a href="/pricing/">Pricing</a>
       </nav>
       <nav class="pm-footer-links" aria-label="SEO services">
         <h3>Search &amp; growth</h3>

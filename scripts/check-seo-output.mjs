@@ -87,5 +87,27 @@ for(const page of ['//','/our-work/','/our-work/residential-roofing-and-fascias/
  }
  if(!html.includes('15</strong>'))failures.push(page+' missing additional-page count');
 }
+
+// Single canonical pricing page and consistent published offers.
+const pricing=pages.find(page=>page.name==='/pricing/')?.source;
+if(!pricing) failures.push('Native pricing page missing');
+else {
+  if((pricing.match(/<h1\b/gi)||[]).length!==1) failures.push('Pricing page needs exactly one H1');
+  for(const offer of ['£995','£1,795','£2,995','£99','£195','£50','Google Business Profile']) {
+    if(!pricing.includes(offer)) failures.push('Pricing page missing '+offer);
+  }
+  if(!pricing.includes('rel="canonical" href="https://prunusmedia.com/pricing/"')) failures.push('Pricing canonical missing');
+  if(!pricing.includes('href="/contact/#interest=seo"')) failures.push('SEO contact CTA missing');
+}
+if(pages.some(page=>page.name==='/website-design/packages/')) failures.push('Obsolete packages page is still being crawled');
+const redirects=readFileSync(path.join(root,'_redirects'),'utf8');
+for(const old of ['/website-design/packages/','/packages/']){
+  if(!redirects.includes(old+' /pricing/ 301')) failures.push('Missing old pricing redirect: '+old);
+}
+for(const route of ['//','/seo-agency-uk/','/social-media-marketing-uk/']){
+  const html=pages.find(page=>page.name===route)?.source||'';
+  if(!html.includes('href="/pricing/"')) failures.push(route+' has no current pricing link');
+  if(html.includes('href="/website-design/packages/"')) failures.push(route+' still links to old packages');
+}
 console.log('SEO OUTPUT AUDIT: '+pages.length+' pages; '+totalImages+' images checked; '+descriptions.size+' unique public descriptions; '+failures.length+' failures');
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}

@@ -38,6 +38,8 @@ export function getLegacyRoutes() {
       if (entry.isDirectory()) {
         visit(absolute, [...urlSegments, entry.name]);
       } else if (entry.isFile() && entry.name === 'index.html') {
+        // This obsolete URL redirects to the new native Astro /pricing/ page.
+        if (urlSegments.join('/') === 'website-design/packages') continue;
         routes.push({
           slug: urlSegments.join('/'),
           filename: path.relative(root, absolute)
