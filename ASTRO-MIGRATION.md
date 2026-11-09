@@ -56,3 +56,5 @@ After comparison approval, merge to `main` and configure the production Cloudfla
 - The footer lives in `src/lib/footer.mjs`, styled by `public/assets/prunus-styles/footer.css`. The same footer appears in legacy pages and editorial shell.
 - Keep `/client-login/` as a **noindex** holding/entry route until the separate Cloudflare Worker PR #2 is deployed and verified. Once it is genuinely operational, set `PUBLIC_PRUNUS_PORTAL_ACTIVE=true` in the marketing Pages project and rebuild; do not override DNS or activate this merely to show a working link.
 - UI screenshot artefacts from GitHub Actions include full recent-work gallery and footer at desktop/mobile sizes. Review visually before production merge.
+
+- 2026-11-09 design correction: Jordan chose a **white**, not gold, animated highlight behind **Websites built** on the homepage. Keep the existing reveal timing and lettering.

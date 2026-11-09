@@ -107,10 +107,10 @@ lite-youtube.prunus-video-playing::after{display:none!important}
 }
 
 
-/* Hand-marked golden highlight from the original Websites built hero. */
+/* White hand-drawn highlight for the homepage Websites built heading. */
 .bde-dual-heading-35-625 .dual-heading--secondary.js-annotate{
   position:relative;
-  background-image:linear-gradient(96deg,rgba(236,205,130,.83),rgba(243,220,155,.94) 55%,rgba(236,205,130,.78));
+  background-image:linear-gradient(96deg,rgba(255,255,255,.88),rgba(255,255,255,.98) 55%,rgba(249,250,247,.92));
   background-repeat:no-repeat;
   background-position:0 78%;
   background-size:0% 80%;

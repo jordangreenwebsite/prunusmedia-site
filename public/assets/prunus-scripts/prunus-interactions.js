@@ -235,7 +235,7 @@
     });
 
 
-    // Restore the original hand-drawn RoughNotation highlight of the
+    // Restore the hand-drawn white highlight of the
     // "Websites built" phrase, using native CSS instead of the old plugin.
     document.querySelectorAll('.bde-dual-heading .js-annotate').forEach((text)=>{
       const heading=text.closest('.bde-dual-heading');
