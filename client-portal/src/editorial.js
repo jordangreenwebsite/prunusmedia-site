@@ -283,6 +283,39 @@ async function overview(env,user) {
   const queued=(await env.DB.prepare("SELECT j.id,j.client_id,c.name AS client_name,j.week_start,j.status,j.research_note FROM research_jobs j JOIN clients c ON c.id=j.client_id WHERE j.status IN ('queued','working','failed') ORDER BY j.week_start DESC,c.name LIMIT 200").all()).results;
   return json({clients,lead_areas:[...summary.values()],research_queue:queued});
 }
+// One compact monthly view. Admin sees titles and research tasks across connected
+// businesses; customers can only see the planned articles for their own membership.
+// Do not expose leads or internal research jobs to client accounts.
+async function getCompactCalendar(env,user,url) {
+  const month=str(url.searchParams.get('month'),7);
+  const match=/^(\d{4})-(0[1-9]|1[0-2])$/.exec(month);
+  if(!match || Number(match[1])<2020 || Number(match[1])>2100)return bad('Choose a valid calendar month.');
+  const clientId=str(url.searchParams.get('client'),100);
+  if(!user.admin && !(await canRead(env,user,clientId)))return bad('Not found.',404);
+  if(user.admin && clientId && !(await canRead(env,user,clientId)))return bad('Not found.',404);
+  const start=month+'-01';
+  const end=new Date(Date.UTC(Number(match[1]),Number(match[2]),1)).toISOString().slice(0,10);
+  const scope=clientId?' AND p.client_id=?':'';
+  const bindings=clientId?[start,end,clientId]:[start,end];
+  const posts=(await env.DB.prepare(
+    "SELECT p.id,p.client_id,c.name AS client_name,p.title,p.status,p.scheduled_at AS occurs_at,substr(p.scheduled_at,1,10) AS day "+
+    "FROM editorial_posts p JOIN clients c ON c.id=p.client_id "+
+    "WHERE c.active=1 AND p.scheduled_at>=? AND p.scheduled_at<? "+
+    "AND p.status NOT IN ('published','rejected')"+scope+" ORDER BY p.scheduled_at,p.title LIMIT 250"
+  ).bind(...bindings).all()).results;
+  let research=[];
+  if(user.admin) {
+    const rScope=clientId?' AND j.client_id=?':'';
+    research=(await env.DB.prepare(
+      "SELECT j.id,j.client_id,c.name AS client_name,j.week_start AS day,j.status "+
+      "FROM research_jobs j JOIN clients c ON c.id=j.client_id "+
+      "WHERE c.active=1 AND j.week_start>=? AND j.week_start<? "+
+      "AND j.status IN ('queued','working','failed')"+rScope+
+      " ORDER BY j.week_start,c.name LIMIT 250"
+    ).bind(...bindings).all()).results;
+  }
+  return json({month,posts,research});
+}
 async function editResearch(request,env,user,jobId) {
   if (!user.admin)return bad('Forbidden.',403);
   const job=await env.DB.prepare('SELECT id,client_id FROM research_jobs WHERE id=?').bind(jobId).first();
@@ -297,6 +330,7 @@ async function editResearch(request,env,user,jobId) {
 }
 export async function extraRoutes(request,env,user,url) {
   const path=url.pathname,method=request.method;
+  if (path==='/api/calendar' && method==='GET')return getCompactCalendar(env,user,url);
   if (path==='/api/admin/overview' && method==='GET')return overview(env,user);
   if (path==='/api/admin/research/queue' && method==='POST') {
     if (!user.admin)return bad('Forbidden.',403);

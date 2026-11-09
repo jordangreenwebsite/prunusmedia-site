@@ -196,3 +196,142 @@
   .brand-half{padding:30px 24px}
 }
 @media(prefers-reduced-motion:reduce){.brand-half,.brand-inner{animation:none!important}}
+
+
+/* Desktop app workspace with persistent sidebar and one compact content calendar. */
+.workspace-icon-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.dashboard{
+  display:grid;grid-template-columns:clamp(215px,19vw,250px) minmax(0,1fr);
+  gap:clamp(20px,2.5vw,36px);align-items:start;
+  width:100%;max-width:1650px;margin:0 auto;padding:0 clamp(16px,2.3vw,38px) 95px;
+}
+.workspace-content{min-width:0;max-width:1320px;padding-top:30px}
+.workspace-sidebar{
+  display:flex;flex-direction:column;gap:3px;
+  position:sticky;top:17px;min-width:0;max-height:calc(100dvh - 34px);overflow-y:auto;
+  margin-top:18px;padding:22px 13px 17px;border:1px solid #e8ded2;border-radius:14px;
+  background:#fffbf5;box-shadow:0 12px 34px #4e393014;
+  scrollbar-width:thin;
+}
+.sidebar-heading{display:flex;align-items:center;gap:11px;padding:0 8px 19px;border-bottom:1px solid #ecdfd5;margin-bottom:12px}
+.sidebar-heading strong{display:block;font:600 22px/1 "EB Garamond",Georgia,serif;letter-spacing:-.025em;color:#383838}
+.sidebar-heading small,.sidebar-footer small{display:block;color:#867971;font:11px/1.45 Arial,Helvetica,sans-serif;margin-top:4px}
+.sidebar-mark{display:grid;place-items:center;flex:0 0 35px;width:35px;height:35px;border-radius:50%;background:#eee0db;color:#925b65;font:600 24px/1 "EB Garamond",Georgia,serif}
+.sidebar-label{margin:13px 12px 7px;color:#ab8a84;font-size:10px;font-weight:800;letter-spacing:.16em}
+.workspace-nav-link{
+  display:flex;align-items:center;gap:11px;
+  min-height:43px;padding:10px 12px;
+  color:#605752;text-decoration:none;border-radius:8px;
+  font:600 13px/1.3 Arial,Helvetica,sans-serif;
+  transition:background-color .12s ease,color .12s ease;
+}
+.nav-icon{width:19px;height:19px;flex:0 0 19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.workspace-nav-link:hover,.workspace-nav-link:focus-visible{background:#f7ece3;color:#824f57}
+.workspace-nav-link.is-active{background:#f1e1d8;color:#7d4953;box-shadow:inset 3px 0 #c1838d}
+.sidebar-footer{border-top:1px solid #ecdfd5;padding:15px 12px 0;margin-top:18px;font-size:12px;color:#736761}
+.workspace-mobile-nav,.mobile-more-sheet{display:none}
+.workspace-content .panel{scroll-margin-top:24px}
+.workspace-content .dashboard-head{margin-bottom:23px}
+.workspace-content .dashboard-head h1{font-size:clamp(2.65rem,3.6vw,4rem)}
+.compact-calendar-panel{padding:clamp(20px,2vw,31px);margin:0 0 25px}
+.calendar-widget-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:17px}
+.calendar-widget-head h2{font-size:clamp(1.9rem,2.8vw,2.35rem);margin:0 0 5px}
+.calendar-widget-head .subtle{margin:0!important;max-width:530px}
+.calendar-view-all{text-decoration:none;white-space:nowrap;color:#855963;font-size:12px;font-weight:750;border-bottom:1px solid #bf9b9c;padding-bottom:4px}
+.calendar-view-all:hover{color:#5f3a44}
+.calendar-widget-layout{display:grid;grid-template-columns:minmax(235px,285px) minmax(0,1fr);gap:clamp(16px,2vw,32px)}
+.calendar-mini{background:#fcf5ed;border:1px solid #ebddd1;border-radius:10px;padding:15px}
+.calendar-controls{display:flex;justify-content:space-between;align-items:center;gap:7px;margin-bottom:11px}
+.calendar-controls strong{font:600 22px/1.15 "EB Garamond",Georgia,serif;white-space:nowrap}
+.calendar-controls button{display:grid;place-items:center;width:32px;height:32px;border:1px solid #dfcfc0;border-radius:7px;background:#fffcf7;color:#775761;font-size:26px;line-height:1}
+.calendar-controls button:hover{background:#f0ded3}
+.calendar-day-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;align-items:center}
+.calendar-weekday{display:grid;place-items:center;height:23px;color:#95837a;font-size:10px;font-weight:800}
+.calendar-blank{height:34px}
+.calendar-day{
+  position:relative;display:grid;place-items:center;min-width:0;min-height:35px;
+  padding:3px 0;border:1px solid transparent;border-radius:7px;background:transparent;
+  color:#524b46;font:600 11px/1 Arial,Helvetica,sans-serif;
+}
+.calendar-day:hover{background:#f0e3d9}
+.calendar-day.is-today{border-color:#b77b82}
+.calendar-day.is-selected{background:#8a535f;color:#fff}
+.calendar-day.has-events:not(.is-selected){color:#985963;background:#f1dcd8}
+.calendar-day-count{position:absolute;top:0;right:1px;display:grid;place-items:center;min-width:12px;height:12px;border-radius:50%;background:#c08087;color:#fff;font-size:8px}
+.calendar-day.is-selected .calendar-day-count{background:#fff;color:#894b56}
+.calendar-agenda{min-width:0}
+.calendar-agenda-head{display:flex;justify-content:space-between;align-items:center;gap:9px;padding-bottom:8px;border-bottom:1px solid #eee3da}
+.calendar-agenda-head h3{margin:0;font-size:1.5rem}
+#calendar-client-filter{max-width:200px;min-height:35px;border:1px solid #ddcfc5;border-radius:7px;background:#fffcf7;color:#504b47;padding:6px 9px;font:12px Arial,Helvetica,sans-serif}
+.calendar-upcoming{display:grid;gap:8px;margin-top:12px}
+.calendar-agenda-item{display:grid;grid-template-columns:75px minmax(0,1fr);gap:13px;padding:10px 0;border-bottom:1px solid #eee2d8}
+.calendar-agenda-date strong{display:block;font:600 16px/1.2 "EB Garamond",Georgia,serif;color:#684550;white-space:nowrap}
+.calendar-agenda-date span{display:block;font-size:10px;color:#8a7970;line-height:1.4;margin-top:3px}
+.calendar-agenda-link{display:block;font-size:13px;line-height:1.5;font-weight:700;color:#42403d;text-decoration:none;overflow-wrap:anywhere}
+.calendar-agenda-link:hover{color:#944d60;text-decoration:underline;text-underline-offset:3px}
+.calendar-agenda-caption{font-size:11px;color:#766e67;margin:4px 0 0;line-height:1.5}
+.calendar-empty{padding:14px 0;color:#7e6d63;font-size:13px;line-height:1.7}
+.calendar-overflow{font-size:11px;color:#836d63}
+#calendar-message:empty{display:none}
+#agency-clients,#research-queue,#requests-panel,#admin-panel{scroll-margin-top:22px}
+@media(max-width:1170px) and (min-width:761px){
+  .dashboard{grid-template-columns:210px minmax(0,1fr);gap:16px;padding:0 14px 65px}
+  .workspace-sidebar{padding:15px 7px}
+  .workspace-nav-link{padding:9px}
+  .calendar-widget-layout{grid-template-columns:minmax(220px,260px) minmax(0,1fr);gap:15px}
+}
+@media(max-width:960px) and (min-width:761px){
+  .calendar-widget-layout{grid-template-columns:1fr}
+  .calendar-mini{max-width:300px}
+}
+@media(max-width:760px){
+  .dashboard{display:block;width:100%;max-width:none;padding:0 15px calc(114px + env(safe-area-inset-bottom))}
+  .workspace-sidebar{display:none}
+  .workspace-content{max-width:790px;margin:0 auto;padding-top:21px}
+  .workspace-content .dashboard-head{margin-bottom:17px}
+  .workspace-content .dashboard-head h1{font-size:clamp(2.5rem,8vw,3.4rem)}
+  .workspace-mobile-nav{
+    display:flex;align-items:stretch;justify-content:space-around;
+    position:fixed;left:0;right:0;bottom:0;z-index:2147480000;
+    padding:6px 5px calc(6px + env(safe-area-inset-bottom));
+    background:#fffbf5;border-top:1px solid #e6d9cd;
+    box-shadow:0 -7px 26px #35282418;
+  }
+  .workspace-mobile-nav>a,.workspace-mobile-nav>button{
+    flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:4px;padding:7px 2px;border:0;border-radius:8px;background:transparent;
+    color:#6c625c;text-decoration:none;text-align:center;font:700 10px/1.1 Arial,Helvetica,sans-serif;
+  }
+  .workspace-mobile-nav .nav-icon{height:21px;width:21px;flex:0 0 21px}
+  .workspace-mobile-nav .is-active{background:#f3e5dc;color:#915762}
+  .workspace-mobile-nav>a:hover,.workspace-mobile-nav>button:hover{color:#8a5560}
+  .mobile-more-sheet:not([hidden]){
+    display:block;position:fixed;z-index:2147480001;
+    bottom:calc(74px + env(safe-area-inset-bottom));left:12px;right:12px;
+    max-width:490px;margin-left:auto;margin-right:auto;
+    padding:17px 20px 20px;border:1px solid #dbc8b8;border-radius:16px;
+    background:#fffbf5;box-shadow:0 -14px 44px #35282430;
+  }
+  .mobile-sheet-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+  .mobile-sheet-head h2{font-size:1.9rem;margin:0}
+  .mobile-sheet-head button{display:grid;place-items:center;width:35px;height:35px;border:1px solid #d8c7bc;border-radius:50%;background:#fff}
+  .mobile-more-sheet nav{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .mobile-more-sheet nav a{display:flex;align-items:center;gap:9px;padding:11px 8px;background:#fbf1e8;border-radius:8px;color:#514844;text-decoration:none;font-size:12px;font-weight:700;line-height:1.35}
+  .mobile-more-sheet nav a.is-active{background:#f1dfd6;color:#925666}
+  .mobile-more-sheet .nav-icon{width:19px;height:19px}
+  .calendar-widget-head{align-items:start;flex-direction:column;gap:9px}
+  .calendar-widget-layout{grid-template-columns:1fr}
+  .calendar-mini{max-width:330px}
+  .calendar-widget-head .subtle{font-size:12px}
+  .compact-calendar-panel{padding:20px 18px}
+  .calendar-agenda-item{grid-template-columns:80px minmax(0,1fr)}
+  .footer{padding-bottom:calc(95px + env(safe-area-inset-bottom))}
+}
+@media(max-width:380px){
+  .dashboard{padding-left:10px;padding-right:10px}
+  .mobile-more-sheet nav{grid-template-columns:1fr}
+  .calendar-mini{padding:12px}
+  .calendar-agenda-item{grid-template-columns:72px minmax(0,1fr);gap:9px}
+}
+@media(prefers-reduced-motion:reduce){.workspace-nav-link{transition:none}}

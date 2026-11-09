@@ -68,17 +68,19 @@ async function loadSession() {
     $('admin-panel').hidden = !state.session.admin;
     if(state.session.admin) { await loadNotifications(); await loadAgencyOverview(); }
     $('enquiries').hidden=state.session.admin;
-    document.querySelector('.tabs a[href="#enquiries"]').hidden=state.session.admin;
     const hasClients=state.session.clients.length>0;
     $('client-picker').disabled=!hasClients;
     $('back-to-website').hidden=!hasClients;
-    document.querySelector('.tabs').hidden=!hasClients;
     document.querySelector('.two-col').hidden=!hasClients;
+    $('editorial').hidden=!hasClients;
+    $('uploads').hidden=!hasClients;
     $('requests-panel').hidden=!hasClients;
     $('profile').hidden=!hasClients;
+    updateWorkspaceNavigation();
     if(!hasClients) {
       $('business-title').textContent='Create your first client';
-      $('business-subtitle').textContent='No websites have been connected yet. Use the Prunus admin form below to add your first client.';
+      $('business-subtitle').textContent='No websites have been connected yet. Use the agency admin form below to add your first client.';
+      await loadCompactCalendar();
       return;
     }
     const picker = $('client-picker'); picker.replaceChildren();
@@ -266,7 +268,7 @@ $('change-email').addEventListener('click',()=>{
 });
 $('logout').addEventListener('click',async()=>{
   try{await jsonPost('/api/auth/logout',{});}catch{}
-  state.session=null;state.clientId=null;openLogin();showMessage('login-message','Signed out.');
+  state.session=null;state.clientId=null;showMobileMore(false);openLogin();showMessage('login-message','Signed out.');
 });
 $('client-picker').addEventListener('change',async e=>{state.clientId=e.target.value;await loadDashboard();});
 $('lead-filter').addEventListener('change',()=>{if(state.dashboard)renderLeads(state.dashboard.leads);});

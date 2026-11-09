@@ -23,6 +23,7 @@ jobs:
           node --check src/editorial.js
           node --check public/app.js
           node --check public/editorial-ui.js
+          node --check public/workspace-ui.js
       - name: Security and tenant isolation tests
         working-directory: client-portal
         run: node --experimental-sqlite --test tests/*.test.mjs

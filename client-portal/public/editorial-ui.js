@@ -130,6 +130,8 @@ async function loadEditorial() {
     fields.namedItem('allow_client_ideas').checked=!!data.config.allow_client_ideas;
     fields.namedItem('allow_client_uploads').checked=!!data.config.allow_client_uploads;
   }
+  // Keep the dashboard's dated plan current after editorial edits and approvals.
+  await loadCompactCalendar();
 }
 async function loadUploads() {
   if(!state.clientId)return;
@@ -205,8 +207,11 @@ function renderAgencyOverview() {
 }
 async function loadAgencyOverview() {
   if(!state.session?.admin)return;
-  try{agencyData=await api('/api/admin/overview');renderAgencyOverview();}
-  catch(e){showMessage('research-message','Admin overview unavailable: '+e.message,true);}
+  try{
+    agencyData=await api('/api/admin/overview');
+    renderAgencyOverview();
+    await loadCompactCalendar();
+  }catch(e){showMessage('research-message','Admin overview unavailable: '+e.message,true);}
 }
 $('idea-form').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');

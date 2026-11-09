@@ -37,3 +37,14 @@ Status: implemented design for the shared client login and the signed-in website
 - No changes to OTP rate limits, auth cookies, database schema, lead information, tenant privileges, private R2 uploads or Resend credentials for a design-only release.
 - The signed-in page keeps admin and client permissions as before. The header and footer become agency-neutral after sign-in and return to the shared labels on logout.
 - Repo source is the implementation truth. Check client-portal/tests and GitHub portal deployment workflow for release. Test live code delivery and uploaded file isolation independently of green CI.
+
+
+## App layout (November 2026)
+- Desktop authenticated workspace: a compact, persistent **left sidebar** with Dashboard, Calendar, Blogs, Files, business details, and role-specific links. Sidebar is sticky and scrolls when needed; it must not duplicate the public marketing navigation.
+- Mobile authenticated workspace: five-item **fixed bottom app navigation**, with safe-area padding, Home, Enquiries/Clients (role-dependent), Calendar, Blogs, and More. The More button opens an accessible closeable tool sheet; Escape and link selection dismiss it.
+- Hide admin-only routes for client roles in the interface, but never rely on menu hiding for security. The API still requires membership/agency-admin rights.
+- The signed-in dashboard has a small monthly calendar above the main sections. Click a day to filter that day's items; previous/next month changes load the matching data.
+- Admin calendar shows planned articles and research-week markers across their customers, optionally filtered by business. Client calendar shows **only their own dated articles** and never internal research jobs.
+- A planned publication date does **not** imply that the blog has been published or even approved. Undated requests must never be given guessed deadlines.
+- Keep cream #f8f2e9, EB Garamond heading typography, Arial body copy, rounded ivory cards and visible focus states in every new navigation and calendar element.
+- Desktop/sidebar + mobile/bottom-nav experience must remain consistent when a newly invited client signs in with no other customer accounts.
