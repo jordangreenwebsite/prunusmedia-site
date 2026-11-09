@@ -1,21 +1,19 @@
 ---
 title: "Car Care TLC"
-summary: "A past automotive-services website example. The business is currently closed, so this is an archived design showcase."
-addedAt: 2026-11-06
-category: "Automotive services"
-services:
-  - "Website design"
+summary: "A completed car-care website that helped bring in customers, now preserved as an archived project."
+addedAt: "2026-11-09"
+category: "Car care & detailing"
+status: "archived"
+website: "https://carcaretlc.co.uk/"
+services: ["Full website build","Service presentation","Enquiry design"]
+priority: 15
 image: "/wp-content/uploads/2026/09/Screenshot-2026-09-23-080825.png"
-imageAlt: "Screenshot of the Car Care TLC website featured in the original Prunus Media showcase"
-priority: 16
-status: "closed"
+imageAlt: "Car Care TLC website screenshot from the Prunus Media portfolio"
 draft: false
 ---
 
 ## The project
 
-The existing Prunus Media showcase describes a modern website built to present the business professionally, make services easier to find and encourage genuine enquiries.
+A **full website build**, created to present car-care services professionally and help turn visits into genuine enquiries.
 
-We have retained that concise description without adding unverified performance claims.
-
-**Current status:** The business is closed. This page is preserved as a design example rather than a link to an active service.
+The site was used commercially and the business reported gaining customers through it. After a change in work circumstances, it is no longer being used. The project remains on display as an archived example.

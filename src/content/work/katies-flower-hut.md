@@ -1,19 +1,18 @@
 ---
 title: "Katie’s Flower Hut"
-summary: "A floral website concept showing bouquets, occasions and enquiries without the complication of a full online shop."
+summary: "A delicate florist website concept created as a taster of what a full local-florist site could become."
 addedAt: "2026-11-09"
-category: "Floristry"
-services: ["Website concept","Local content","Mobile design"]
+category: "Florist website"
 status: "concept"
-priority: 2
-featured: true
-completedAt: "2026-11-05"
 website: "https://katies-flower-hut.pages.dev/"
+services: ["Website concept","Floral brand styling","Local service pages"]
+priority: 4
+completedAt: "2026-11-05"
 draft: false
 ---
 
 ## The project
 
-A goodwill concept exploring what a clear, graceful website could look like for a local florist in South Shields.
+A goodwill **concept build** for Katie's Flower Hut, giving the business a chance to see a dedicated website before deciding whether to go ahead.
 
-The design covers bouquets, weddings, funeral flowers and getting in touch. It is a **concept**, not an active paid client engagement or an ecommerce storefront. The concept preview is intentionally excluded from search indexing.
+The theme takes a gentle, floral approach and makes room for bouquets, weddings, sympathy flowers, classes and enquiries. It's a demonstration, not a currently commissioned or operating full website.

@@ -1,18 +1,17 @@
 ---
 title: "UK Trade Websites"
-summary: "A dedicated website service for UK trades, with clear packages and pages for individual trades."
+summary: "A dedicated agency brand offering clear website packages and SEO-led pages for UK trade businesses."
 addedAt: "2026-11-09"
 category: "Trades & home services"
-services: ["Website design","SEO pages","Service packaging"]
 status: "owned"
-priority: 12
-featured: false
 website: "https://uktradewebsites.co.uk/"
+services: ["Brand website","Website package pages","Trade-sector landing pages","SEO structure"]
+priority: 7
 draft: false
 ---
 
 ## The project
 
-A separate Prunus-owned website service focused on websites for UK tradespeople.
+UK Trade Websites is a Prunus-owned brand focused on helping UK tradespeople launch or improve their online presence.
 
-Its design and architecture make packages, service sectors and enquiries easy to find. This is an in-house brand, not a third-party client case study.
+The site explains its website packages clearly, routes visitors into trade-specific content and makes enquiry actions straightforward. It also demonstrates the lighter, fast, static website-building approach used for current client projects. This is our own business, not an external client case study.

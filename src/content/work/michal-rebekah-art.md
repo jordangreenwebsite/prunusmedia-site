@@ -1,17 +1,17 @@
 ---
 title: "Michal Rebekah Art"
-summary: "An artist-led digital gallery and shop concept that puts the artwork and its presentation first."
+summary: "A website for an emerging artist, putting the art, its presentation and the artist's identity at the centre."
 addedAt: "2026-11-09"
-category: "Art & ecommerce"
-services: ["Website design","Gallery","Online shop"]
-status: "showcase"
-priority: 5
-featured: false
+category: "Art & creative"
+status: "live"
+website: "https://www.michalrebekahart.com/"
+services: ["Artist website","Artwork presentation","Brand-led design"]
+priority: 16
 draft: false
 ---
 
 ## The project
 
-A visually led website project for original artwork.
+A website built for **emerging artist Michal Rebekah**, designed to let visitors engage with the artwork and learn about the creative practice.
 
-The design direction gives the artwork room to breathe, with clear gallery navigation and a pathway to explore pieces. A public website link will be added when its current address has been verified.
+This project demonstrates a very different side of Prunus: restrained layouts and art-first presentation instead of the service-led patterns used for trades and local businesses.

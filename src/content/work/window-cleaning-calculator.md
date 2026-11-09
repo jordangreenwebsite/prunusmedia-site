@@ -1,17 +1,17 @@
 ---
 title: "Window Cleaning Calculator"
-summary: "An interactive pricing-tool project that turns a complicated service quote into a clearer customer journey."
+summary: "A free practical pricing tool shaped with professional window cleaners, showing how an interactive website can solve an everyday problem."
 addedAt: "2026-11-09"
-category: "Digital tool"
-services: ["Interactive calculator","UX","Frontend development"]
+category: "Free web tool"
 status: "owned"
+website: "https://windowcleaningcalculator.co.uk/"
+services: ["Interactive calculator","User experience","Trade-sector research"]
 priority: 6
-featured: false
 draft: false
 ---
 
 ## The project
 
-An independent pricing-calculator tool exploring how to make window-cleaning quotes easier to understand.
+Created with input from professional window cleaners and experience in the trade, this free tool helps users work through window-cleaning pricing.
 
-It demonstrates Prunus's ability to build practical customer-facing web functionality, not just brochure pages. The current public tool address is not yet verified for the portfolio.
+It's an example of functional web design: making a useful tool available publicly rather than building a static page alone. It also connects with Prunus's wider interest in helping UK tradespeople run better websites and businesses.

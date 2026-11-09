@@ -1,18 +1,18 @@
 ---
 title: "Cotswold Pawprints"
-summary: "A personable website for dog walking and pet care, with clear services and reassuring local information."
+summary: "An early client website for a local pet-care business, built to inspire trust and encourage steady enquiries."
 addedAt: "2026-11-09"
 category: "Pet care"
-services: ["Website design","Local pages","Service presentation"]
 status: "live"
+website: "https://www.pawprintscotswolds.com/"
+services: ["Full website build","Local SEO","Pet-care content","Enquiry design"]
 priority: 3
 featured: true
-website: "https://www.pawprintscotswolds.com/"
 draft: false
 ---
 
 ## The project
 
-A welcoming digital presence for a Cotswold dog walking and pet-care business.
+One of Prunus Media's early client projects. The website needed to help local pet owners understand the services, feel confident in the business and get in touch easily.
 
-The website presents dog walking, puppy visits and other pet care in plain language, with relevant local-area pages and straightforward enquiry options. The focus is credibility, clarity and the human side of the business.
+The build focuses on friendly, reassuring design, services and local relevance. The client reports strong rankings for competitive local searches, consistent calls and regular work from the site. These are client-reported outcomes rather than independently audited Search Console figures.

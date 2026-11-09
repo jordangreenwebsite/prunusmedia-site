@@ -1,20 +1,19 @@
 ---
 title: "Caring Companions Pet Care"
-summary: "A warmer, clearer website focused on trust, personality and making pet-care services easier to understand."
-addedAt: 2026-11-06
+summary: "A brand-new website for a pet-care business that previously had no site, now helping it win new work."
+addedAt: "2026-11-09"
 category: "Pet care"
-services:
-  - "Website design"
-image: "/wp-content/uploads/2026/09/Screenshot-2026-09-23-080741.png"
-imageAlt: "Screenshot of a pet-care website from the existing Prunus Media project showcase"
-priority: 15
 status: "live"
 website: "https://caringcompanionspetcare.co.uk/"
+services: ["New website build","Service presentation","Local discoverability","Enquiry design"]
+priority: 8
+image: "/wp-content/uploads/2026/09/Screenshot-2026-09-23-080741.png"
+imageAlt: "Caring Companions Pet Care website from the existing Prunus showcase"
 draft: false
 ---
 
 ## The project
 
-The website was designed around trust and personality, helping pet owners understand the available services.
+Caring Companions Pet Care came to Prunus **without an existing website**. We created a welcoming web presence that presents the care available, the people behind it and how customers can make contact.
 
-This description is retained from Prunus Media's existing homepage portfolio; no unsupported results or testimonials have been introduced.
+The owner reports that the website is already bringing in work. We haven't added invented lead numbers or rankings.

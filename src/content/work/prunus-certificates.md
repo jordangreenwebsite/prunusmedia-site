@@ -1,18 +1,19 @@
 ---
 title: "Prunus Certificates"
-summary: "A training-business software marketing site showcasing bookings, attendance and certificate management."
+summary: "A substantial SaaS product for first-aid training providers, combining a public website with a powerful training-management workspace."
 addedAt: "2026-11-09"
-category: "Software & SaaS"
-services: ["Product website","Interface design","Marketing pages"]
+category: "Software / SaaS"
 status: "owned"
-priority: 13
-featured: false
 website: "https://certificates.prunusmedia.com/"
+services: ["SaaS product design","Training bookings","Attendance & certificates","Payments & automation"]
+priority: 5
 draft: false
 ---
 
 ## The project
 
-An in-house software product and accompanying marketing site for training providers.
+Prunus Certificates goes far beyond an ordinary marketing website. It's an independently developed product for training providers, including first-aid and FAIB-oriented workflows.
 
-This example demonstrates product communication and software-focused website design. It is labelled as an internal product rather than client work.
+The underlying platform has been developed around **course and session scheduling, public and private bookings, attendee records, trainer workspaces, attendance/assessment, certificate generation and records, customer information, invoices and payment flows through Stripe**. It also includes work on reminders, retraining dates, online booking options and business administration.
+
+Booking-platform connections such as Bookwhen and calendar integrations are part of the product direction and integration work; this portfolio does not claim that every external integration is live. The project demonstrates the depth of Prunus's software, database, UX and automation work, not just a landing-page design.

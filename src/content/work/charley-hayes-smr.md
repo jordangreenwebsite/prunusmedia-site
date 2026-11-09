@@ -1,19 +1,18 @@
 ---
 title: "Charley Hayes SMR"
-summary: "An August 2026 massage-therapy website build, retained as a previous design project."
+summary: "A complete website for Charley Hayes, retained as finished design work even though it is no longer used."
 addedAt: "2026-11-09"
-category: "Wellness"
-services: ["Website design","Service presentation"]
+category: "Wellness & treatments"
 status: "archived"
-completedAt: "2026-08-04"
-priority: 8
-featured: false
 website: "https://charleyhayessmr.pages.dev/"
+services: ["Full website build","Service pages","Design & development"]
+priority: 13
+completedAt: "2026-08-04"
 draft: false
 ---
 
 ## The project
 
-An earlier design for a massage and treatment-focused website.
+This was a **full website build**, not merely a concept. It was designed to present Charley Hayes's services and make enquiries easy.
 
-This is retained as a historical design example only. It is **not** presented as an ongoing client engagement, and the linked preview may not represent an active business website.
+Due to a change in circumstances the site is no longer used commercially, but the available preview remains an example of Prunus Media's work. The link opens the historical build.

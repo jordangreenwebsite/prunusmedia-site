@@ -1,27 +1,20 @@
 ---
 title: "J Piper Cleaning Services"
-summary: "A larger search-led website for an established cleaning company, with service and area pages and a custom instant quote calculator."
-addedAt: 2026-11-06
-category: "Cleaning services"
-services:
-  - "Website design"
-  - "Site architecture"
-  - "SEO-led service pages"
-  - "Quote calculator"
-image: "/wp-content/uploads/2026/09/Screenshot-2026-09-23-064622.png"
-imageAlt: "Screenshot of the J Piper Cleaning Services website featured in the original Prunus Media portfolio"
-priority: 14
+summary: "A substantial SEO-led website built to help an established cleaning business attract local enquiries week after week."
+addedAt: "2026-11-09"
+category: "Cleaning & commercial services"
 status: "live"
 website: "https://jpipercleaning.com/"
+services: ["Full website build","Local SEO","Service and area pages","Enquiry journeys"]
+priority: 1
+featured: true
+image: "/wp-content/uploads/2026/09/Screenshot-2026-09-23-064622.png"
+imageAlt: "J Piper Cleaning Services website shown in the original Prunus Media portfolio"
 draft: false
 ---
 
 ## The project
 
-J Piper already had customers, experience and a reputation. The website needed to reflect the scale of the business.
+J Piper Cleaning Services needed more than a basic brochure website. We created a substantial website structured around its cleaning services, the areas it covers and the questions potential customers ask.
 
-We developed a larger, search-led site with dedicated residential cleaning, commercial service, area and individual service pages, alongside a custom instant quote calculator.
-
-The objective was a website structured to support the next stage of the business rather than simply prove the business exists.
-
-This project was carried over from the existing Prunus Media homepage portfolio. No unverified performance figures have been added.
+The project combines service-led pages, an enquiry-first layout and a custom instant quote journey. The business reports receiving work regularly from its online presence. Performance figures can be added once Search Console and lead-conversion records have been reviewed.
