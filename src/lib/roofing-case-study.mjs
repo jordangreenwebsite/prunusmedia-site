@@ -9,7 +9,7 @@ const assets={
   menu:'https://uktradewebsites.co.uk/case-studies/roofing/after-menu.png',
 };
 
-const css=String.raw\`<style id="pm-roofing-story-css">
+const css=String.raw`<style id="pm-roofing-story-css">
 .pm-roofing-story{--roof-sage:#94A998;--roof-gold:#ECCD82;--roof-cream:#FAF4EE;--roof-ink:#2E2E2E;--roof-blush:#F8DCDC;color:var(--roof-ink);background:#fffdf9;box-sizing:border-box;padding:72px 20px;margin:60px 0;border:1px solid #e8e4dc;border-radius:8px}
 .pm-roofing-story *{box-sizing:border-box}
 .pm-roofing-story__inner{max-width:1100px;margin:0 auto}
@@ -55,15 +55,15 @@ const css=String.raw\`<style id="pm-roofing-story-css">
   .pm-roofing-story__count{min-height:95px;max-width:190px}
   .pm-roofing-story__count strong{font-size:48px}
 }
-</style>\`;
+</style>`;
 
 export function roofingComparisonHtml({id='pm-roofing-story',compact=false}={}){
-return css+\`
-<section class="pm-roofing-story\${compact?' pm-roofing-story--compact':''}" id="\${id}" aria-labelledby="\${id}-title">
+return css+`
+<section class="pm-roofing-story${compact?' pm-roofing-story--compact':''}" id="${id}" aria-labelledby="${id}-title">
  <div class="pm-roofing-story__inner">
   <div class="pm-roofing-story__intro">
    <p class="pm-roofing-story__eyebrow">Client transformation / Residential Roofing &amp; Fascias</p>
-   <h2 id="\${id}-title">Same character. A website built to work harder.</h2>
+   <h2 id="${id}-title">Same character. A website built to work harder.</h2>
    <p>His first website was new but had little search visibility, and the editing process was taking too much time. He wanted the familiar colours and character kept, but rebuilt into something professional, easier to navigate and ready for local SEO.</p>
    <p>We rebuilt the site in Astro, preserving the business's identity and adding clearer customer journeys and a structure that is easier to maintain.</p>
   </div>
@@ -71,13 +71,13 @@ return css+\`
    <figure class="pm-roofing-story__window">
     <figcaption><span class="pm-roofing-story__phase pm-roofing-story__phase--before">Before</span> Original website</figcaption>
     <div class="pm-roofing-story__scroll" role="region" tabindex="0" aria-label="Scroll through the original roofing website screenshot">
-     <img src="\${assets.before}" loading="lazy" decoding="async" alt="Full-page screenshot of the old Residential Roofing and Fascias website">
+     <img src="${assets.before}" loading="lazy" decoding="async" alt="Full-page screenshot of the old Residential Roofing and Fascias website">
     </div>
    </figure>
    <figure class="pm-roofing-story__window">
     <figcaption><span class="pm-roofing-story__phase pm-roofing-story__phase--after">After</span> New Astro website</figcaption>
     <div class="pm-roofing-story__scroll" role="region" tabindex="0" aria-label="Scroll through the rebuilt roofing website screenshot">
-     <img src="\${assets.after}" loading="lazy" decoding="async" alt="Full-page screenshot of the redesigned Residential Roofing and Fascias website">
+     <img src="${assets.after}" loading="lazy" decoding="async" alt="Full-page screenshot of the redesigned Residential Roofing and Fascias website">
     </div>
    </figure>
   </div>
@@ -97,7 +97,7 @@ return css+\`
     <ul><li>17-page Astro website rebuild</li><li>Services and area-specific landing pages</li><li>Technical SEO and structured data</li><li>Clear mobile navigation and enquiry options</li><li>Ongoing SEO support after launch</li></ul>
    </div>
    <figure>
-    <img src="\${assets.menu}" loading="lazy" decoding="async" alt="Screenshot of the new roofing website service and location navigation menu">
+    <img src="${assets.menu}" loading="lazy" decoding="async" alt="Screenshot of the new roofing website service and location navigation menu">
     <figcaption>The redesigned navigation links visitors to service and location pages.</figcaption>
    </figure>
   </div>
@@ -106,5 +106,5 @@ return css+\`
    <a href="/contact/">Discuss a website rebuild</a>
   </nav>
  </div>
-</section>\`;
+</section>`;
 }
