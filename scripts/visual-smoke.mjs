@@ -144,6 +144,19 @@ try {
           failures.push(test.label + ': header logo hidden or collapsed');
         }
       }
+
+      // Visual QA captures of the two intentionally redesigned sections;
+      // these supplement, not replace, interactive and pixel-diff tests.
+      if (test.route === '/') {
+        await page.locator('#recent-work').screenshot({
+          path:path.join(output,test.mobile?'recent-work-mobile.png':'recent-work-desktop.png'),
+          animations:'disabled',timeout:9000
+        });
+        await page.locator('.pm-site-footer').screenshot({
+          path:path.join(output,test.mobile?'footer-mobile.png':'footer-desktop.png'),
+          animations:'disabled',timeout:9000
+        });
+      }
       if (!test.mobile && test.route === '/') {
         const canvas = await page.locator('#prunus-cursor-fx').count();
         if (!canvas) failures.push(test.label + ': Prunus flower canvas not mounted');
