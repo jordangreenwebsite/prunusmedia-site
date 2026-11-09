@@ -7,7 +7,6 @@ status: "live"
 website: "https://pppowerdetailing.com/"
 services: ["Website rebuild","Local SEO","Service pages","Ongoing SEO"]
 priority: 9
-completedAt: "2026-10-01"
 draft: false
 ---
 

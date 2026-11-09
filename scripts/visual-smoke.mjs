@@ -112,8 +112,17 @@ try {
         const cards=page.locator('#recent-work .pm-project-card');
         if(await cards.count()!==3)failures.push(test.label+': homepage must have 3 recent work cards');
         const first=await cards.first().locator('h3 a').getAttribute('href');
-        if(first!=='/our-work/residential-roofing-and-fascias/'){
-          failures.push(test.label+': most recent featured roofing project not first');
+        if(first!=='/our-work/j-piper-cleaning-services/'){
+          failures.push(test.label+': featured J Piper project must be first');
+        }
+        const featuredHrefs=await cards.locator('h3 a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
+        const expectedFeatured=[
+          '/our-work/j-piper-cleaning-services/',
+          '/our-work/residential-roofing-and-fascias/',
+          '/our-work/cotswold-pawprints/'
+        ];
+        if (JSON.stringify(featuredHrefs)!==JSON.stringify(expectedFeatured)) {
+          failures.push(test.label+': homepage portfolio cards out of approved order');
         }
         const more=page.locator('#recent-work .pm-home-work__more');
         if(await more.getAttribute('href')!=='/our-work/'){
@@ -124,7 +133,11 @@ try {
       }
       if (test.route === '/our-work/') {
         const cards=page.locator('.pm-project-card');
-        if(await cards.count()<14)failures.push(test.label+': expanded portfolio not published');
+        if(await cards.count()!==17)failures.push(test.label+': expected 17 approved portfolio entries');
+        const externalLinks=page.locator('.pm-project-card .pm-project-website');
+        if(await externalLinks.count()!==17)failures.push(test.label+': every project must have external website link');
+        const hrefs=await externalLinks.evaluateAll(nodes=>nodes.map(a=>a.href));
+        if(hrefs.some(href=>!href.startsWith('https://')))failures.push(test.label+': external website link lacks HTTPS');
         if(await page.locator('a[href="/our-work/residential-roofing-and-fascias/"]').count()===0){
           failures.push(test.label+': residential roofing portfolio entry missing');
         }

@@ -7,7 +7,6 @@ status: "archived"
 website: "https://charleyhayessmr.pages.dev/"
 services: ["Full website build","Service pages","Design & development"]
 priority: 13
-completedAt: "2026-08-04"
 draft: false
 ---
 

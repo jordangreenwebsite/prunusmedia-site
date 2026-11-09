@@ -33,7 +33,10 @@ export function projectCard(project) {
     '<span class="pm-project-category">'+category+' <span aria-hidden="true">·</span> '+escapeHtml(status)+'</span>'+
     '<h3><a href="/our-work/'+slug+'/">'+title+'</a></h3>'+
     '<p>'+escapeHtml(d.summary)+'</p>'+
-    '<a class="pm-project-view" href="/our-work/'+slug+'/">Explore project <span aria-hidden="true">↗</span></a>'+
+    '<div class="pm-project-actions">'+
+    '<a class="pm-project-view" href="/our-work/'+slug+'/">Project details <span aria-hidden="true">→</span></a>'+
+    (d.website ? '<a class="pm-project-website" href="'+escapeHtml(d.website)+'" target="_blank" rel="noopener noreferrer">Visit website <span aria-hidden="true">↗</span></a>' : '')+
+    '</div>'+
     '</div></article>';
 }
 export function projectCardsHtml(projects) {
