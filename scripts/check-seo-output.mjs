@@ -52,8 +52,13 @@ assert(/Copy-of-PRUNUS-MEDIA-300x300\.png/.test(headerImage),'Header logo not sw
 assert(/sizes="\(max-width: 670px\) 90px, 110px"/.test(headerImage),'Header logo responsive sizes missing');
 assert(!/\/client-login\/ https:\/\/portal/.test(readFileSync('dist/_redirects','utf8')),
   'Client portal is not deployed; do not add a live redirect');
-assert(/src="\/wp-content\/uploads\/2026\/09\/Hero-image-1024x724.png"/.test(homepage),
-  'Homepage illustrative hero still uses a full resolution source');
+assert(/src="\/wp-content\/uploads\/2026\/09\/Hero-image.png"/.test(homepage),
+  'Homepage illustrative hero must retain the original artwork asset for visual fidelity');
+const heroTag=(homepage.match(/<img\b[^>]*Hero-image\.png[^>]*>/i)||[])[0]||'';
+assert(/loading="eager"/.test(heroTag)&&/fetchpriority="high"/.test(heroTag),
+  'Homepage hero artwork should load with priority');
+assert(/width="\d+"/.test(heroTag)&&/height="\d+"/.test(heroTag),
+  'Homepage hero artwork must reserve its intrinsic aspect ratio');
 assert(/srcset=/.test(homepage),'Responsive srcset must be retained');
 const seoCss=readFileSync('dist/assets/prunus-styles/components.css','utf8');
 assert(seoCss.includes('aspect-ratio:2000/1414'),'Reserved hero aspect ratio missing');

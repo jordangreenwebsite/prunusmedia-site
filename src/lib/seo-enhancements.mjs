@@ -93,8 +93,9 @@ export function improveImages(html){
       tag=setAttr(tag,'src',small);
       if(getAttr(tag,'srcset'))tag=setAttr(tag,'sizes','(max-width: 670px) 22vw, 180px');
     }else if(isHero){
-      tag=setAttr(tag,'src',src.replace(/\.png$/,'-1024x724.png'));
-      tag=setAttr(tag,'sizes','(max-width: 670px) 92vw, (max-width: 1100px) 55vw, 650px');
+      // Hero artwork must retain the original high-resolution source and
+      // srcset selection to preserve the user-approved exact appearance.
+      // Eager loading and intrinsic dimensions still improve stability.
     }else if(getAttr(tag,'srcset')&&/breakdance-image-object|bde-image2/.test(tag)){
       tag=setAttr(tag,'sizes','(max-width: 670px) 96vw, (max-width: 1100px) 55vw, 750px');
     }
