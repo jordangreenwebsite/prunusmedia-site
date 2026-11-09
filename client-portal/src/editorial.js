@@ -90,6 +90,44 @@ async function addEditorial(request,env,user) {
   } catch {return bad('This topic already exists in this client editorial calendar. Review it rather than adding a duplicate.',409);}
   return json({id:ownerId,status},201);
 }
+async function reviewMail(env,clientId,event,recipient,subject,message) {
+  if (!env.RESEND_API_KEY || !env.OTP_FROM_EMAIL) return;
+  const from=str(env.OTP_FROM_EMAIL,200),to=str(recipient,254).toLowerCase();
+  if (!/^[^@<>\s]+@([a-z0-9-]+\.)*prunusmedia\.com$/i.test(from) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return;
+  let status='sent',reason=null;
+  try {
+    const response=await fetch('https://api.resend.com/emails',{
+      method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+env.RESEND_API_KEY},
+      body:JSON.stringify({from:'Prunus Media <'+from+'>',to:[to],subject,text:message})
+    });
+    if (!response.ok)throw Error('Resend response: '+response.status);
+  } catch(error) {
+    status='failed';reason=str(error.message,180);
+  }
+  await env.DB.prepare('INSERT INTO notifications (id,client_id,event,status,error_message) VALUES (?,?,?,?,?)')
+    .bind(id(),clientId,event,status,reason).run();
+}
+async function notifyClientReview(env,post) {
+  const business=await env.DB.prepare('SELECT name,slug FROM clients WHERE id=?').bind(post.client_id).first();
+  if (!business)return;
+  const recipients=(await env.DB.prepare('SELECT email FROM client_members WHERE client_id=? AND active=1 LIMIT 10').bind(post.client_id).all()).results;
+  const signIn='https://prunusmedia.com/client-login/?site='+encodeURIComponent(business.slug);
+  for (const recipient of recipients) {
+    await reviewMail(env,post.client_id,'editorial.client_review_email',recipient.email,
+      'Blog ready for your approval: '+post.title,
+      'Prunus Media has an article ready for '+business.name+' to review.\n\n'+post.title+
+      '\n\nSign in to read it and choose Approve article or Request changes:\n'+signIn+
+      '\n\nThe article will not be published before the agreed review process.');
+  }
+}
+async function notifyAdminDecision(env,post,approved) {
+  const recipient=str(env.ADMIN_NOTIFY_EMAIL,254);
+  if (!recipient)return;
+  await reviewMail(env,post.client_id,'editorial.client_decision',recipient,
+    'Client '+(approved?'approved':'requested changes to')+' blog: '+post.title,
+    post.title+'\n\nClient decision: '+(approved?'Approved':'Changes requested')+
+    '\n\nReview in https://portal.prunusmedia.com/');
+}
 async function patchEditorial(request,env,user,postId) {
   if (!adminOnly(user))return bad('Forbidden.',403);
   const old=await env.DB.prepare('SELECT * FROM editorial_posts WHERE id=?').bind(postId).first();
@@ -129,6 +167,10 @@ async function patchEditorial(request,env,user,postId) {
   await env.DB.prepare("UPDATE editorial_posts SET brief=?,draft=?,target_query=?,sources_json=?,evidence_note=?,review_note=?,status=?,scheduled_at=?,published_url=?,approved_at=?,approved_by=CASE WHEN ?=1 THEN NULL ELSE approved_by END,updated_at=datetime('now') WHERE id=?")
     .bind(brief,draft,query,JSON.stringify(sources),note,reviewNote,status,schedule||null,publishedUrl||null,approvedAt,contentChanged?1:0,postId).run();
   await log(env,user,'editorial.updated.'+status,old.client_id,postId);
+  if (status==='client-review' && old.status!=='client-review') {
+    // Notification failures are recorded for admin review; the saved draft is retained.
+    await notifyClientReview(env,old);
+  }
   return json({id:postId,status,message:'Editorial record saved. Scheduling does not publish the article.'});
 }
 async function decideEditorial(request,env,user,postId) {
@@ -145,6 +187,8 @@ async function decideEditorial(request,env,user,postId) {
     .bind(approve?'approved':'draft',approve?user.email:null,approve?new Date().toISOString():null,note,postId).first();
   if (!result)return bad('Article has already changed.',409);
   await log(env,user,approve?'editorial.client_approved':'editorial.client_changes',post.client_id,postId);
+  const title=await env.DB.prepare('SELECT title FROM editorial_posts WHERE id=?').bind(postId).first();
+  await notifyAdminDecision(env,{...post,title:title?.title||'Website article'},approve);
   return json({status:approve?'approved':'draft'});
 }
 async function changeClientSettings(request,env,user,clientId) {
@@ -224,7 +268,7 @@ export async function enqueueWeeklyResearch(env) {
 }
 async function overview(env,user) {
   if (!user.admin)return bad('Forbidden.',403);
-  const clients=(await env.DB.prepare("SELECT c.id,c.name,c.domain,c.brand,c.industry,c.service_area,c.requires_blog_approval,c.search_console_url,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id) lead_total,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id AND l.created_at>=datetime('now','-30 days')) lead_last30,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status NOT IN ('published','rejected')) blog_open,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status='client-review') awaiting_approval,(SELECT COUNT(*) FROM client_uploads f WHERE f.client_id=c.id) uploads FROM clients c WHERE c.active=1 ORDER BY c.name").all()).results;
+  const clients=(await env.DB.prepare("SELECT c.id,c.name,c.domain,c.contact_email,c.brand,c.industry,c.service_area,c.requires_blog_approval,c.search_console_url,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id) lead_total,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id AND l.created_at>=datetime('now','-30 days')) lead_last30,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status NOT IN ('published','rejected')) blog_open,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status='client-review') awaiting_approval,(SELECT COUNT(*) FROM client_uploads f WHERE f.client_id=c.id) uploads FROM clients c WHERE c.active=1 ORDER BY c.name").all()).results;
   // Do not expose names, messages, phone numbers, emails or full postcodes in admin reporting.
   const leadRows=(await env.DB.prepare("SELECT client_id,postcode,substr(created_at,1,10) day FROM leads WHERE created_at>=datetime('now','-90 days') ORDER BY created_at DESC LIMIT 3000").all()).results;
   const summary=new Map();

@@ -73,3 +73,29 @@ Future: lead contacted/dealt-with UI, staff permissions with assigned tenants, c
 RELEASE GATE: Do not merge login links while the Worker is unreachable. Before enabling the roofing lead-integration secret, add the verified owner email and run an end-to-end form -> email -> lead list -> contact action -> status change test.
 
 Cloudflare Worker custom domain is declared in wrangler.jsonc. It requires a Cloudflare zone owned by the account, authorised deploy credentials, no conflicting CNAME, D1/R2 bindings and secrets.
+
+
+## Editorial MVP extension (2026-11-09, staged)
+
+The existing draft portal now includes the agency-wide editorial calendar, tenant preferences and client approval workflow, general photos/PDF uploads and aggregate enquiry reporting.
+
+### What is implemented
+- D1 migration 0002_editorial.sql stores brand (Prunus or UK Trades), niche, real service areas, voice notes, a Search Console link, per-client idea/upload/approval toggles, editorial posts, verified-reference metadata, private client assets and weekly research jobs.
+- Admin can see every connected client with enquiry totals, last-30-day counts, blog stages, pending approvals and uploaded file counts. Enquiry reporting shows only date and postcode district; it does not return personal lead details. The client dashboard still shows full enquiry details to that authorised client.
+- Admin may maintain article research briefs, draft text, reference URLs and dates, evidence notes, status and scheduled publication date. Clients may suggest topics and, when requested for that article, review the complete draft, approve it or request changes.
+- Entering the client-review stage sends a Resend email to the client's active member emails when the Worker email secrets are configured. The client approval/changes response can notify the agency. Failed delivery is logged as a notification for admin inspection.
+- Private images (JPG/PNG/WebP) and PDFs up to 8 MB are validated, tenant-scoped in R2, and always downloaded as attachments. Uploaded PDFs are not auto-converted to posts.
+- Cloudflare's existing daily Worker cron creates one idempotent research task for each active client per week. Admin can record the actual source links and research findings and mark it complete. EDITORIAL_POLICY.md defines publication gates and writing standards.
+- Google Search Console is **a client-specific, admin-only link**, not an OAuth data ingestion or Search Console API integration. The portal does not claim access to external analytics.
+- The portal does **not** automatically research the web, invent an idea list, create GitHub pull requests, publish at scheduled time or connect to a customer site until each independent integration is built, authorised and tested.
+
+### Required setup
+1. Provision the D1 database and private R2 bucket from the earlier setup section.
+2. Apply both D1 migrations before deploying. Test migration 0002 on a throwaway D1 database first and back up before applying to an existing dataset.
+3. Configure a real verified sender, Resend email key, admin email(s), session pepper and admin notices; do not commit secrets.
+4. Connect each client website's server-side form ingestion token separately. The roofing integration remains a draft PR; PP Power Detailing has not been connected.
+5. Sign in as the admin, create client accounts, set individual approval preferences, connect verified client emails, and test with two invited accounts.
+6. Configure Cloudflare custom domain, HTTPS, WAF rate limits, R2 malware safety/retention plan and privacy notices. Test real email delivery, full lead + stats visibility and files before enabling public sign-in.
+7. Do not remove the marketing site's holding page or merge login-route redirects until the Worker and real cross-tenant tests are successful.
+
+Scheduled articles deliberately require a separate reviewed GitHub PR, successful build and verified live URL. This is the safe release gate for SEO clients.

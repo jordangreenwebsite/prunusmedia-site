@@ -162,6 +162,7 @@ function renderAgencyOverview() {
     const card=add(grid,'div',null,'agency-client');
     add(card,'strong',client.name);
     add(card,'div',client.domain,'meta');
+    if(client.contact_email)add(card,'div','Owner: '+client.contact_email,'meta');
     const stats=add(card,'div',null,'agency-stats');
     add(stats,'span',client.lead_last30+' leads (30 days)');
     add(stats,'span',client.blog_open+' active blogs');
