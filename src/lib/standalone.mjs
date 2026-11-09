@@ -155,7 +155,7 @@ export function cleanPageHtml(originalHtml, filename) {
     '<script defer src="/assets/prunus-scripts/prunus-cursor.js"></script>';
   if (html.includes('</body>')) html = html.replace('</body>', scripts + '\n</body>');
   if (html.includes('</head>')) html = html.replace('</head>',
-    '<link rel="stylesheet" href="/assets/prunus-styles/components.css">\n' +
+    '<link rel="stylesheet" href="/assets/prunus-styles/components.css?v=white-headings-20261109">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/portfolio.css">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/footer.css">\n</head>');
   return html;
