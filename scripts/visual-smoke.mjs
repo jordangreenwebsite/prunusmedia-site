@@ -71,7 +71,7 @@ try {
       // Compare actual element geometry and computed typography whenever
       // homepage pixel parity changes. This catches real layout drift
       // separately from harmless image downsampling/compression.
-      const layoutProbe=async ()=>{
+      var layoutProbe=async ()=>{
         return page.evaluate(()=>{
           function inspect(selector){
             const el=document.querySelector(selector);
