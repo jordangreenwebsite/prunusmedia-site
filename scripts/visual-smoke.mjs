@@ -138,6 +138,20 @@ try {
         if(await externalLinks.count()!==17)failures.push(test.label+': every project must have external website link');
         const hrefs=await externalLinks.evaluateAll(nodes=>nodes.map(a=>a.href));
         if(hrefs.some(href=>!href.startsWith('https://')))failures.push(test.label+': external website link lacks HTTPS');
+        const detailSlugs=await cards.locator('h3 a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
+        for (const detail of detailSlugs) {
+          const response=await page.request.get(local+detail);
+          if(!response.ok())failures.push(test.label+': portfolio detail '+detail+' returns '+response.status());
+        }
+        const outdated=new Set([
+          '/our-work/guardians-brand-works/',
+          '/our-work/my-sweet-pea-flowers/',
+          '/our-work/stephenus/',
+          '/our-work/coffee-art-socks/'
+        ]);
+        if(detailSlugs.some(slug=>outdated.has(slug))){
+          failures.push(test.label+': superseded portfolio entries still displayed');
+        }
         if(await page.locator('a[href="/our-work/residential-roofing-and-fascias/"]').count()===0){
           failures.push(test.label+': residential roofing portfolio entry missing');
         }
