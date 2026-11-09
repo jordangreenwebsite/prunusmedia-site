@@ -44,5 +44,26 @@ const secrets = {
   ADMIN_EMAILS: emails.join(',')
 };
 if (notify) secrets.ADMIN_NOTIFY_EMAIL=notify;
+const extra=[
+  ['PORTAL_GSC_SERVICE_ACCOUNT_JSON','GSC_SERVICE_ACCOUNT_JSON'],
+  ['PORTAL_BRAVE_SEARCH_API_KEY','BRAVE_SEARCH_API_KEY'],
+  ['PORTAL_MCP_ADMIN_TOKEN','MCP_ADMIN_TOKEN'],
+  ['PORTAL_GITHUB_CONTENT_TOKEN','GITHUB_PRUNUS_CONTENT_TOKEN']
+];
+for(const [source,target] of extra){
+  const value=String(process.env[source]||'').trim();
+  if(value)secrets[target]=value;
+}
+if(secrets.GSC_SERVICE_ACCOUNT_JSON){
+  let creds;
+  try{creds=JSON.parse(secrets.GSC_SERVICE_ACCOUNT_JSON);}
+  catch{throw new Error('GSC service account must be the complete original Google JSON file.');}
+  if(creds.type!=='service_account'||!creds.private_key?.includes('BEGIN PRIVATE KEY')||
+    !/\.iam\.gserviceaccount\.com$/.test(creds.client_email||''))
+    throw new Error('GSC secret requires a valid Google service-account JSON key.');
+}
+if(secrets.MCP_ADMIN_TOKEN&&secrets.MCP_ADMIN_TOKEN.length<48)
+  throw new Error('MCP token must be at least 48 randomly generated characters.');
+
 writeFileSync('.portal-secrets.json',JSON.stringify(secrets),{mode:0o600});
 console.log('Portal deployment configuration validated, without printing secrets.');

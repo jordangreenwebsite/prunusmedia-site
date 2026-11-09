@@ -1,4 +1,5 @@
 // Shared, tenant-scoped editorial and private upload API.
+import { validProperty } from './gsc.js';
 // This Worker is an editorial queue, not an automated publisher.
 const json = (value, status = 200) => new Response(JSON.stringify({ok:true,...value}), {
   status, headers: {'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}
@@ -15,7 +16,7 @@ async function canRead(env,user,clientId) {
   return !!(await env.DB.prepare('SELECT 1 FROM client_members m JOIN clients c ON c.id=m.client_id WHERE c.id=? AND c.active=1 AND m.email=? AND m.active=1').bind(clientId,user.email).first());
 }
 async function flags(env,clientId) {
-  return env.DB.prepare('SELECT id,brand,industry,service_area,voice_notes,requires_blog_approval,allow_client_ideas,allow_client_uploads,search_console_url FROM clients WHERE id=? AND active=1').bind(clientId).first();
+  return env.DB.prepare('SELECT id,brand,industry,service_area,voice_notes,requires_blog_approval,allow_client_ideas,allow_client_uploads,search_console_url,gsc_property FROM clients WHERE id=? AND active=1').bind(clientId).first();
 }
 async function bodyJson(request,max=100000) {
   if (!(request.headers.get('content-type')||'').startsWith('application/json')) throw Error('JSON required');
@@ -199,9 +200,13 @@ async function changeClientSettings(request,env,user,clientId) {
   if (!brand)return bad('Choose Prunus Media or UK Trade Websites.');
   let gsc=str(d.search_console_url,600);
   if (gsc && !/^https:\/\/search\.google\.com\/search-console(\/|$|\?)/.test(gsc))return bad('Use an official Google Search Console URL.');
-  await env.DB.prepare('UPDATE clients SET brand=?,industry=?,service_area=?,voice_notes=?,requires_blog_approval=?,allow_client_ideas=?,allow_client_uploads=?,search_console_url=? WHERE id=?')
+  const website=await env.DB.prepare('SELECT domain FROM clients WHERE id=?').bind(clientId).first();
+  const property=str(d.gsc_property,250);
+  if(property&&!validProperty(property,website?.domain))
+    return bad('Search Console property must be the exact HTTPS or sc-domain property for this client website.');
+  await env.DB.prepare('UPDATE clients SET brand=?,industry=?,service_area=?,voice_notes=?,requires_blog_approval=?,allow_client_ideas=?,allow_client_uploads=?,search_console_url=?,gsc_property=? WHERE id=?')
     .bind(brand,str(d.industry,160),str(d.service_area,350),str(d.voice_notes,2000),
-      d.requires_blog_approval===true?1:0,d.allow_client_ideas===true?1:0,d.allow_client_uploads===true?1:0,gsc,clientId).run();
+      d.requires_blog_approval===true?1:0,d.allow_client_ideas===true?1:0,d.allow_client_uploads===true?1:0,gsc,property,clientId).run();
   await log(env,user,'client.preferences_changed',clientId,clientId);
   return json({message:'Client preferences saved. Existing article approval requirements are unchanged.'});
 }
@@ -268,7 +273,7 @@ export async function enqueueWeeklyResearch(env) {
 }
 async function overview(env,user) {
   if (!user.admin)return bad('Forbidden.',403);
-  const clients=(await env.DB.prepare("SELECT c.id,c.name,c.domain,c.contact_email,c.brand,c.industry,c.service_area,c.requires_blog_approval,c.search_console_url,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id) lead_total,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id AND l.created_at>=datetime('now','-30 days')) lead_last30,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status NOT IN ('published','rejected')) blog_open,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status='client-review') awaiting_approval,(SELECT COUNT(*) FROM client_uploads f WHERE f.client_id=c.id) uploads FROM clients c WHERE c.active=1 ORDER BY c.name").all()).results;
+  const clients=(await env.DB.prepare("SELECT c.id,c.name,c.domain,c.contact_email,c.brand,c.industry,c.service_area,c.requires_blog_approval,c.search_console_url,c.gsc_property,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id) lead_total,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id AND l.created_at>=datetime('now','-30 days')) lead_last30,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status NOT IN ('published','rejected')) blog_open,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status='client-review') awaiting_approval,(SELECT COUNT(*) FROM client_uploads f WHERE f.client_id=c.id) uploads FROM clients c WHERE c.active=1 ORDER BY c.name").all()).results;
   // Do not expose names, messages, phone numbers, emails or full postcodes in admin reporting.
   const leadRows=(await env.DB.prepare("SELECT client_id,postcode,substr(created_at,1,10) day FROM leads WHERE created_at>=datetime('now','-90 days') ORDER BY created_at DESC LIMIT 3000").all()).results;
   const summary=new Map();
@@ -280,7 +285,7 @@ async function overview(env,user) {
     const e=summary.get(key)||{client_id:l.client_id,day:l.day,area,count:0};
     e.count++;summary.set(key,e);
   }
-  const queued=(await env.DB.prepare("SELECT j.id,j.client_id,c.name AS client_name,j.week_start,j.status,j.research_note FROM research_jobs j JOIN clients c ON c.id=j.client_id WHERE j.status IN ('queued','working','failed') ORDER BY j.week_start DESC,c.name LIMIT 200").all()).results;
+  const queued=(await env.DB.prepare("SELECT j.id,j.client_id,c.name AS client_name,j.week_start,j.status,j.research_note,j.discovery_query,j.candidate_sources_json,j.discovered_at FROM research_jobs j JOIN clients c ON c.id=j.client_id WHERE j.status IN ('queued','working','failed') ORDER BY j.week_start DESC,c.name LIMIT 200").all()).results;
   return json({clients,lead_areas:[...summary.values()],research_queue:queued});
 }
 // One compact monthly view. Admin sees titles and research tasks across connected
@@ -324,6 +329,8 @@ async function editResearch(request,env,user,jobId) {
   const status=str(d.status,30),note=str(d.research_note,4000);
   if (!['queued','working','complete','failed'].includes(status))return bad('Invalid research status.');
   if (status==='complete' && note.length<30)return bad('Record the research sources and findings before completing a job.');
+  if(status==='complete'&&!/https:\/\/[^\s]+|first.party|original evidence|interview|client records/i.test(note))
+    return bad('Complete the human check with actual HTTPS source links or documented first-party evidence.');
   await env.DB.prepare("UPDATE research_jobs SET status=?,research_note=?,updated_at=datetime('now') WHERE id=?").bind(status,note,jobId).run();
   await log(env,user,'research.updated.'+status,job.client_id,jobId);
   return json({status});

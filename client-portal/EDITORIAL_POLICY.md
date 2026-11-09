@@ -20,7 +20,7 @@ This standard applies to every Prunus Media and UK Trade Websites customer. The 
 - Keep drafts, ideas, uploads and sensitive client material private and tenant-scoped. Never put OAuth or GitHub credentials in browser code.
 
 ## Automation distinction
-The D1 weekly queue is built and runs from the existing Worker cron. Actual unattended SERP research, Search Console access, AI drafting, GitHub PR creation and scheduled deployment require separate authorised service integrations and a monitored job runner. No unverified research or automatic publication is claimed by the MVP.
+The D1 weekly queue is built and runs from the existing Worker cron. Optional Brave-powered source-candidate discovery, per-client Google Search Console read-only analytics, a separate-token read-only MCP endpoint, and a narrowly allowlisted GitHub **draft** PR action for the Prunus Media site are implemented. All are inactive until their separate credentials are authorised. Brave results are unverified candidates and still require source review. AI writing and customer-site publishing remain unimplemented. No unverified research or automatic publication is claimed.
 
 ## Monitoring
 Track website enquiry count and postcode district in the admin overview without exposing customer contact details. Clients retain their full enquiry contact actions. Historical email-only enquiries are not recovered automatically. Confirm legal/privacy retention, per-client data processing and recovery before live use.

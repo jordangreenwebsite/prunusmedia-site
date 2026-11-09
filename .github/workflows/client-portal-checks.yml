@@ -21,9 +21,14 @@ jobs:
         run: |
           node --check src/index.js
           node --check src/editorial.js
+          node --check src/gsc.js
+          node --check src/research.js
+          node --check src/mcp.js
+          node --check src/github-pr.js
           node --check public/app.js
           node --check public/editorial-ui.js
           node --check public/workspace-ui.js
+          node --check public/integrations-ui.js
       - name: Security and tenant isolation tests
         working-directory: client-portal
         run: node --experimental-sqlite --test tests/*.test.mjs
@@ -38,5 +43,6 @@ jobs:
           test -f client-portal/wrangler.jsonc
           test -f client-portal/migrations/0001_initial.sql
           test -f client-portal/migrations/0002_editorial.sql
+          test -f client-portal/migrations/0003_integrations.sql
           test -f client-portal/EDITORIAL_POLICY.md
           test -f client-portal/public/index.html

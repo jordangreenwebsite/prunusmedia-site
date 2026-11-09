@@ -1,4 +1,8 @@
 import { extraRoutes, enqueueWeeklyResearch } from './editorial.js';
+import { gscRoute } from './gsc.js';
+import { researchDiscoveryRoute, runAutomaticDiscovery } from './research.js';
+import { createPrRoute } from './github-pr.js';
+import { mcpHandler } from './mcp.js';
 // Prunus Media shared website-client portal.
 // Deploy independently from the marketing site using client-portal/wrangler.jsonc.
 // Cloudflare Worker: D1 (tenant-scoped records), private R2 (PDFs), Resend (OTP + notices).
@@ -316,6 +320,7 @@ async function ingest(request, env) {
 export default {
   async fetch(request,env,context) {
     const url=new URL(request.url), path=url.pathname;
+    if (path==='/mcp') return mcpHandler(request,env);
     if (!path.startsWith('/api/')) {
       if (!env.ASSETS) return error('Portal assets not configured.',503);
       const asset = await env.ASSETS.fetch(request);
@@ -363,6 +368,12 @@ export default {
       if (ticket && method==='PATCH') return await updateTicket(request,env,user,ticket[1]);
       const extra=await extraRoutes(request,env,user,url);
       if (extra) return extra;
+      const seo=await gscRoute(request,env,user,url);
+      if(seo)return seo;
+      const discovery=await researchDiscoveryRoute(request,env,user,url);
+      if(discovery)return discovery;
+      const pr=await createPrRoute(request,env,user,url);
+      if(pr)return pr;
       return error('Not found.',404);
     } catch (e) {
       console.error('Portal request failed',path,clean(e.message,150));
@@ -382,5 +393,11 @@ export default {
     // Daily idempotent scheduling creates one weekly research task per active client.
     // Research itself requires human/source verification and is never invented here.
     await enqueueWeeklyResearch(env);
+    // Optional external Brave API discovery: source candidates only, never
+    // a verified claim, approval, draft publication, or GitHub deployment.
+    if(env.BRAVE_SEARCH_API_KEY){
+      try{await runAutomaticDiscovery(env,2);}
+      catch{console.error('Portal research discovery unavailable');}
+    }
   }
 };
