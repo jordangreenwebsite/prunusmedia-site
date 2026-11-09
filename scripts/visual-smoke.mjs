@@ -129,7 +129,30 @@ try {
           failures.push(test.label+': Recent Work missing link to complete portfolio');
         }
         const highlight=page.locator('.bde-dual-heading-35-625 .dual-heading--secondary.js-annotate');
-        if(await highlight.count()!==1)failures.push(test.label+': original gold highlighter phrase missing');
+        if(await highlight.count()!==1)failures.push(test.label+': white highlighted heading missing');
+        else{
+          const styles=await highlight.evaluate((el)=>{
+            const css=getComputedStyle(el);
+            return {backgroundImage:css.backgroundImage,backgroundColor:css.backgroundColor,
+              visible:el.getBoundingClientRect().width>0};
+          });
+          console.log('HOME HIGHLIGHT RENDERED STYLES '+JSON.stringify(styles));
+          if(!styles.visible || !/rgb\(255,\s*255,\s*255\)|#fff|white/.test(styles.backgroundImage)){
+            failures.push(test.label+': Websites built highlight does not actually render white');
+          }
+          if(/236,\s*205,\s*130|243,\s*220,\s*155|eccd82/i.test(styles.backgroundImage)){
+            failures.push(test.label+': gold highlight still present in rendered style');
+          }
+        }
+        const olderGold=page.locator('.bde-animated-heading-35-469 .bde-animated-heading__word');
+        const goldCount=await olderGold.count();
+        if(goldCount){
+          const nonWhite=await olderGold.evaluateAll(nodes=>nodes.some(el=>{
+            const css=getComputedStyle(el);
+            return css.backgroundColor!=='rgb(255, 255, 255)';
+          }));
+          if(nonWhite)failures.push(test.label+': rotating heading still has a gold background');
+        }
       }
       if (test.route === '/our-work/') {
         const cards=page.locator('.pm-project-card');
