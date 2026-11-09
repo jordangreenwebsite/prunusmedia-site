@@ -1,0 +1,73 @@
+
+/* Selected Work: editorial project gallery, shared by the home page and portfolio. */
+.pm-home-work{background:#faf4ee;padding:90px 24px 102px}
+.pm-home-work .pm-home-work__inner{width:min(100%,1260px);margin:0 auto}
+.pm-home-work .pm-home-work__top{display:flex;align-items:end;justify-content:space-between;gap:30px;flex-wrap:wrap;margin-bottom:34px}
+.pm-home-work .pm-work-eyebrow{font:600 12px/1.4 "Space Grotesk",sans-serif;letter-spacing:.15em;text-transform:uppercase;color:#718a76;margin:0 0 17px}
+.pm-home-work h2{font:400 clamp(35px,4.7vw,63px)/1.1 "Playfair Display",Georgia,serif;letter-spacing:-.03em;color:#263e31;margin:0 0 12px}
+.pm-home-work .pm-home-work__intro{font:400 19px/1.5 "Alegreya Sans",Arial,sans-serif;color:#53665b;max-width:650px;margin:0}
+.pm-project-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;align-items:stretch}
+.pm-project-card{overflow:hidden;background:#fffdf8;border:1px solid #dbe1d7;border-radius:13px;box-shadow:0 5px 25px rgba(44,57,47,.055);transition:transform .26s ease,box-shadow .26s ease;display:flex;flex-direction:column}
+.pm-project-card:hover{transform:translateY(-5px);box-shadow:0 15px 32px rgba(44,57,47,.13)}
+.pm-project-cover{display:block;width:100%;overflow:hidden;text-decoration:none!important}
+.pm-project-picture{display:block;height:225px;width:100%;object-fit:cover;transition:transform .45s ease}
+.pm-project-card:hover .pm-project-picture{transform:scale(1.025)}
+.pm-project-art{--c1:#e7eadc;--c2:#85a791;--ink:#284c3b;min-height:225px;height:225px;display:flex;position:relative;overflow:hidden;flex-direction:column;justify-content:center;align-items:flex-start;padding:24px 28px;background:linear-gradient(142deg,var(--c1),#fff9f0 58%,var(--c2));color:var(--ink)}
+.pm-project-art:after{content:"";position:absolute;right:-64px;bottom:-92px;width:260px;height:260px;border:1px solid currentColor;opacity:.2;border-radius:50%;box-shadow:0 0 0 31px rgba(255,255,255,.2),0 0 0 65px rgba(255,255,255,.16)}
+.pm-project-art--residential-roofing-and-fascias{--c1:#d9e3e8;--c2:#67889a;--ink:#314c61}
+.pm-project-art--katies-flower-hut{--c1:#f6e1e6;--c2:#cf99a8;--ink:#785361}
+.pm-project-art--cotswold-pawprints{--c1:#dfe8d3;--c2:#8caa74;--ink:#35553d}
+.pm-project-art--my-sweet-pea-flowers{--c1:#f3e4ec;--c2:#bfa0be;--ink:#765878}
+.pm-project-art--michal-rebekah-art{--c1:#e9dbd0;--c2:#b7a08d;--ink:#684a40}
+.pm-project-art--window-cleaning-calculator{--c1:#d9e9ed;--c2:#8bb6c5;--ink:#2b5e6a}
+.pm-project-art--uk-trade-websites{--c1:#d5e6f0;--c2:#769bb5;--ink:#2d5470}
+.pm-project-art--prunus-certificates{--c1:#f5e9df;--c2:#d5ad83;--ink:#6b4d33}
+.pm-project-art--charley-hayes-smr{--c1:#eee4dc;--c2:#b88d7f;--ink:#6c4a42}
+.pm-project-art--guardians-brand-works{--c1:#e4e6ef;--c2:#9fa4c0;--ink:#3a4263}
+.pm-project-art--coffee-art-socks{--c1:#f2e0cb;--c2:#ca9769;--ink:#754423}
+.pm-project-art--tj-bespoke-designs{--c1:#e3dbd4;--c2:#af9987;--ink:#604a3b}
+.pm-project-browser{position:absolute;top:0;left:0;right:0;height:32px;display:flex;align-items:center;gap:5px;border-bottom:1px solid rgba(33,55,43,.1);padding:0 14px;background:rgba(255,255,255,.32)}
+.pm-project-browser>span{width:5px;height:5px;background:currentColor;border-radius:50%;opacity:.4}
+.pm-project-browser small{margin-left:auto;font:500 10px/1 "Space Grotesk",sans-serif;letter-spacing:.08em;text-transform:uppercase;opacity:.68}
+.pm-project-art-title{font:500 clamp(22px,2.6vw,33px)/1.08 "Playfair Display",Georgia,serif;max-width:87%;position:relative;z-index:1;overflow-wrap:break-word}
+.pm-project-art-line{display:block;height:3px;width:45%;margin-top:22px;background:currentColor;opacity:.26;border-radius:99px}
+.pm-project-art-small{display:block;height:3px;width:28%;margin-top:8px;background:currentColor;opacity:.17;border-radius:99px}
+.pm-project-content{padding:22px 24px 25px;display:flex;flex-direction:column;flex:1}
+.pm-project-category{font:600 10px/1.6 "Space Grotesk",sans-serif;color:#668371;text-transform:uppercase;letter-spacing:.06em}
+.pm-project-content h3{font:500 23px/1.18 "Playfair Display",Georgia,serif;margin:12px 0 10px;color:#2e4235}
+.pm-project-content h3 a{color:inherit;text-decoration:none!important}
+.pm-project-content h3 a:hover{color:#55755d}
+.pm-project-content p{font:400 17px/1.47 "Alegreya Sans",Arial,sans-serif;color:#506358;margin:0 0 26px}
+.pm-project-view{display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 12px/1.3 "Space Grotesk",sans-serif;margin-top:auto;padding-top:13px;border-top:1px solid #dce2da;text-decoration:none!important;color:#254e36!important}
+.pm-project-view:hover{text-decoration:underline!important}
+.pm-project-view span{font-size:20px;font-weight:400}
+.pm-home-work__more{display:inline-flex;align-items:center;justify-content:space-between;gap:35px;background:#243e31;color:#fff!important;text-decoration:none!important;padding:15px 23px;border-radius:5px;font:600 14px/1.3 "Space Grotesk",sans-serif;transition:background .2s,transform .2s;margin-top:29px}
+.pm-home-work__more:hover{background:#52725b;transform:translateY(-2px)}
+.pm-editorial .pm-project-grid{margin-top:40px}
+.pm-editorial .pm-project-card h3{font-size:23px;margin:12px 0 10px}
+.pm-editorial .pm-project-card p{font-size:17px;line-height:1.47}
+.pm-editorial .pm-project-art{height:225px}
+.pm-portfolio-group{margin-top:60px}
+.pm-portfolio-group>h2{font:400 28px/1.3 "Playfair Display",Georgia,serif;color:#30483a}
+.pm-portfolio-intro{font:400 17px/1.55 "Alegreya Sans",Arial,sans-serif;max-width:720px;color:#5a6a5f}
+.pm-project-card a:focus-visible,.pm-home-work__more:focus-visible{outline:3px solid #e0ba72;outline-offset:3px}
+@media(max-width:950px){.pm-project-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pm-home-work{padding:70px 22px}}
+@media(max-width:650px){.pm-project-grid{grid-template-columns:1fr;gap:19px}.pm-home-work{padding:58px 17px 70px}.pm-home-work .pm-home-work__top{margin-bottom:27px}.pm-project-art{height:230px}.pm-project-picture{height:230px}.pm-home-work h2{font-size:37px}.pm-portfolio-group{margin-top:40px}}
+@media(prefers-reduced-motion:reduce){.pm-project-card,.pm-project-picture,.pm-home-work__more{transition:none}.pm-project-card:hover{transform:none}}
+
+
+/* Two deliberate actions: portfolio notes + external working/archived preview. */
+.pm-project-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:auto}
+.pm-project-actions>a{display:flex;align-items:center;justify-content:space-between;gap:5px;min-width:0;min-height:43px;font:600 11px/1.3 "Space Grotesk",sans-serif;padding:10px 11px;border-radius:4px;white-space:nowrap;text-decoration:none!important}
+.pm-project-actions>a span{font-size:17px;line-height:1}
+.pm-project-actions .pm-project-view{border:1px solid #cbd7cc;color:#2f5540!important;margin-top:0}
+.pm-project-actions .pm-project-website{background:#294a38;color:#fff!important}
+.pm-project-actions .pm-project-website:hover{background:#5a8065}
+.pm-project-actions .pm-project-view:hover{border-color:#729880;background:#f2f7ed}
+.pm-project-actions>a:focus-visible{outline:3px solid #dcae65;outline-offset:3px}
+.pm-project-art--pp-power-detailing{--c1:#dce1e4;--c2:#86949f;--ink:#29333c}
+.pm-project-art--lee-green{--c1:#e3e5db;--c2:#8ca080;--ink:#3e5b3c}
+.pm-project-art--clearview-bristol{--c1:#dcebf0;--c2:#9cbdc8;--ink:#356579}
+.pm-project-art--gudgeons-groundworks{--c1:#e9e4d8;--c2:#baa27d;--ink:#605040}
+.pm-project-art--coffee-at-odd-socks{--c1:#f0e6d9;--c2:#c5a287;--ink:#684c3b}
+@media(max-width:650px){.pm-project-actions{gap:9px}.pm-project-actions>a{padding:12px;font-size:12px}}

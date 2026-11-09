@@ -1,0 +1,5 @@
+---
+import { getLegacyDocument } from '../lib/exported-pages.mjs';
+const document = getLegacyDocument('404.html');
+---
+<Fragment set:html={document} />

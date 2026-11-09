@@ -1,0 +1,147 @@
+
+/* Independent native interaction styles. Loaded after the source design snapshot. */
+.breakdance-dropdown-floater[aria-hidden="true"] { pointer-events: none; }
+.breakdance-dropdown--open .breakdance-dropdown-floater { pointer-events: auto; }
+.breakdance-menu--open .breakdance-menu-list { visibility: visible; }
+.bde-advanced-tabs-content[hidden], .bde-tabs__panel[hidden] { display: none !important; }
+.js-comparison-container { position: relative; overflow: hidden; touch-action: pan-y; cursor: ew-resize; }
+.js-comparison-container .images { position: relative; overflow: hidden; min-height: 270px; }
+.js-comparison-container .js-image-before,
+.js-comparison-container .js-image-after { position: absolute; inset: 0; background-repeat: no-repeat; background-position: center; background-size: cover; }
+.js-comparison-container .dragger { position: absolute; z-index: 4; top: 0; bottom: 0; transform: translateX(-50%); }
+.js-comparison-container .dragger::before { content: ""; position: absolute; height: 100%; width: 2px; background: #fff; left: 50%; box-shadow: 0 0 8px #0007; }
+.js-comparison-container:focus-visible { outline: 3px solid #ECCD82; outline-offset: 3px; }
+.bde-faq__item--active .bde-faq__icon--inactive { display: none; }
+.bde-faq__item:not(.bde-faq__item--active) .bde-faq__icon--active { display: none; }
+@media(prefers-reduced-motion:reduce) {
+  .bde-header-builder { transition: none !important; }
+  .bde-animated-heading__wrapper { animation: none !important; }
+}
+
+
+/* Port of the original entrance settings: 500ms, 100px/deg,
+   trigger as the element approaches the lower viewport (120px margin). */
+[data-prunus-reveal] { visibility: visible !important; }
+html.prunus-motion-active [data-prunus-reveal]:not(.prunus-revealed) {
+  opacity: 0;
+  visibility: hidden !important;
+}
+html.prunus-motion-active [data-prunus-reveal] {
+  transition: transform .5s ease-out, opacity .5s ease-out,
+    visibility 0s linear .5s;
+  will-change: transform, opacity;
+}
+html.prunus-motion-active [data-prunus-reveal].prunus-revealed {
+  opacity: 1;
+  visibility: visible !important;
+  transform: none !important;
+  transition: transform .5s ease-out, opacity .5s ease-out;
+  will-change: auto;
+}
+html.prunus-motion-active [data-prunus-reveal="slideLeft"]:not(.prunus-revealed) {transform:translate3d(-100px,0,0)}
+html.prunus-motion-active [data-prunus-reveal="slideRight"]:not(.prunus-revealed) {transform:translate3d(100px,0,0)}
+html.prunus-motion-active [data-prunus-reveal="slideUp"]:not(.prunus-revealed) {transform:translate3d(0,100px,0)}
+html.prunus-motion-active [data-prunus-reveal="slideDown"]:not(.prunus-revealed) {transform:translate3d(0,-100px,0)}
+html.prunus-motion-active [data-prunus-reveal="flipUp"]:not(.prunus-revealed) {transform:perspective(2500px) rotateX(-100deg)}
+html.prunus-motion-active [data-prunus-reveal="flipDown"]:not(.prunus-revealed) {transform:perspective(2500px) rotateX(100deg)}
+html.prunus-motion-active [data-prunus-reveal="flipLeft"]:not(.prunus-revealed) {transform:perspective(2500px) rotateY(-100deg)}
+html.prunus-motion-active [data-prunus-reveal="flipRight"]:not(.prunus-revealed) {transform:perspective(2500px) rotateY(100deg)}
+html.prunus-motion-active [data-prunus-reveal="zoomIn"]:not(.prunus-revealed) {transform:scale(.6)}
+html.prunus-motion-active [data-prunus-reveal="zoomOut"]:not(.prunus-revealed) {transform:scale(1.2)}
+.prunus-animated-phrase{display:inline-block;transform-origin:50% 0;animation:prunus-flip-phrase 4s ease-in-out infinite}
+@keyframes prunus-flip-phrase{0%,44%,100%{transform:rotateX(0)}49%{transform:rotateX(9deg)}54%{transform:rotateX(0)}}
+@media(min-width:1120px){.prunus-sticky{position:sticky;top:30vh}}
+@media(prefers-reduced-motion:reduce){
+  html.prunus-motion-active [data-prunus-reveal]{opacity:1!important;visibility:visible!important;transform:none!important;transition:none!important}
+  .prunus-animated-phrase{animation:none!important}
+}
+
+/* Client portal access is understated and placed with the existing footer links. */
+.bde-div-26-113 .prunus-footer-login{
+  display:inline-block;color:#526458;text-decoration:underline;text-underline-offset:4px;
+  font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:14px;
+}
+.bde-div-26-113 .prunus-footer-login:hover{color:#2E2E2E}
+.bde-div-26-113 .prunus-footer-login:focus-visible{outline:2px solid #2E2E2E;outline-offset:4px}
+@media(max-width:1023px){.bde-div-26-113 .prunus-footer-login{font-size:15px}}
+
+/* Independent no-autoplay-until-click video embed */
+lite-youtube{position:relative;display:block;aspect-ratio:16/9;background-size:cover;background-position:center;cursor:pointer}
+lite-youtube:focus-visible{outline:3px solid #ECCD82;outline-offset:3px}
+lite-youtube.prunus-video-playing{background-image:none!important}
+lite-youtube.prunus-video-playing iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+lite-youtube.prunus-video-playing::before,
+lite-youtube.prunus-video-playing::after{display:none!important}
+
+
+/* No additional top-level menu items: protect the original logo and spacing. */
+.bde-image-27-105{flex-shrink:0}
+.breakdance-dropdown-links > .prunus-added-dropdown-item .breakdance-dropdown-link:focus-visible{
+  outline:2px solid #2E2E2E;outline-offset:3px;
+}
+
+
+/* Original mobile offcanvas stacking: independent of the removed builder JS. */
+@media(max-width:1119px){
+  .bde-header-builder-27-100{z-index:1000;isolation:isolate}
+  .bde-menu-27-139{position:relative;z-index:1001}
+  .bde-menu-27-139 .breakdance-menu--offcanvas.breakdance-responsive-menu--open .breakdance-menu-list{
+    z-index:1005;
+    visibility:visible;
+    pointer-events:auto;
+    opacity:1;
+  }
+  .bde-menu-27-139 .breakdance-dropdown-floater[aria-hidden="true"]{
+    pointer-events:none;display:none;
+  }
+  /* Expanded submenus flow under their own label; absolute positioning
+     would cover the next menu's toggle and steal mobile taps. */
+  .bde-menu-27-139 .breakdance-dropdown-floater{
+    position:static!important;top:auto!important;left:auto!important;
+    right:auto!important;min-width:0!important;width:100%!important;
+    transform:none!important;transition:none!important;
+  }
+  .bde-menu-27-139 .breakdance-dropdown-floater[aria-hidden="false"]{
+    pointer-events:auto;display:block;visibility:visible;opacity:1;
+  }
+}
+
+
+/* White brush highlight behind "Websites built"; no surviving gold.
+   Force both the original annotation and the separately animated phrase
+   to white even when an older per-page stylesheet loads later. */
+.bde-dual-heading-35-625 .dual-heading--secondary.js-annotate{
+  position:relative;
+  background-color:transparent!important;
+  background-image:linear-gradient(96deg,#fff 0%,#fff 100%)!important;
+  background-repeat:no-repeat!important;
+  background-position:0 78%!important;
+  background-size:0% 80%;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+  transition:background-size 2.25s cubic-bezier(.17,.55,.36,1);
+}
+.bde-dual-heading-35-625 .dual-heading--secondary.js-annotate.pm-highlight-drawn{background-size:100% 80%}
+.bde-animated-heading-35-469 .bde-animated-heading__word,
+.bde-animated-heading-35-469 .bde-animated-heading__wrapper .bde-animated-heading__word{
+  background-color:#fff!important;
+  background-image:none!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .bde-dual-heading-35-625 .dual-heading--secondary.js-annotate{background-size:100% 80%;transition:none}
+}
+/* Sticky scroll-up navigation, matching the approved header's dimensions. */
+.bde-header-builder.pm-scroll-header{
+  position:fixed!important;top:0!important;left:0!important;right:0!important;
+  width:100%!important;z-index:1000!important;
+  transition:transform .28s cubic-bezier(.2,.7,.2,1),background-color .24s ease!important;
+  will-change:transform;transform:translateY(0)
+}
+.bde-header-builder.pm-scroll-header.pm-header-hidden{transform:translateY(-110%)!important}
+.bde-header-builder.pm-scroll-header.pm-header-scrolled:not(.bde-header-builder--overlay){
+  box-shadow:0 7px 26px rgba(33,58,48,.1)
+}
+.bde-header-builder.pm-scroll-header:focus-within{transform:translateY(0)!important}
+html.prunus-menu-open .bde-header-builder.pm-scroll-header{transform:translateY(0)!important}
+@media(prefers-reduced-motion:reduce){
+  .bde-header-builder.pm-scroll-header{transition:none!important;will-change:auto}
+}

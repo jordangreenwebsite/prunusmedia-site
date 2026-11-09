@@ -1,0 +1,12 @@
+---
+import { getCollection } from 'astro:content';
+import { getLegacyDocument } from '../lib/exported-pages.mjs';
+import { sortProjects, projectCardsHtml } from '../lib/portfolio-ui.mjs';
+
+const all = sortProjects(await getCollection('work', ({ data }) => !data.draft));
+const featured = all.filter((project) => project.data.featured).slice(0,3);
+if (featured.length !== 3) throw new Error('Expected exactly three featured portfolio projects');
+const document = getLegacyDocument('index.html')
+  .replace('<!--PRUNUS_RECENT_WORK_CARDS-->', projectCardsHtml(featured));
+---
+<Fragment set:html={document} />

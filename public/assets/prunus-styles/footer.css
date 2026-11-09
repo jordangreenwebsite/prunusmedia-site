@@ -1,0 +1,42 @@
+
+/* Prunus Media's independent, semantic, responsive footer. */
+.pm-site-footer{position:relative;isolation:isolate;background:#213a30;color:#f8f2e9;overflow:hidden;font-family:"Space Grotesk",Arial,sans-serif}
+.pm-site-footer *{box-sizing:border-box}
+.pm-site-footer:before{content:"";position:absolute;pointer-events:none;right:-200px;top:130px;width:680px;height:680px;border:1px solid rgba(218,230,204,.09);border-radius:50%;box-shadow:0 0 0 80px rgba(218,230,204,.018),0 0 0 160px rgba(218,230,204,.013)}
+.pm-footer-inner{position:relative;margin:0 auto;padding:68px 48px 23px;max-width:1380px}
+.pm-footer-invite{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:35px;align-items:center;background:#edf0e5;color:#233b31;border-radius:22px;padding:48px 55px;margin-bottom:74px;box-shadow:0 24px 50px rgba(0,0,0,.09)}
+.pm-footer-kicker{font:600 12px/1.4 "Space Grotesk",sans-serif;letter-spacing:.19em;color:#607966;margin:0 0 15px!important}
+.pm-footer-invite h2{font-family:"Playfair Display",Georgia,serif!important;line-height:1.08!important;font-size:clamp(31px,4vw,57px)!important;letter-spacing:-.025em;max-width:620px;margin:0 0 17px!important;color:#263e31!important}
+.pm-footer-invite h2 em{font-style:italic;color:#718b73}
+.pm-footer-invite p:not(.pm-footer-kicker){font:400 18px/1.5 "Alegreya Sans",Arial,sans-serif;max-width:610px;margin:0!important;color:#46594d}
+.pm-footer-actions{display:flex;flex-direction:column;align-items:stretch;min-width:238px;gap:13px}
+.pm-footer-actions a{display:flex;align-items:center;justify-content:space-between;gap:18px;border-radius:5px;font:600 13px/1.45 "Space Grotesk",sans-serif;padding:15px 17px;text-decoration:none!important;transition:background .2s,color .2s,transform .2s}
+.pm-footer-actions a:hover{transform:translateY(-2px)}
+.pm-footer-primary{background:#233b31;color:#fff!important}
+.pm-footer-primary:hover{background:#476a52}
+.pm-footer-secondary{border:1px solid #8fa797;color:#263e31!important}
+.pm-footer-secondary:hover{background:#dbe5d7}
+.pm-footer-grid{display:grid;grid-template-columns:minmax(245px,1.65fr) repeat(3,minmax(140px,1fr));gap:36px;padding:0 4px 56px}
+.pm-footer-logo-link{display:inline-flex;align-items:center;gap:13px;color:#fff!important;text-decoration:none!important;font:600 24px/1 "Space Grotesk",sans-serif;letter-spacing:-.055em}
+.pm-footer-logo-link>span span{font-weight:300}
+.pm-footer-logo-link img{width:58px;height:58px;object-fit:contain;background:#f7f1e9;border-radius:50%;padding:6px;flex-shrink:0}
+.pm-footer-brand p{font:400 18px/1.54 "Alegreya Sans",Arial,sans-serif;max-width:290px;color:#d9e2d7;margin:20px 0 11px}
+.pm-footer-brand p strong{font-weight:600;color:#f2e9d9}
+.pm-footer-brand .pm-footer-geography{font-size:15px;color:#b4c8b8;margin-top:0}
+.pm-footer-social{display:flex;gap:22px;flex-wrap:wrap;margin-top:24px}
+.pm-site-footer a{color:#e5ede3;text-decoration:none}
+.pm-site-footer a:hover{color:#f3d68a;text-decoration:underline;text-underline-offset:4px}
+.pm-footer-social a{font-size:13px;border-bottom:1px solid rgba(245,236,220,.35);padding-bottom:6px}
+.pm-footer-links{display:flex;flex-direction:column;gap:15px;padding-top:16px}
+.pm-footer-links h3{color:#ecca88!important;font:600 12px/1.4 "Space Grotesk",sans-serif!important;letter-spacing:.13em;text-transform:uppercase;margin:0 0 11px!important}
+.pm-footer-links a{font:400 14px/1.45 "Space Grotesk",sans-serif;color:#dae6db}
+.pm-footer-contact{display:flex;justify-content:space-between;align-items:center;gap:16px;border-top:1px solid rgba(241,238,226,.16);border-bottom:1px solid rgba(241,238,226,.16);padding:26px 4px;flex-wrap:wrap}
+.pm-footer-contact span{font:400 18px/1.5 "Alegreya Sans",sans-serif;color:#e1e5d8}
+.pm-footer-contact a{font:500 clamp(15px,1.6vw,21px)/1.4 "Space Grotesk",sans-serif;color:#f7eccd;overflow-wrap:anywhere}
+.pm-footer-bottom{display:flex;justify-content:space-between;align-items:center;gap:25px;flex-wrap:wrap;padding:25px 4px 3px;color:#a4b8a8;font:400 12px/1.6 "Space Grotesk",sans-serif}
+.pm-footer-legal{display:flex;gap:24px;flex-wrap:wrap}
+.pm-footer-legal a{font-size:12px;color:#b9c9b9}
+.pm-site-footer :focus-visible{outline:2px solid #ecca88;outline-offset:4px}
+@media(max-width:1070px){.pm-footer-inner{padding:42px 30px 22px}.pm-footer-invite{padding:35px;gap:28px}.pm-footer-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}.pm-footer-brand{grid-column:span 3}}
+@media(max-width:670px){.pm-footer-inner{padding:25px 20px 19px}.pm-footer-invite{grid-template-columns:1fr;padding:29px 24px;gap:24px;margin-bottom:45px;border-radius:17px}.pm-footer-invite h2{font-size:37px!important}.pm-footer-actions{min-width:0}.pm-footer-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 24px;padding-bottom:35px}.pm-footer-brand{grid-column:span 2}.pm-footer-logo-link{font-size:22px}.pm-footer-links{gap:13px}.pm-footer-contact{padding:26px 0}.pm-footer-contact a{font-size:16px}.pm-footer-bottom{align-items:flex-start;flex-direction:column;gap:14px}.pm-footer-legal{gap:17px}}
+@media(prefers-reduced-motion:reduce){.pm-footer-actions a{transition:none}.pm-footer-actions a:hover{transform:none}}

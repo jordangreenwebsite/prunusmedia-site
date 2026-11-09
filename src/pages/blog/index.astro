@@ -1,0 +1,24 @@
+---
+import { getCollection } from 'astro:content';
+import EditorialLayout from '../../layouts/EditorialLayout.astro';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime());
+---
+<EditorialLayout title="Web Design and SEO Insights" description="Practical website design, SEO and business growth articles from Prunus Media, written for UK businesses." pathname="/blog/">
+  <p class="pm-editorial__eyebrow">Prunus Media / Journal</p>
+  <h1>Ideas worth putting into practice.</h1>
+  <p class="pm-editorial__intro">Research, website design, SEO and the decisions behind building a useful online presence. Written for business owners, not search engines.</p>
+  {posts.length ? <div class="pm-editorial__grid">
+    {posts.map((post) => <article class="pm-editorial__card">
+      {post.data.image ? <img src={post.data.image} alt={post.data.imageAlt} loading="lazy" /> : <div class="pm-editorial__card-image-empty" aria-hidden="true" />}
+      <div class="pm-editorial__card-inner">
+        <p class="pm-editorial__meta"><time datetime={post.data.publishedAt.toISOString()}>{post.data.publishedAt.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</time></p>
+        <h3>{post.data.title}</h3>
+        <p>{post.data.description}</p>
+        <a href={'/blog/' + post.id + '/'}>Read article →</a>
+      </div>
+    </article>)}
+  </div> : <p class="pm-editorial__empty">Our first article is on its way. This journal will collect practical advice and project lessons as we publish them.</p>}
+  <nav class="pm-editorial__nav" aria-label="Explore Prunus"><a href="/seo-agency-uk/">SEO services</a><a href="/website-design/">Website design</a><a href="/our-work/">Our work</a></nav>
+</EditorialLayout>

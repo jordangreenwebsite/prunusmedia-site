@@ -1,0 +1,14 @@
+---
+import { getLegacyDocument, getLegacyRoutes } from '../lib/exported-pages.mjs';
+
+export function getStaticPaths() {
+  return getLegacyRoutes().map(({ slug, filename }) => ({
+    params: { slug },
+    props: { filename }
+  }));
+}
+
+const { filename } = Astro.props;
+const document = getLegacyDocument(filename);
+---
+<Fragment set:html={document} />
