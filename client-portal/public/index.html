@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#172c37">
-  <meta name="description" content="Secure Prunus Media website client workspace.">
-  <title>Client workspace | Prunus Media</title>
+  <meta name="description" content="Secure shared client workspace for Prunus Media and UK Trade Websites.">
+  <title>Client sign in | Prunus Media &amp; UK Trade Websites</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
   <script src="/editorial-ui.js" defer></script>
@@ -14,36 +14,60 @@
 <body>
   <a class="skip" href="#main">Skip to main content</a>
   <header class="top">
-    <a class="wordmark" href="https://prunusmedia.com" aria-label="Prunus Media homepage"><span class="blossom" aria-hidden="true">✳</span> PRUNUS <strong>MEDIA</strong></a>
-    <span class="top-label">CLIENT WORKSPACE</span>
+    <a class="wordmark" href="/" aria-label="Client portal home">CLIENT <strong>PORTAL</strong></a>
+    <span class="top-label">PRUNUS MEDIA <span aria-hidden="true">·</span> UK TRADE WEBSITES</span>
     <button type="button" id="logout" class="text-action" hidden>Sign out</button>
   </header>
   <main id="main">
-    <section id="login-panel" class="login-wrap">
-      <p class="eyebrow">YOUR WEBSITE. IN ONE PLACE.</p>
-      <h1>Welcome to your client workspace.</h1>
-      <p class="lede">See your website enquiries, request a change, or send over a complete blog draft for Prunus Media to review.</p>
-      <div class="auth-card">
-        <form id="email-form">
-          <h2>Sign in with your email</h2>
-          <p>We'll send a six-digit, one-time code. No password required.</p>
-          <label for="email">Account email</label>
-          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@yourbusiness.co.uk" required maxlength="254">
-          <button type="submit" class="primary">Send sign-in code</button>
-        </form>
-        <form id="code-form" hidden>
-          <h2>Enter your code</h2>
-          <p>Check your email. Codes are valid for 10 minutes.</p>
-          <label for="code">Six-digit code</label>
-          <input id="code" name="code" inputmode="numeric" type="text" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required>
-          <button class="primary" type="submit">Sign in</button>
-          <button id="change-email" class="text-action" type="button">Use a different email</button>
-        </form>
-        <p id="login-message" class="message" role="status" aria-live="polite"></p>
+    <section id="login-panel" class="login-wrap shared-login" aria-labelledby="shared-login-heading">
+  <div class="shared-login-intro">
+    <p class="eyebrow">ONE SECURE CLIENT WORKSPACE</p>
+    <h1 id="shared-login-heading">Everything your website needs. In one place.</h1>
+    <p class="lede">Whether you're with Prunus Media or UK Trade Websites, sign in to see your enquiries, website updates, files and blog plans.</p>
+  </div>
+  <div class="brand-split" aria-label="Two website agencies, one secure client login">
+    <section class="brand-half brand-half-prunus" aria-labelledby="prunus-brand-title">
+      <span class="brand-kicker">WEB DESIGN · SEO · CREATIVE</span>
+      <div class="brand-lockup brand-lockup-prunus" id="prunus-brand-title">
+        <span class="brand-flower" aria-hidden="true">✿</span><span>PRUNUS <strong>MEDIA</strong></span>
       </div>
-      <p class="hint">Access is by invitation. Contact Prunus Media if your account hasn't been activated.</p>
+      <p class="brand-description">Thoughtful websites, ongoing search growth and the details that make a business stand out.</p>
+      <a href="https://prunusmedia.com/" class="brand-website">Visit Prunus Media <span aria-hidden="true">→</span></a>
     </section>
-    <section id="dashboard-panel" class="dashboard" hidden>
+    <section class="brand-half brand-half-trades" aria-labelledby="trades-brand-title">
+      <span class="brand-kicker">WEBSITES BUILT FOR YOUR TRADE</span>
+      <div class="brand-lockup brand-lockup-trades" id="trades-brand-title">
+        <span class="trades-monogram" aria-hidden="true">UK</span><span>TRADE<br>WEBSITES</span>
+      </div>
+      <p class="brand-description">Straightforward websites and practical support to help UK trades get found and win more work.</p>
+      <a href="https://uktradewebsites.co.uk/" class="brand-website">Visit UK Trade Websites <span aria-hidden="true">→</span></a>
+    </section>
+  </div>
+  <div class="auth-card shared-auth-card">
+    <div class="auth-card-intro">
+      <p class="eyebrow">SECURE CLIENT ACCESS</p>
+      <p>One login for both brands. You only see the businesses you're authorised to access.</p>
+    </div>
+    <form id="email-form">
+      <h2>Sign in with your email</h2>
+      <p>We'll send a six-digit, one-time code. No password required.</p>
+      <label for="email">Account email</label>
+      <input id="email" name="email" type="email" autocomplete="email" placeholder="you@yourbusiness.co.uk" required maxlength="254">
+      <button type="submit" class="primary">Send sign-in code</button>
+    </form>
+    <form id="code-form" hidden>
+      <h2>Enter your code</h2>
+      <p>Check your inbox. Your code is valid for 10 minutes.</p>
+      <label for="code">Six-digit code</label>
+      <input id="code" name="code" inputmode="numeric" type="text" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required>
+      <button class="primary" type="submit">Sign in to my workspace</button>
+      <button id="change-email" class="text-action" type="button">Use a different email</button>
+    </form>
+    <p id="login-message" class="message" role="status" aria-live="polite"></p>
+  </div>
+  <p class="hint shared-login-help">Access is by invitation. Need help? <a href="mailto:contactprunusmedia@gmail.com">Email the Prunus support team</a>.</p>
+</section>
+        <section id="dashboard-panel" class="dashboard" hidden>
       <div class="dashboard-head">
         <div>
           <p class="eyebrow">YOUR PRUNUS WORKSPACE</p>
@@ -186,6 +210,6 @@
       </section>
     </section>
   </main>
-  <footer class="footer"><span>Prunus Media · Secure client workspace</span><a href="https://prunusmedia.com/contact/">Need help? Contact us</a></footer>
+  <footer class="footer"><span>Prunus Media &amp; UK Trade Websites · Secure client workspace</span><a href="mailto:contactprunusmedia@gmail.com">Need help? Email us</a></footer>
 </body>
 </html>
