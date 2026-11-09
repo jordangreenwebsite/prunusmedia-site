@@ -213,8 +213,29 @@ export function cleanPageHtml(originalHtml, filename) {
   const scripts = '<script defer src="/assets/prunus-scripts/prunus-interactions.js"></script>' +
     '<script defer src="/assets/prunus-scripts/prunus-cursor.js"></script>';
   if (html.includes('</body>')) html = html.replace('</body>', scripts + '\n</body>');
+  // In critical inline CSS the keyboard-only link is visually clipped by
+  // default. This prevents a permanently visible link if Cloudflare/browser
+  // caches an older shared stylesheet or the external CSS arrives late.
+  // Clipping instead of display:none retains keyboard focusability.
+  const skipLinkCriticalCss = '<style id="pm-skip-link-critical">' +
+    '.pm-skip-link:not(:focus):not(:focus-visible){' +
+    'position:absolute!important;top:0!important;left:0!important;' +
+    'width:1px!important;height:1px!important;padding:0!important;' +
+    'margin:-1px!important;border:0!important;overflow:hidden!important;' +
+    'white-space:nowrap!important;clip:rect(0,0,0,0)!important;' +
+    'clip-path:inset(50%)!important;transform:none!important;}' +
+    '.pm-skip-link:focus,.pm-skip-link:focus-visible{' +
+    'display:inline-block!important;position:fixed!important;top:12px!important;' +
+    'left:12px!important;z-index:2147483000!important;width:auto!important;' +
+    'height:auto!important;padding:11px 18px!important;margin:0!important;' +
+    'overflow:visible!important;clip:auto!important;clip-path:none!important;' +
+    'white-space:normal!important;transform:none!important;' +
+    'background:#2e2e2e!important;color:#fff!important;' +
+    'border:2px solid #fff!important;outline:3px solid #eccd82!important;}' +
+    '</style>';
+  if (html.includes('</head>')) html = html.replace('</head>', skipLinkCriticalCss + '\n</head>');
   if (html.includes('</head>')) html = html.replace('</head>',
-    '<link rel="stylesheet" href="/assets/prunus-styles/components.css?v=white-headings-20261109">\n' +
+    '<link rel="stylesheet" href="/assets/prunus-styles/components.css?v=skip-link-critical-20261109">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/portfolio.css">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/footer.css">\n</head>');
   return html;
