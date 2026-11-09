@@ -117,9 +117,9 @@ export function improveLegacySeo(html,filename){
     const original=/<h2 class="bde-dual-heading-35-625 bde-dual-heading">([\s\S]*?)<\/h2>/i;
     if(!original.test(html))throw new Error('Cannot locate homepage hero for H1 correction');
     html=html.replace(original,(_,inner)=>
-      '<h1 class="bde-dual-heading-35-625 bde-dual-heading">'+
-      inner.replace('to become your best source of new business.',
-        'with SEO to bring UK businesses more enquiries.')+'</h1>');
+      // Semantic H1 with the previously approved H2 visual preset and copy.
+      '<h1 class="bde-h2 bde-dual-heading-35-625 bde-dual-heading">'+
+      inner+'</h1>');
   }
   if(filename==='contact/index.html'){
     html=html.replace(

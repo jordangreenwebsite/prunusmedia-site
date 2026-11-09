@@ -42,8 +42,8 @@ for(const {name,source} of pages){
 const homepage=pages.find(p=>p.name==='//')?.source;
 if(!homepage)failures.push('home page not found');
 else{
- const h1=homepage.match(/<h1 class="bde-dual-heading-35-625\b[\s\S]*?<\/h1>/i);
- if(!h1||!h1[0].includes('UK businesses more enquiries')){
+ const h1=homepage.match(/<h1 class="bde-h2 bde-dual-heading-35-625\b[\s\S]*?<\/h1>/i);
+ if(!h1||!h1[0].includes('to become your best source of new business.')){
    failures.push('homepage SEO H1 missing');
    console.error('HOME DEBUG '+JSON.stringify({
      h1tags:homepage.match(/<h1[^>]*>/gi),
