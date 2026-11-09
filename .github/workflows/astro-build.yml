@@ -1,7 +1,8 @@
-name: Astro migration build checks
+name: Prunus Media Astro build and production checks
 on:
   push:
     branches:
+      - main
       - astro-preservation-rebuild-2026-11-06
   pull_request:
     paths:
@@ -9,6 +10,8 @@ on:
       - 'scripts/**'
       - 'package.json'
       - 'astro.config.mjs'
+      - 'public/**'
+      - '_redirects'
       - '.github/workflows/astro-build.yml'
 
 jobs:
@@ -51,6 +54,8 @@ jobs:
           test -f dist/contact/index.html
           test -f dist/seo-agency-uk/free-seo-audit/index.html
           test -f dist/blog/index.html
+          test -f dist/client-login/index.html
+          if grep -qE '^/client-login/.*portal\.prunusmedia\.com' dist/_redirects; then echo 'Inactive client portal must not redirect'; exit 1; fi
           grep -q 'href="/blog/"' dist/index.html
           grep -q 'href="/our-work/"' dist/index.html
           grep -q 'prunus-added-dropdown-item' dist/index.html
