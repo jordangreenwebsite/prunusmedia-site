@@ -48,3 +48,11 @@ Astro now transforms committed exported pages to replace WordPress/Breakdance ru
 The conversion is **not yet complete**: old source HTML and exported CSS are still read at build time as the reference for the preserved layouts. It is not sufficient simply to rename legacy CSS files. Replace the exported layout and compiled rules with maintainable Astro components and authored styles before marking this a dependency-free rebuild. The original Breakdance/WordPress plugin JavaScript should never be restored to the generated pages.
 
 After comparison approval, merge to `main` and configure the production Cloudflare Pages build as `npm run build` with output directory `dist`. Do not point the custom domain at an unreviewed feature branch.
+
+## Approved homepage/gallery/footer project changes (2026-11-09)
+
+- Work cards are authored in `src/content/work/*.md`, using `status`, optional `completedAt` (verified date only), `priority` (display curation when unknown), and `featured` for exactly 3 homepage cards. `addedAt` is a portfolio publish date, **not** a fabricated launch date.
+- `src/lib/portfolio-ui.mjs` renders consistent cards on the homepage and portfolio index; `src/lib/standalone.mjs` replaces the one approved homepage section.
+- The footer lives in `src/lib/footer.mjs`, styled by `public/assets/prunus-styles/footer.css`. The same footer appears in legacy pages and editorial shell.
+- Keep `/client-login/` as a **noindex** holding/entry route until the separate Cloudflare Worker PR #2 is deployed and verified. Once it is genuinely operational, set `PUBLIC_PRUNUS_PORTAL_ACTIVE=true` in the marketing Pages project and rebuild; do not override DNS or activate this merely to show a working link.
+- UI screenshot artefacts from GitHub Actions include full recent-work gallery and footer at desktop/mobile sizes. Review visually before production merge.

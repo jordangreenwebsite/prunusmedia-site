@@ -18,7 +18,7 @@ Never overwrite the production `main` or switch Cloudflare configuration while p
 - Type families already loaded: Space Grotesk, Alegreya Sans, Playfair Display. Keep weights, sizes and letter spacing from legacy styles.
 - Responsive: preserve desktop, tablet and mobile hierarchy, margins, navigation collapse, hover/focus/click behaviour and the sticky/scroll header.
 - Navigation: retain the same order, names, working dropdowns and destinations until asked otherwise.
-- Footer: preserve design, social links, email, existing copy, map, and layout.
+- Footer: **approved exception 2026-11-09** — replace the original weak footer with one responsive, semantic, SEO-conscious footer, consistent across legacy and editorial pages. Include real service links, contact, portfolio, blog, social profiles, and discreet Client login at the very bottom. No fake claims, fake location data, or broken policy pages.
 - Industry pages are intentionally distinct in tone and visual design (accountants, private clinics, physiotherapists); never impose a generic shared hero on them.
 
 ## Source inventory — must survive
@@ -80,3 +80,13 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Removed the lingering `lozad()` call from Social Media Marketing and replaced its lazy-media and embedded YouTube behaviour with independent JavaScript.
 - First controlled screenshot comparisons still show differences requiring review. They are concentrated in dynamic page areas and particularly the mobile hero/header. This is **not** permission to merge or promise pixel-identical output.
 - Source CSS remains generated from the original exported design; replacing that compiled stylesheet with semantic authored CSS is the remaining core migration requirement.
+
+## Explicitly approved design changes — 2026-11-09
+
+- The homepage's old three-tab case-study/slider block under **Some of our recent work** may be completely replaced by a fresh gallery of **three recently completed selected projects** plus a link to `/our-work/`. Use the same Markdown work collection as the full gallery; do not show fictitious statistics or pretend designs are live when they are concepts.
+- The full `/our-work/` portfolio is expanded to include client work, older work, in-house products and clearly labelled concepts. Order verified completion dates newest first, and group undated projects separately; never imply that the date added to the portfolio is the project launch date.
+- The entire footer may be redesigned. Current implementation in `src/lib/footer.mjs` and `public/assets/prunus-styles/footer.css`. Keep the domain and identity credible, with useful linked service navigation and real social/contact destinations.
+- Restore the original hand-drawn gold highlight on **Websites built** in the homepage hero, using owned CSS and IntersectionObserver instead of the removed RoughNotation plugin.
+- Approved scroll header: visible through the first ~1,100 px. Past that point, it hides after downward scrolling and reveals when scrolling up, with escape hatches for reduced motion, keyboard focus, and open mobile navigation.
+- The footer's **Client login** points to `/client-login/`. Shared Worker code lives in **draft PR #2**. The portal `portal.prunusmedia.com` is **NOT confirmed live**, so the login route currently shows a noindex access-information page and must NOT automatically redirect until D1/R2, Resend OTP, secrets, custom domain, rate limits and two-client privacy verification have passed. Once those gates pass, set the Cloudflare Pages environment variable `PUBLIC_PRUNUS_PORTAL_ACTIVE=true` to enable the secure handoff, rebuild and test the redirected login; do not set this early.
+- All exceptions remain **preview-only** pending review. Keep live `main` and custom domains untouched until merge/cutover approval.
