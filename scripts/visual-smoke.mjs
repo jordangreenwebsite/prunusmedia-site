@@ -67,6 +67,30 @@ try {
       await Promise.race([page.evaluate(() => document.fonts.ready), new Promise((r) => setTimeout(r, 1200))]);
       await page.waitForTimeout(350);
       await page.screenshot({ path: path.join(output, test.label + '-astro.png'), fullPage: false, animations:'disabled', timeout: 6500 });
+
+      // Compare actual element geometry and computed typography whenever
+      // homepage pixel parity changes. This catches real layout drift
+      // separately from harmless image downsampling/compression.
+      const layoutProbe=async ()=>{
+        return page.evaluate(()=>{
+          function inspect(selector){
+            const el=document.querySelector(selector);
+            if(!el)return null;
+            const rect=el.getBoundingClientRect(),css=getComputedStyle(el);
+            return {tag:el.tagName,top:Math.round(rect.top),height:Math.round(rect.height),
+              width:Math.round(rect.width),font:css.fontSize,weight:css.fontWeight,
+              lineHeight:css.lineHeight,loading:el.loading||'',
+              image:el.currentSrc?.split('/').pop()||'',complete:el.complete||false};
+          }
+          return {heading:inspect('.bde-dual-heading-35-625'),
+            heroImage:inspect('.bde-image2-35-620'),
+            heroSection:inspect('.bde-section-35-253'),
+            logo:inspect('header .bde-image-27-105 img'),
+            firstFollowSection:inspect('.bde-section-35-109')};
+        });
+      };
+      if(test.route==='/')console.log('LAYOUT HOME LOCAL '+test.label+': '+JSON.stringify(await layoutProbe()));
+
       const title = await page.title();
       const visibleLinks = await page.locator('header a[href]').count();
       if (!title || visibleLinks < 4) failures.push(test.label + ': missing title or expected header navigation');
@@ -234,6 +258,7 @@ try {
         await Promise.race([page.evaluate(() => document.fonts.ready), new Promise((r) => setTimeout(r, 4000))]);
         await page.waitForTimeout(350);
         await page.screenshot({ path: path.join(output, test.label + '-live.png'), fullPage: false, animations:'disabled', timeout: 12000 });
+        if(test.route==='/')console.log('LAYOUT HOME LIVE '+test.label+': '+JSON.stringify(await layoutProbe()));
         // Same viewport and reduced-motion preference on both sites.
         const localImage = PNG.sync.read(readFileSync(path.join(output, test.label + '-astro.png')));
         const liveImage = PNG.sync.read(readFileSync(path.join(output, test.label + '-live.png')));
