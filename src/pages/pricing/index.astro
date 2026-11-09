@@ -2,17 +2,17 @@
 import EditorialLayout from '../../layouts/EditorialLayout.astro';
 const builds = [
   {
-    id:'build-10-15', eyebrow:'For growing businesses', name:'10–15 page website', price:'£995',
+    id:'build-10-15', eyebrow:'Launch / For growing businesses', name:'10–15 page website', price:'£995',
     summary:'A proper business website with enough space to explain your services and turn visitors into enquiries.',
     points:['Up to 15 planned pages','Custom responsive design','Service-focused site structure','Technical SEO at launch','Page titles, descriptions and internal links','Enquiry forms and conversion-ready calls to action','Analytics and Search Console setup']
   },
   {
-    id:'build-15-20', eyebrow:'Most popular', name:'15–20 page website', price:'£1,795',
+    id:'build-15-20', eyebrow:'Growth / Most popular', name:'15–20 page website', price:'£1,795',
     summary:'For established businesses ready to cover more services, customer questions and locations.',
     points:['Up to 20 structured pages','More detailed service and location coverage','Keyword and competitor research','Technical SEO and structured data','Conversion-led page layouts','Performance and accessibility checks','Analytics, Search Console and launch testing']
   },
   {
-    id:'build-custom', eyebrow:'Built around your business', name:'Fully custom website', price:'£2,995',
+    id:'build-custom', eyebrow:'Scale / Built around you', name:'Fully custom website', price:'£2,995',
     summary:'When a straightforward brochure site is not enough. We plan the scope around the job.',
     points:['Bespoke site architecture and design','Advanced features and integrations scoped together','Content migration or multi-location structures','Technical SEO built into development','Performance, security and accessibility planning','Custom quote and delivery milestones','A platform you can keep growing']
   }
@@ -58,7 +58,7 @@ const addons=[
           <a class="pm-pricing__button" href={'/contact/#interest='+build.id}>Talk to us about this build <span aria-hidden="true">→</span></a>
         </article>)}
       </div>
-      <p class="pm-pricing__fine-print">These are starting prices, not fixed quotes. Content production, complex integrations and unusual migrations are scoped before work begins. Hosting and ongoing SEO are separate from the one-off build.</p>
+      <p class="pm-pricing__fine-print">These are the established Prunus build starting prices, not fixed quotes. Content production, complex integrations and unusual migrations are scoped before work begins. New hosted website packages have a 12-month hosting term; SEO has a three-month minimum. Hosting is included during active SEO months and is £99/month when SEO is inactive.</p>
     </section>
 
     <section class="pm-pricing__rebuild" aria-labelledby="rebuild-heading">
@@ -77,6 +77,30 @@ const addons=[
         <a href="/our-work/residential-roofing-and-fascias/">Explore the roofing rebuild <span aria-hidden="true">↗</span></a>
         <small>Results are measured over time. We do not promise rankings or invent performance figures.</small>
       </aside>
+
+    </section>
+
+    <section class="pm-pricing__comparison" aria-label="Before and after example of a website rebuild">
+      <div class="pm-pricing__section-head">
+        <p class="pm-pricing__eyebrow">A real rebuild / Residential Roofing &amp; Fascias</p>
+        <h2>See the difference a thoughtful rebuild makes.</h2>
+        <p>We preserved the familiar character of the business while creating a clearer, more expandable website with dedicated service and location pages. Scroll through the two screenshots to compare the layouts.</p>
+      </div>
+      <div class="pm-pricing__comparison-grid">
+        <figure>
+          <figcaption>Before — existing website</figcaption>
+          <div class="pm-pricing__comparison-scroll" role="region" tabindex="0" aria-label="Scroll through original roofing website screenshot">
+            <img src="https://uktradewebsites.co.uk/case-studies/roofing/before.jpg" loading="lazy" decoding="async" alt="Original Residential Roofing and Fascias website before the rebuild" />
+          </div>
+        </figure>
+        <figure>
+          <figcaption>After — rebuilt Astro website</figcaption>
+          <div class="pm-pricing__comparison-scroll" role="region" tabindex="0" aria-label="Scroll through the rebuilt roofing website screenshot">
+            <img src="https://uktradewebsites.co.uk/case-studies/roofing/after.jpg" loading="lazy" decoding="async" alt="Rebuilt Residential Roofing and Fascias website with clearer layout and local services" />
+          </div>
+        </figure>
+      </div>
+      <p class="pm-pricing__comparison-foot">From the original website to a 17-page rebuild with 15 additional service and location pages. <a href="/our-work/residential-roofing-and-fascias/">Read the complete case study →</a></p>
     </section>
 
     <section class="pm-pricing__seo" aria-labelledby="seo-heading">
@@ -109,7 +133,7 @@ const addons=[
       <div>
         <p class="pm-pricing__eyebrow">One straightforward rate</p>
         <h2 id="hosting-heading">Hosting &amp; technical upkeep</h2>
-        <p>Managed hosting, SSL, basic security and technical upkeep for your Prunus website. Content edits, additional development and SEO campaigns are separately agreed.</p>
+        <p>Managed hosting, SSL, basic security and technical upkeep for your Prunus website. New hosted website builds have a 12-month minimum hosting term. Content edits and additional development are separately agreed.</p>
       </div>
       <div class="pm-pricing__hosting-cost">
         <strong>£99 <small>/month</small></strong>
