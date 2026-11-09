@@ -71,3 +71,16 @@
 @media(max-width:1000px){.pm-pricing__builds{grid-template-columns:1fr 1fr}.pm-pricing__build:last-child{grid-column:1/-1}.pm-pricing__build h3{min-height:auto}.pm-pricing__summary{min-height:auto}.pm-pricing__addons{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.pm-pricing__hero{padding-bottom:30px}.pm-pricing__builds,.pm-pricing__addons,.pm-pricing__rebuild,.pm-pricing__seo{grid-template-columns:1fr}.pm-pricing__build:last-child{grid-column:auto}.pm-pricing__section{margin-bottom:55px}.pm-pricing__rebuild{margin:0 0 55px;padding:24px;gap:21px}.pm-pricing__seo{margin-bottom:55px}.pm-pricing__hosting{flex-direction:column;align-items:flex-start;gap:10px;padding:30px 0;margin-bottom:55px}.pm-pricing__hosting-cost{align-items:flex-start;min-width:0;text-align:left}.pm-pricing__final{margin-top:0}.pm-pricing__hero h1{font-size:clamp(2.45rem,10vw,4.2rem)}}
 @media(prefers-reduced-motion:reduce){.pm-pricing__button{transition:none}.pm-pricing__button:hover{transform:none}}
+
+/* Genuine roofing transformation on the pricing page. Screenshots remain scrollable. */
+.pm-pricing__comparison{margin:-35px 0 75px;padding:35px 0;border-top:1px solid #d9e2d8;border-bottom:1px solid #d9e2d8}
+.pm-pricing__comparison .pm-pricing__section-head{max-width:900px}
+.pm-pricing__comparison-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.pm-pricing__comparison-grid figure{margin:0;background:#fffdf9;border:1px solid #d8ded5;border-radius:9px;overflow:hidden;box-shadow:0 7px 24px #1e332512}
+.pm-pricing__comparison-grid figcaption{padding:15px 18px;font:700 14px/1.45 "Space Grotesk",sans-serif;color:#314935}
+.pm-pricing__comparison-scroll{height:clamp(310px,37vw,520px);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;outline-offset:-3px;background:#fff}
+.pm-pricing__comparison-scroll img{display:block;width:100%;height:auto}
+.pm-pricing__comparison-scroll:focus-visible{outline:3px solid #31523a!important}
+.pm-pricing__comparison-foot{font-size:16px!important;line-height:1.55!important;margin:18px 0 0!important;color:#4d5a4e}
+.pm-pricing__comparison-foot a{font-weight:700;color:#30543a!important}
+@media(max-width:700px){.pm-pricing__comparison{margin:0 0 52px;padding:22px 0}.pm-pricing__comparison-grid{grid-template-columns:1fr}.pm-pricing__comparison-scroll{height:360px}}
