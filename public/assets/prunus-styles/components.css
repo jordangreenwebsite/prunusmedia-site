@@ -145,3 +145,20 @@ html.prunus-menu-open .bde-header-builder.pm-scroll-header{transform:translateY(
 @media(prefers-reduced-motion:reduce){
   .bde-header-builder.pm-scroll-header{transition:none!important;will-change:auto}
 }
+
+
+/* Responsive original hero artwork. Reuse committed resized originals;
+   the 1.5 MB full resolution background must not be a mobile prerequisite. */
+.bde-section-35-253{
+  background-image:url("/wp-content/uploads/2026/09/Prunus-main-hero-1536x864.png")!important;
+}
+@media(max-width:1199px){
+  .bde-section-35-253{
+    background-image:url("/wp-content/uploads/2026/09/Prunus-main-hero-1024x576.png")!important;
+  }
+}
+@media(max-width:767px){
+  .bde-section-35-253{
+    background-image:url("/wp-content/uploads/2026/09/Prunus-main-hero-768x432.png")!important;
+  }
+}

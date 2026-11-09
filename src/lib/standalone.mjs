@@ -9,6 +9,7 @@
  */
 import path from 'node:path';
 import { footerMarkup } from './footer.mjs';
+import { improveLegacySeo } from './seo-enhancements.mjs';
 export function routeAssetName(filename) {
   if (filename === 'index.html') return 'home';
   if (filename === '404.html') return 'not-found';
@@ -142,6 +143,9 @@ export function cleanPageHtml(originalHtml, filename) {
     html = html.replace(/(class="bde-button-35-359\b[\s\S]*?<a\b[^>]*\bhref=")\/industries\//i,
       '$1/our-work/');
   }
+
+  // Search semantics, non-fabricated structured data, and image accessibility.
+  html = improveLegacySeo(html, filename);
 
   // The header logo should never be deferred behind other lazy images.
   html = html.replace(/(<header\b[\s\S]*?<img\b[^>]*class="breakdance-image-object"[^>]*?)loading="lazy"/i,

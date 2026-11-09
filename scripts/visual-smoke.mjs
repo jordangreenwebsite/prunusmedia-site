@@ -106,6 +106,22 @@ try {
         failures.push(test.label + ': client login missing from footer');
       }
 
+
+      if(test.route==='/'){
+        const mainHeading=page.locator('h1.bde-dual-heading-35-625');
+        if(await mainHeading.count()!==1)failures.push(test.label+': one visible SEO hero H1 missing');
+        else if(!(await mainHeading.innerText()).includes('UK businesses more enquiries')){
+          failures.push(test.label+': homepage SEO H1 wording missing');
+        }
+        const imagesWithoutAlt=await page.locator('img:not([alt])').count();
+        if(imagesWithoutAlt)failures.push(test.label+': images lacking alt='+imagesWithoutAlt);
+        const heroImage=page.locator('img.bde-image2-35-620');
+        if(await heroImage.count()===1){
+          const dims=await heroImage.evaluate(el=>({w:el.getAttribute('width'),h:el.getAttribute('height'),src:el.getAttribute('src')}));
+          if(!dims.w||!dims.h||!dims.src.includes('768x543'))failures.push(test.label+': hero image sizing/accessibility regression');
+        }
+      }
+
       // The homepage is now fed by the same Astro content collection as the
       // full portfolio. The first verified project is the roofing rebuild.
       if (test.route === '/') {

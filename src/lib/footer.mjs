@@ -17,7 +17,7 @@ export const footerMarkup = String.raw`
     <div class="pm-footer-grid">
       <div class="pm-footer-brand">
         <a class="pm-footer-logo-link" href="/" aria-label="Prunus Media homepage">
-          <img src="/wp-content/uploads/2024/08/Copy-of-PRUNUS-MEDIA.png" alt="Prunus Media" width="68" height="68" loading="lazy">
+          <img src="/wp-content/uploads/2024/08/Copy-of-PRUNUS-MEDIA-300x300.png" alt="Prunus Media" width="68" height="68" loading="lazy">
           <span>Prunus <span>Media.</span></span>
         </a>
         <p>Websites and SEO built for businesses that want to be <strong>found, trusted and chosen.</strong></p>

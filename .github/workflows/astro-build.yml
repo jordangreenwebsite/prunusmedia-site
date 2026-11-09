@@ -35,6 +35,8 @@ jobs:
         run: node scripts/assert-export-parity.mjs
       - name: Verify every original scroll animation and footer/navigation structure
         run: node scripts/check-animation-coverage.mjs
+      - name: Validate H1s, meta uniqueness, image accessibility and structured data
+        run: node scripts/check-seo-output.mjs
       - name: Install Chromium for browser checks
         run: npx playwright install chromium --with-deps
       - name: Capture visual baselines and check browser interactions
