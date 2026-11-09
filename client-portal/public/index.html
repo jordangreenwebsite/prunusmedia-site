@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#172c37">
+  <meta name="description" content="Secure Prunus Media website client workspace.">
+  <title>Client workspace | Prunus Media</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to main content</a>
+  <header class="top">
+    <a class="wordmark" href="https://prunusmedia.com" aria-label="Prunus Media homepage"><span class="blossom" aria-hidden="true">✳</span> PRUNUS <strong>MEDIA</strong></a>
+    <span class="top-label">CLIENT WORKSPACE</span>
+    <button type="button" id="logout" class="text-action" hidden>Sign out</button>
+  </header>
+  <main id="main">
+    <section id="login-panel" class="login-wrap">
+      <p class="eyebrow">YOUR WEBSITE. IN ONE PLACE.</p>
+      <h1>Welcome to your client workspace.</h1>
+      <p class="lede">See your website enquiries, request a change, or send over a complete blog draft for Prunus Media to review.</p>
+      <div class="auth-card">
+        <form id="email-form">
+          <h2>Sign in with your email</h2>
+          <p>We'll send a six-digit, one-time code. No password required.</p>
+          <label for="email">Account email</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@yourbusiness.co.uk" required maxlength="254">
+          <button type="submit" class="primary">Send sign-in code</button>
+        </form>
+        <form id="code-form" hidden>
+          <h2>Enter your code</h2>
+          <p>Check your email. Codes are valid for 10 minutes.</p>
+          <label for="code">Six-digit code</label>
+          <input id="code" name="code" inputmode="numeric" type="text" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="one-time-code" required>
+          <button class="primary" type="submit">Sign in</button>
+          <button id="change-email" class="text-action" type="button">Use a different email</button>
+        </form>
+        <p id="login-message" class="message" role="status" aria-live="polite"></p>
+      </div>
+      <p class="hint">Access is by invitation. Contact Prunus Media if your account hasn't been activated.</p>
+    </section>
+    <section id="dashboard-panel" class="dashboard" hidden>
+      <div class="dashboard-head">
+        <div>
+          <p class="eyebrow">YOUR PRUNUS WORKSPACE</p>
+          <h1 id="business-title">Your website</h1>
+          <p id="business-subtitle">Website enquiries and requests, together in one place.</p>
+        </div>
+        <div class="dashboard-actions">
+          <a id="back-to-website" class="site-return" href="https://prunusmedia.com/" rel="noopener noreferrer" hidden>Back to my website</a>
+          <label class="account-picker" for="client-picker">Business
+            <select id="client-picker"></select>
+          </label>
+        </div>
+      </div>
+      <div class="tabs" role="navigation" aria-label="Workspace sections">
+        <a href="#enquiries">Enquiries</a><a href="#changes">Website changes</a><a href="#blogs">Blog submissions</a><a href="#profile">Business profile</a>
+      </div>
+      <div class="two-col">
+        <section id="enquiries" class="panel">
+          <div class="panel-heading"><div><p class="eyebrow">INCOMING ENQUIRIES</p><h2>Form submissions</h2></div><span id="lead-count" class="counter"></span></div>
+          <p class="subtle">New enquiries saved from connected website forms. Your usual email notifications continue. Contact each customer, then update the enquiry's progress.</p>
+          <div class="pipeline-toolbar">
+            <label for="lead-filter">Show enquiries
+              <select id="lead-filter">
+                <option value="all">All enquiries</option>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="dealt-with">Dealt with</option>
+              </select>
+            </label>
+            <p id="pipeline-summary" class="pipeline-summary" aria-live="polite"></p>
+          </div>
+          <div id="lead-list" class="item-list"></div>
+        </section>
+        <div class="stack">
+          <section id="changes" class="panel">
+            <p class="eyebrow">WEBSITE SUPPORT</p><h2>Request a change</h2>
+            <p class="subtle">Tell us the page and exactly what you want adjusted. We'll review it before making anything live.</p>
+            <form id="change-form" class="form-stack">
+              <label>What should we change?<input name="title" minlength="4" maxlength="150" required placeholder="e.g. Update our opening hours"></label>
+              <label>Page URL (optional)<input name="page_url" maxlength="500" placeholder="https://yourwebsite.co.uk/contact/"></label>
+              <label>Details<textarea name="body" rows="5" minlength="10" maxlength="8000" required placeholder="Paste your replacement wording or describe the exact change."></textarea></label>
+              <button class="primary" type="submit">Send change request</button>
+              <p class="message" id="change-message" role="status"></p>
+            </form>
+          </section>
+          <section id="blogs" class="panel">
+            <p class="eyebrow">CONTENT REQUESTS</p><h2>Submit a blog</h2>
+            <p class="subtle">Provide the full article as text or a PDF. We can help with presentation and SEO, then review before publishing.</p>
+            <form id="blog-form" class="form-stack">
+              <label>Blog title<input name="title" minlength="4" maxlength="150" required placeholder="e.g. Signs your gutters need replacing"></label>
+              <label>Full blog draft<textarea name="body" rows="7" maxlength="30000" placeholder="Paste your complete article here, or attach a PDF below."></textarea></label>
+              <label>Or upload your article as a PDF (maximum 5 MB)<input name="file" type="file" accept="application/pdf,.pdf"></label>
+              <button class="primary" type="submit">Send blog for review</button>
+              <p class="message" id="blog-message" role="status"></p>
+            </form>
+          </section>
+        </div>
+      </div>
+      <section id="requests-panel" class="panel">
+        <p class="eyebrow">CURRENT WORK</p><h2>Your requests &amp; drafts</h2>
+        <div id="request-list" class="item-list"></div>
+      </section>
+      <section id="profile" class="panel profile-panel">
+        <p class="eyebrow">ACCOUNT</p><h2>Business details</h2><div id="profile-details"></div>
+        <p class="subtle">Need a change to your business contact details? Send a change request above.</p>
+      </section>
+      <section id="admin-panel" class="panel" hidden>
+        <p class="eyebrow">PRUNUS ADMIN ONLY</p><h2>Connect a new website client</h2>
+        <p class="subtle">An invited client can sign in once created. Copy the generated integration token into that website's Cloudflare server-side secret. Never put it in browser code.</p>
+        <form id="client-form" class="form-stack admin-fields">
+          <label>Business name<input name="name" required minlength="3" maxlength="150" placeholder="Residential Roofing & Fascias"></label>
+          <label>Unique slug<input name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="80" placeholder="residential-roofing-fascias"></label>
+          <label>Website domain<input name="domain" required placeholder="www.example.co.uk"></label>
+          <label>Owner email<input name="owner_email" type="email" required placeholder="owner@example.co.uk"></label>
+          <button class="primary" type="submit">Create client &amp; site token</button>
+        </form>
+        <p id="admin-message" class="message" role="status"></p>
+        <div id="integration-token" class="token-output" hidden></div>
+        <h3>Email delivery alerts</h3><div id="notification-errors" class="item-list" aria-live="polite"></div>
+        <h3>Add a team member</h3>
+        <form id="member-form" class="inline-form">
+          <input name="email" type="email" required aria-label="Team member email" placeholder="colleague@example.co.uk">
+          <button class="secondary" type="submit">Invite by email</button>
+        </form>
+        <p class="subtle">The new member signs in with their email code. No invitation link is sent automatically.</p>
+        <p id="member-message" class="message" role="status"></p>
+      </section>
+    </section>
+  </main>
+  <footer class="footer"><span>Prunus Media · Secure client workspace</span><a href="https://prunusmedia.com/contact/">Need help? Contact us</a></footer>
+</body>
+</html>
