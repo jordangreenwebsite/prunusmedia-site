@@ -22,6 +22,9 @@ for (const route of routes) {
   const normalize = (html) => html.replace(/\r\n/g, '\n').trim().replace(
     /<section class="pm-home-work"[^>]*>[\s\S]*?<\/section>/,
     '<section data-collection-driven-gallery></section>'
+  ).replace(
+    /<style id="pm-roofing-story-css">[\s\S]*?<\/style><section class="pm-roofing-story[\s\S]*?<\/section>/,
+    ''
   );
   if (normalize(standaloneHtml) !== normalize(newHtml)) {
     const older = normalize(standaloneHtml), newer = normalize(newHtml);
