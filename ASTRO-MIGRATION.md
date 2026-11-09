@@ -58,3 +58,20 @@ After comparison approval, merge to `main` and configure the production Cloudfla
 - UI screenshot artefacts from GitHub Actions include full recent-work gallery and footer at desktop/mobile sizes. Review visually before production merge.
 
 - 2026-11-09 design correction: Jordan chose a **white**, not gold, animated highlight behind **Websites built** on the homepage. Keep the existing reveal timing and lettering.
+
+
+## SEO audit corrective pass — 9 November 2026
+
+Reference: owner-supplied Prunus Media free SEO audit (20 crawled pages, 59 checks):
+79 overall; 79 SEO / 63 Content / 81 Performance / 70 Accessibility / 97 Site Health; mobile Lighthouse 93; LCP 1.65 s; CLS 0.144; grade E transfer 3.44 MB.
+
+Source findings: homepage hero was H2 (no H1); original exported images lacked alt entirely; content-creation metadata duplicated brand-identity; archived WordPress JSON-LD used a dead WP search action; original header logo src was ~1 MB and requested sizes were inaccurately advertised as 100vw.
+
+Implemented in \`src/lib/seo-enhancements.mjs\` to preserve approved design:
+- Upgrade homepage existing heading to its sole H1 (no copy or animation change); repair Contact FAQ auxiliary H1 to H2.
+- Add \`alt\` to every exported \`img\`. Use meaningful descriptions only where the asset purpose is supported by its name/context. Repeated decorative marquee icons or unknown stock photographs receive \`alt=""\` (correct accessibility practice, not made-up descriptions).
+- Add trustworthy Organisation schema contactPoint (published email), UK service area and social profile \`sameAs\` links; remove obsolete WP SearchAction. No fabricated phone, physical address, opening hours or local-business subtype solely to improve an audit score.
+- Correct Content Creation description, speed up footer/header logo and decorative asset requests using present compressed WordPress variants, cap responsive image \`sizes\`, reserve the image hero aspect ratio and serve smaller mobile background art.
+- Add automated source/image/heading/schema tests. Test the live site's actual Lighthouse and SEO-auditor result AFTER deployment to determine remaining gaps; never claim a new score without a new audit.
+
+Do not perform a visual redesign or treat the E grade as a verified physical carbon emission measurement.

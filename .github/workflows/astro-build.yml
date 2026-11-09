@@ -31,6 +31,8 @@ jobs:
         run: npm run check:export
       - name: Build Astro
         run: npm run build
+      - name: Audit semantic H1, image alt, metadata, structured data and image sizing
+        run: node scripts/check-seo-output.mjs
       - name: Assert original exported HTML is preserved
         run: node scripts/assert-export-parity.mjs
       - name: Verify every original scroll animation and footer/navigation structure
