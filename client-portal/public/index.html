@@ -14,6 +14,7 @@
   <script src="/app.js" defer></script>
   <script src="/editorial-ui.js" defer></script>
   <script src="/workspace-ui.js" defer></script>
+  <script src="/integrations-ui.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to main content</a>
@@ -101,6 +102,7 @@
         <a class="workspace-nav-link" href="#agency-clients" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>All clients</span></a>
         <a class="workspace-nav-link" href="#enquiries" data-workspace-link data-role="client" data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Enquiries</span></a>
         <a class="workspace-nav-link" href="#calendar" data-workspace-link><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-calendar"></use></svg><span>Calendar</span></a>
+        <a class="workspace-nav-link" href="#seo" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Search insights</span></a>
         <a class="workspace-nav-link" href="#editorial" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Blog planner</span></a>
         <a class="workspace-nav-link" href="#research-queue" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Weekly research</span></a>
         <p class="sidebar-label">MANAGE</p>
@@ -127,6 +129,7 @@
           <a href="#changes" data-workspace-link data-role="client" data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg> Request a change</a>
           <a href="#blogs" data-workspace-link data-role="client" data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg> Submit a blog</a>
           <a href="#requests-panel" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg> Open requests</a>
+          <a href="#seo" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg> Search insights</a>
           <a href="#research-queue" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg> Weekly research</a>
           <a href="#admin-panel" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg> Administration</a>
           <a href="#profile" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg> Business details</a>
@@ -175,6 +178,26 @@
             </div>
             <p id="calendar-message" class="message" role="status" aria-live="polite"></p>
             <div id="calendar-upcoming" class="calendar-upcoming" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+      
+      <section id="seo" class="panel seo-panel" aria-labelledby="seo-heading">
+        <div class="panel-heading">
+          <div><p class="eyebrow">MEASURED SEARCH PERFORMANCE</p><h2 id="seo-heading">Google Search Console</h2></div>
+          <button id="seo-refresh" class="secondary" type="button">Refresh insights</button>
+        </div>
+        <p class="subtle">Actual Google Search Console data for the selected website, not estimated rankings. The most recent few days may not be final.</p>
+        <p id="seo-status" class="message" role="status" aria-live="polite">Add a Search Console property to connect performance data.</p>
+        <div id="seo-measurements" class="seo-measurements" hidden>
+          <p id="seo-period" class="meta"></p>
+          <div id="seo-metrics" class="seo-metric-grid"></div>
+          <h3>Top search queries</h3>
+          <div class="seo-table-wrap">
+            <table class="seo-query-table">
+              <thead><tr><th>Search query</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th></tr></thead>
+              <tbody id="seo-query-rows"></tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -273,7 +296,7 @@
           <div id="agency-clients" class="agency-grid"></div>
           <h3>Enquiry activity by date and area</h3><div id="agency-lead-areas" class="item-list"></div>
           <h3>Weekly blog research</h3>
-          <p class="subtle">Weekly jobs are queued automatically. A job is not marked researched until sources and findings have been checked. This queue does not publish articles.</p>
+          <p class="subtle">Weekly jobs automatically discover candidate sources once the Brave Search key is connected. Candidate snippets are <strong>not verified evidence</strong>. Check full sources and your client's real experience before completing research. No automatic articles are published.</p>
           <button id="research-queue-now" class="secondary" type="button">Check this week's research queue</button>
           <p id="research-message" class="message" role="status"></p>
           <div id="research-queue" class="item-list"></div>
@@ -286,6 +309,8 @@
             <label>Real service areas<input name="service_area" maxlength="350" placeholder="Cirencester, Swindon and nearby towns"></label>
             <label>Client's writing style<textarea name="voice_notes" rows="3" maxlength="2000" placeholder="Friendly, practical, first person, only verified examples from our work."></textarea></label>
             <label>Google Search Console link (optional)<input name="search_console_url" type="url" maxlength="600" placeholder="https://search.google.com/search-console/..."></label>
+            <label>Exact Search Console property (API)<input name="gsc_property" maxlength="250" placeholder="sc-domain:example.co.uk or https://www.example.co.uk/"></label>
+            <p class="subtle">Grant your separate portal Google service account access to the exact property above. Access is read-only and individual to this client.</p>
             <label class="checkline"><input type="checkbox" name="requires_blog_approval"> Client must approve blogs before scheduling</label>
             <label class="checkline"><input type="checkbox" name="allow_client_ideas" checked> Client can submit blog ideas</label>
             <label class="checkline"><input type="checkbox" name="allow_client_uploads" checked> Client can upload files</label>

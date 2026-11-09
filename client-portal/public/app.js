@@ -73,6 +73,7 @@ async function loadSession() {
     $('back-to-website').hidden=!hasClients;
     document.querySelector('.two-col').hidden=!hasClients;
     $('editorial').hidden=!hasClients;
+    $('seo').hidden=!hasClients;
     $('uploads').hidden=!hasClients;
     $('requests-panel').hidden=!hasClients;
     $('profile').hidden=!hasClients;
@@ -112,6 +113,7 @@ async function loadDashboard() {
     renderRequests(data.requests);
     renderProfile(data);
     await loadExtended();
+    await loadSeoInsights();
     if(state.session.admin) renderAgencyOverview();
   } catch (e) { showMessage('change-message',e.message,true); }
 }

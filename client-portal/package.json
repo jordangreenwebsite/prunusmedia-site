@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check src/index.js && node --check src/editorial.js && node --check public/app.js && node --check public/editorial-ui.js && node --check public/workspace-ui.js && node --experimental-sqlite --test tests/*.test.mjs",
+    "check": "node --check src/index.js && node --check src/editorial.js && node --check src/gsc.js && node --check src/research.js && node --check src/mcp.js && node --check src/github-pr.js && node --check public/app.js && node --check public/editorial-ui.js && node --check public/workspace-ui.js && node --check public/integrations-ui.js && node --experimental-sqlite --test tests/*.test.mjs",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "migrate": "wrangler d1 migrations apply prunus-website-clients --remote"

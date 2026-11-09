@@ -108,6 +108,7 @@ function renderEditorial(posts) {
         }catch(e){message.textContent=e.message;message.classList.add('error');}
         finally{busy(button,false);}
       });
+      renderGitHubPrControl(box,post);
     }
   }
 }
@@ -126,6 +127,7 @@ async function loadEditorial() {
     fields.namedItem('service_area').value=data.config.service_area||'';
     fields.namedItem('voice_notes').value=data.config.voice_notes||'';
     fields.namedItem('search_console_url').value=data.config.search_console_url||'';
+    fields.namedItem('gsc_property').value=data.config.gsc_property||'';
     fields.namedItem('requires_blog_approval').checked=!!data.config.requires_blog_approval;
     fields.namedItem('allow_client_ideas').checked=!!data.config.allow_client_ideas;
     fields.namedItem('allow_client_uploads').checked=!!data.config.allow_client_uploads;
@@ -189,6 +191,36 @@ function renderAgencyOverview() {
     const wrap=add(queue,'div',null,'item');
     add(wrap,'strong',job.client_name);
     add(wrap,'span','Week of '+job.week_start+' · '+job.status,'meta');
+    if(job.discovery_query)add(wrap,'p','Search: '+job.discovery_query,'meta');
+    let candidates=[];
+    try{candidates=JSON.parse(job.candidate_sources_json||'[]');}catch{}
+    if(candidates.length){
+      add(wrap,'p','Source candidates (not verified). Open the original pages, check facts and confirm they apply to the client.','subtle');
+      const refs=add(wrap,'div',null,'source-candidates');
+      for(const source of candidates.slice(0,10)){
+        try {
+          const url=new URL(source.url);
+          if(url.protocol!=='https:')continue;
+          const link=add(refs,'a',source.title||source.url,'source-candidate');
+          link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';
+          add(refs,'small',url.hostname+' · Candidate only. Not fact-checked.');
+        }catch{}
+      }
+    }
+    const discover=add(wrap,'button',candidates.length?'Refresh source candidates':'Find source candidates','secondary');
+    discover.type='button';
+    const discoverMessage=add(wrap,'p','','message');
+    discover.addEventListener('click',async()=>{
+      discover.disabled=true;
+      discoverMessage.classList.remove('error');
+      try{
+        const r=await jsonPost('/api/admin/research/'+job.id+'/discover',{});
+        discoverMessage.textContent=r.sources.length+' source candidates found. Check each page before marking the research complete.';
+        await loadAgencyOverview();
+      }catch(err){discoverMessage.textContent=err.message;discoverMessage.classList.add('error');}
+      finally{discover.disabled=false;}
+    });
+
     const form=add(wrap,'form',null,'form-stack');
     const text=labelField(form,'Source links and research notes','textarea',job.research_note,{name:'research_note',rows:2,maxLength:4000});
     const label=add(form,'label','Research stage'),select=add(label,'select');

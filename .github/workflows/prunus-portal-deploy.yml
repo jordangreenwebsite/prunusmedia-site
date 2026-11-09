@@ -32,6 +32,10 @@ jobs:
       PORTAL_ADMIN_EMAILS: ${{ secrets.PRUNUS_ADMIN_EMAILS }}
       PORTAL_ADMIN_NOTIFY_EMAIL: ${{ secrets.PRUNUS_ADMIN_NOTIFY_EMAIL }}
       PORTAL_OTP_FROM_EMAIL: ${{ vars.PRUNUS_OTP_FROM_EMAIL }}
+      PORTAL_GSC_SERVICE_ACCOUNT_JSON: ${{ secrets.PRUNUS_GSC_SERVICE_ACCOUNT_JSON }}
+      PORTAL_BRAVE_SEARCH_API_KEY: ${{ secrets.PRUNUS_BRAVE_SEARCH_API_KEY }}
+      PORTAL_MCP_ADMIN_TOKEN: ${{ secrets.PRUNUS_PORTAL_MCP_ADMIN_TOKEN }}
+      PORTAL_GITHUB_CONTENT_TOKEN: ${{ secrets.PRUNUS_GITHUB_CONTENT_TOKEN }}
     steps:
       - name: Check out reviewed production commit
         uses: actions/checkout@v4
@@ -48,9 +52,14 @@ jobs:
         run: |
           node --check src/index.js
           node --check src/editorial.js
+          node --check src/gsc.js
+          node --check src/research.js
+          node --check src/mcp.js
+          node --check src/github-pr.js
           node --check public/app.js
           node --check public/editorial-ui.js
           node --check public/workspace-ui.js
+          node --check public/integrations-ui.js
           node --check scripts/prepare-deploy.mjs
 
       - name: Verify tenant isolation and editorial workflow

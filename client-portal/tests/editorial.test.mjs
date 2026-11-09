@@ -2,7 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { createHash, generateKeyPairSync } from 'node:crypto';
+import { validProperty } from '../src/gsc.js';
+import { safeResult } from '../src/research.js';
 import worker from '../src/index.js';
 import { enqueueWeeklyResearch } from '../src/editorial.js';
 
@@ -10,7 +12,7 @@ const base='https://portal.prunusmedia.com';
 const A='00000000-0000-4000-8000-00000000000a', B='00000000-0000-4000-8000-00000000000b';
 function harness() {
   const sqlite=new DatabaseSync(':memory:');
-  for(const name of ['0001_initial.sql','0002_editorial.sql'])
+  for(const name of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql'])
     sqlite.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
   const db={
     prepare(sql) {
@@ -173,4 +175,29 @@ test('monthly calendar is tenant-scoped and admin sees only dated editorial/rese
   assert.equal(r.res.status,400);
   r=await h.call('/api/calendar?month=2026-11',{email:'uninvited@example.co.uk'});
   assert.equal(r.res.status,401);
+});
+
+
+test('GSC properties must belong to the specific client website',()=>{
+  assert.equal(validProperty('sc-domain:example.co.uk','www.example.co.uk'),true);
+  assert.equal(validProperty('https://www.example.co.uk/','example.co.uk'),true);
+  assert.equal(validProperty('sc-domain:another.co.uk','example.co.uk'),false);
+  assert.equal(validProperty('https://other.co.uk/','example.co.uk'),false);
+  assert.equal(validProperty('http://example.co.uk/','example.co.uk'),false);
+});
+test('research candidates never masquerade as checked evidence',()=>{
+  assert.equal(safeResult({title:'Unsafe result title',url:'http://example.com/topic'}),null);
+  assert.equal(safeResult({title:'Local address forbidden',url:'https://localhost/private'}),null);
+  const candidate=safeResult({title:'Official HSE construction guidance',
+    url:'https://www.hse.gov.uk/construction/',description:'Result preview only'});
+  assert.equal(candidate.status,'candidate-not-verified');
+  assert.equal(candidate.checked_at,null);
+});
+test('unconfigured GSC remains clear and tenant scoped',async()=>{
+  const h=harness();
+  let r=await h.call('/api/seo?client='+A,{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.configured,false);
+  r=await h.call('/api/seo?client='+A,{email:'detailer@example.co.uk'});
+  assert.equal(r.res.status,404);
 });

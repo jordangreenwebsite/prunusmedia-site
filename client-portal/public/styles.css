@@ -335,3 +335,38 @@
   .calendar-agenda-item{grid-template-columns:72px minmax(0,1fr);gap:9px}
 }
 @media(prefers-reduced-motion:reduce){.workspace-nav-link{transition:none}}
+
+
+/* Connected integrations (real Search Console data and sourced editorial research). */
+.seo-panel{scroll-margin-top:24px}
+.seo-panel .panel-heading{align-items:flex-start}
+.seo-panel .panel-heading h2{margin:0 0 12px}
+.seo-panel .panel-heading button{flex:0 0 auto}
+.seo-measurements{margin-top:18px}
+.seo-measurements>.meta{font-size:12px;color:#867970}
+.seo-metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0 24px}
+.seo-measure{display:grid;gap:6px;align-content:start;padding:19px 15px;background:#fbf1e7;border:1px solid #e5d6c9;border-radius:10px;min-width:0}
+.seo-measure-label{font-size:11px;letter-spacing:.04em;color:#776761;font-weight:700}
+.seo-measure-number{font:600 clamp(1.8rem,3vw,2.6rem)/1.12 "EB Garamond",Georgia,serif;color:#463b39}
+.seo-measure small{color:#7c6b66;font-size:11px;line-height:1.5}
+.seo-table-wrap{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;border:1px solid #e8dcd1;border-radius:8px}
+.seo-query-table{width:100%;border-collapse:collapse;font-size:13px;background:#fffbf5;min-width:500px}
+.seo-query-table thead{background:#f4e8dc}
+.seo-query-table th{text-align:left;color:#524a46;font-size:11px;padding:11px 12px;white-space:nowrap}
+.seo-query-table td{padding:11px 12px;color:#3f3d3a;border-top:1px solid #ece0d5}
+.seo-query-table td:first-child{max-width:330px;overflow-wrap:anywhere}
+.seo-query-table tbody tr:hover{background:#faf0e6}
+.source-candidates{display:grid;grid-template-columns:1fr;gap:3px;padding:12px 15px;margin:11px 0 14px;background:#fffaf3;border:1px solid #eadcd0;border-radius:8px}
+.source-candidate{display:block;font-size:12px;line-height:1.4;font-weight:700;color:#78464f;text-decoration:underline;text-underline-offset:3px}
+.source-candidates small{display:block;font-size:10px;color:#8f776d;margin:0 0 10px}
+.pr-create-controls{padding:12px 16px;margin-top:18px;border-top:1px solid #e6d9cf}
+.pr-create-controls p.subtle{margin:0 0 12px}
+.pr-review-link{display:inline-block;margin:13px 0 5px;color:#7e4b56;text-decoration:underline;text-underline-offset:3px;font-size:13px;font-weight:700}
+#seo-status:empty{display:none}
+@media(max-width:1050px){.seo-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){
+  .seo-panel .panel-heading{flex-direction:column}
+  .seo-metric-grid{gap:9px}
+  .seo-measure{padding:15px 13px}
+  .seo-measure-number{font-size:2rem}
+}
