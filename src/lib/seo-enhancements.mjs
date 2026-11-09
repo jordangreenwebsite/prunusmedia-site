@@ -90,7 +90,9 @@ function optimizeImage(tag, offset, headerEnd, filename) {
   }
   if (isHero) {
     tag = tag.replace(/\bsrc=["'][^"']+["']/i,
-      'src="/wp-content/uploads/2026/09/Hero-image-768x543.png"');
+      'src="/assets/prunus-images/hero-768.webp"');
+    tag = tag.replace(/\bsrcset=["'][^"']+["']/i,
+      'srcset="/assets/prunus-images/hero-768.webp 768w, /assets/prunus-images/hero-1024.webp 1024w"');
     tag = tag.replace(/\bsizes=["'][^"']+["']/i,
       'sizes="(max-width:767px) 90vw, (max-width:1199px) 58vw, 620px"');
   }
