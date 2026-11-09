@@ -65,7 +65,7 @@ function replaceTag(html, regex, replacement) {
   return html.replace(regex, replacement);
 }
 
-export function getEditorialShell({ title, description, pathname, type = 'WebPage', image, date }) {
+export function getEditorialShell({ title, description, pathname, type = 'WebPage', image, date, noindex = false }) {
   const canonical = 'https://prunusmedia.com' + pathname;
   const safeTitle = esc(title + ' | Prunus Media');
   const safeDescription = esc(description);
@@ -99,6 +99,7 @@ export function getEditorialShell({ title, description, pathname, type = 'WebPag
   if (image) schema.image = new URL(image, canonical).href;
   opening = replaceTag(opening, /<script type="application\/ld\+json" class="rank-math-schema">[\s\S]*?<\/script>/i,
     '<script type="application/ld+json">' + jsonSafe(schema) + '</script>');
+  if (noindex) opening = opening.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n</head>');
   opening = opening.replace('</head>', editorialCss + '\n</head>');
 
   // Existing global header/footer scripts are left intact; homepage-only

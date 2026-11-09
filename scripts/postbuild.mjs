@@ -30,7 +30,7 @@ function collect(folder, segments = []) {
     if (entry.isDirectory()) {
       collect(next, [...segments, entry.name]);
     } else if (entry.isFile() && entry.name === 'index.html') {
-      if (segments.some((s) => s === 'author' || s === 'qs' || s === 'page')) continue;
+      if (segments.some((s) => ['author','qs','page','client-login'].includes(s))) continue;
       urls.push('/' + (segments.length ? segments.join('/') + '/' : ''));
     }
   }
