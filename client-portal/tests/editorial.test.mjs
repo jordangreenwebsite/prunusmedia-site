@@ -132,3 +132,45 @@ test('weekly research jobs enqueue once per client per week, never publish',asyn
   const r=await h.call('/api/admin/research/'+jobs[0].id,{method:'PATCH',data:{status:'complete',research_note:'Source checked: https://www.metoffice.gov.uk/ and first-party repair questions.'}});
   assert.equal(r.res.status,200,JSON.stringify(r.json));
 });
+
+
+test('monthly calendar is tenant-scoped and admin sees only dated editorial/research work',async()=>{
+  const h=harness();
+  const insert=h.sqlite.prepare(
+    "INSERT INTO editorial_posts (id,client_id,topic_key,title,suggested_by,audience_question,status,scheduled_at) VALUES (?,?,?,?,?,?,?,?)"
+  );
+  insert.run('post-A',A,'roofing advice','Roofing inspection checklist','admin@example.co.uk','How should a homeowner check their roof?','scheduled','2026-11-19T09:00:00.000Z');
+  insert.run('post-B',B,'winter cleaning','Winter detailing tips','admin@example.co.uk','How do I clean my car in winter?','approved','2026-11-23T10:00:00.000Z');
+  insert.run('post-rejected',B,'cancelled draft','Cancelled article','admin@example.co.uk','What was cancelled?','rejected','2026-11-23T09:00:00.000Z');
+  h.sqlite.prepare("INSERT INTO research_jobs (id,client_id,week_start,status) VALUES (?,?,?,'queued')")
+    .run('research-A',A,'2026-11-16');
+  h.sqlite.prepare("INSERT INTO research_jobs (id,client_id,week_start,status) VALUES (?,?,?,'working')")
+    .run('research-B',B,'2026-11-23');
+  let r=await h.call('/api/calendar?month=2026-11&client='+A,{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,200,JSON.stringify(r.json));
+  assert.equal(r.json.posts.length,1);
+  assert.equal(r.json.posts[0].title,'Roofing inspection checklist');
+  assert.equal(r.json.research.length,0,'Clients must not see internal research jobs');
+  assert.ok(!JSON.stringify(r.json).includes('Winter detailing'));
+  r=await h.call('/api/calendar?month=2026-11&client='+B,{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,404,'Clients cannot request another company calendar');
+  r=await h.call('/api/calendar?month=2026-11',{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,404,'Clients may not request all-agency calendar');
+  r=await h.call('/api/calendar?month=2026-11');
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.posts.length,2,'Admin sees dated articles across connected companies');
+  assert.equal(r.json.research.length,2,'Admin sees weekly research queue');
+  assert.ok(!JSON.stringify(r.json).includes('Cancelled article'),'Rejected work is not upcoming');
+  r=await h.call('/api/calendar?month=2026-11&client='+B);
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.posts.length,1);
+  assert.equal(r.json.research.length,1);
+  assert.equal(r.json.research[0].client_id,B);
+  r=await h.call('/api/calendar?month=2026-12');
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.posts.length,0,'No fabricated calendar events');
+  r=await h.call('/api/calendar?month=2026-13');
+  assert.equal(r.res.status,400);
+  r=await h.call('/api/calendar?month=2026-11',{email:'uninvited@example.co.uk'});
+  assert.equal(r.res.status,401);
+});

@@ -50,6 +50,7 @@ jobs:
           node --check src/editorial.js
           node --check public/app.js
           node --check public/editorial-ui.js
+          node --check public/workspace-ui.js
           node --check scripts/prepare-deploy.mjs
 
       - name: Verify tenant isolation and editorial workflow
