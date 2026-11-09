@@ -162,7 +162,7 @@ export function improveSchema(html){
       if(website.potentialAction?.target==='/?s={search_term_string}')delete website.potentialAction;
     }
     const encoded=JSON.stringify(data).replace(/</g,'\\u003c');
-    return '<script '+attrs+'>'+encoded+'</script>';
+    return '<script'+attrs+'>'+encoded+'</script>';
   });
 }
 
