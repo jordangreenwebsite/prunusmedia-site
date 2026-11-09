@@ -288,5 +288,22 @@ export function cleanPageHtml(originalHtml, filename) {
     '<link rel="stylesheet" href="/assets/prunus-styles/components.css?v=skip-link-critical-20261109">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/portfolio.css">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/footer.css">\n</head>');
+
+  // A small utility sign-in at the very top right, outside the menu layout.
+  // The shared header feeds every legacy and native editorial page, so this is
+  // the one source of truth for Prunus sign-in. UK Trades already points here.
+  const clientSignIn = '<a class="pm-client-signin" href="/client-login/" aria-label="Sign in to your website client workspace">Sign in</a>';
+  html = html.replace(headerPattern, header => header.replace('</header>', clientSignIn + '</header>'));
+  const clientSignInStyle = '<style id="pm-client-signin-style">' +
+    '.pm-client-signin{position:fixed;right:12px;top:7px;z-index:2147480000;' +
+    'display:inline-flex;align-items:center;justify-content:center;' +
+    'min-height:29px;padding:4px 12px;border:1px solid #d5dfdb;border-radius:20px;' +
+    'background:#fffffff2;color:#273f43;text-decoration:none;' +
+    'font:700 12px/1.3 Arial,Helvetica,sans-serif;box-shadow:0 2px 8px #10242510}' +
+    '.pm-client-signin:hover{background:#f0f5f3;border-color:#8ca8a2}' +
+    '.pm-client-signin:focus-visible{outline:3px solid #2c7489;outline-offset:2px}' +
+    '@media(max-width:980px){.pm-client-signin{right:68px;top:7px;font-size:11px;min-height:27px}}' +
+    '</style>';
+  html = html.replace('</head>', clientSignInStyle + '</head>');
   return html;
 }
