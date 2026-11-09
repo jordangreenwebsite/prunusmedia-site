@@ -7,6 +7,7 @@ import worker from '../src/index.js';
 import { enqueueWeeklyResearch } from '../src/editorial.js';
 
 const base='https://portal.prunusmedia.com';
+const A='00000000-0000-4000-8000-00000000000a', B='00000000-0000-4000-8000-00000000000b';
 function harness() {
   const sqlite=new DatabaseSync(':memory:');
   for(const name of ['0001_initial.sql','0002_editorial.sql'])
@@ -38,8 +39,8 @@ function harness() {
       .run(clientId,clientId,name,domain,email);
     sqlite.prepare("INSERT INTO client_members (id,client_id,email,role) VALUES (?, ?, ?,'owner')").run('membership-'+clientId,clientId,email);
   }
-  seed('a','Residential Roofing & Fascias','roofer.example.co.uk','roofer@example.co.uk');
-  seed('b','PP Power Detailing','detailing.example.co.uk','detailer@example.co.uk');
+  seed(A,'Residential Roofing & Fascias','roofer.example.co.uk','roofer@example.co.uk');
+  seed(B,'PP Power Detailing','detailing.example.co.uk','detailer@example.co.uk');
   const cookies=new Map();
   for(const email of ['admin@prunusmedia.com','roofer@example.co.uk','detailer@example.co.uk']){
     const raw=createHash('sha256').update('session:'+email).digest('hex');
@@ -60,17 +61,17 @@ function harness() {
 }
 test('private editorial calendar, duplicate control, approvals and release gate',async()=>{
   const h=harness();
-  let r=await h.call('/api/admin/clients/a/settings',{method:'PATCH',data:{
+  let r=await h.call('/api/admin/clients/'+A+'/settings',{method:'PATCH',data:{
     brand:'uk-trades',industry:'Roofing',service_area:'Cirencester and Swindon',voice_notes:'Clear and helpful',
     requires_blog_approval:true,allow_client_ideas:true,allow_client_uploads:true,search_console_url:''}});
   assert.equal(r.res.status,200);
-  const idea={client_id:'a',title:'How can you tell a roof leak from a gutter leak?',audience_question:'Where should I look for damp signs?'};
+  const idea={client_id:A,title:'How can you tell a roof leak from a gutter leak?',audience_question:'Where should I look for damp signs?'};
   r=await h.call('/api/editorial',{method:'POST',email:'roofer@example.co.uk',data:idea});
   assert.equal(r.res.status,201);
   const post=r.json.id;
   r=await h.call('/api/editorial',{method:'POST',email:'roofer@example.co.uk',data:idea});
   assert.equal(r.res.status,409);
-  r=await h.call('/api/editorial?client=a',{email:'detailer@example.co.uk'});
+  r=await h.call('/api/editorial?client='+A,{email:'detailer@example.co.uk'});
   assert.equal(r.res.status,404);
   r=await h.call('/api/admin/editorial/'+post,{method:'PATCH',email:'roofer@example.co.uk',data:{status:'published'}});
   assert.equal(r.res.status,403);
@@ -80,7 +81,7 @@ test('private editorial calendar, duplicate control, approvals and release gate'
     draft,evidence_note:'Checked source advice and local client review for practical accuracy.',
     sources:[{title:'Official weather advice',url:'https://www.metoffice.gov.uk/',checked_at:'2026-11-09'}]}});
   assert.equal(r.res.status,200,JSON.stringify(r.json));
-  r=await h.call('/api/editorial?client=a',{email:'roofer@example.co.uk'});
+  r=await h.call('/api/editorial?client='+A,{email:'roofer@example.co.uk'});
   assert.equal(r.json.posts[0].draft,draft);
   r=await h.call('/api/editorial/'+post+'/decision',{method:'POST',email:'detailer@example.co.uk',data:{approve:true}});
   assert.equal(r.res.status,404);
@@ -90,13 +91,13 @@ test('private editorial calendar, duplicate control, approvals and release gate'
   assert.equal(r.res.status,400,'A changed draft cannot reuse client approval');
   r=await h.call('/api/admin/editorial/'+post,{method:'PATCH',data:{status:'scheduled',scheduled_at:'2028-02-01T12:00:00.000Z'}});
   assert.equal(r.res.status,200,JSON.stringify(r.json));
-  r=await h.call('/api/editorial?client=a',{email:'detailer@example.co.uk'});
+  r=await h.call('/api/editorial?client='+A,{email:'detailer@example.co.uk'});
   assert.equal(r.res.status,404);
 });
 test('general files stay private to tenant and admin receives only lead summaries',async()=>{
   const h=harness();
   const form=new FormData();
-  form.set('client_id','a');form.set('notes','Photo for our service page');
+  form.set('client_id',A);form.set('notes','Photo for our service page');
   form.set('file',new File([new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0,0,0,0,0])],'roof.png',{type:'image/png'}));
   let r=await h.call('/api/uploads',{method:'POST',email:'roofer@example.co.uk',form});
   assert.equal(r.res.status,201,JSON.stringify(r.json));
@@ -106,19 +107,19 @@ test('general files stay private to tenant and admin receives only lead summarie
   r=await h.call('/api/uploads/'+uploadId,{email:'roofer@example.co.uk'});
   assert.equal(r.res.status,200);
   assert.match(r.res.headers.get('content-disposition'),/^attachment/);
-  h.sqlite.prepare("INSERT INTO sites (id,client_id,domain) VALUES ('s','a','roofer2.example.co.uk')").run();
-  h.sqlite.prepare("INSERT INTO leads (id,client_id,site_id,external_id,full_name,email,phone,postcode,message,source_page) VALUES ('l','a','s','client-12345','Private Person','private@example.co.uk','07700900123','GL7 1AA','Secret details','/contact/')").run();
+  h.sqlite.prepare("INSERT INTO sites (id,client_id,domain) VALUES ('s','00000000-0000-4000-8000-00000000000a','roofer2.example.co.uk')").run();
+  h.sqlite.prepare("INSERT INTO leads (id,client_id,site_id,external_id,full_name,email,phone,postcode,message,source_page) VALUES ('l','00000000-0000-4000-8000-00000000000a','s','client-12345','Private Person','private@example.co.uk','07700900123','GL7 1AA','Secret details','/contact/')").run();
   r=await h.call('/api/admin/overview');
   assert.equal(r.res.status,200);
-  assert.equal(r.json.clients.find(c=>c.id==='a').lead_total,1);
+  assert.equal(r.json.clients.find(c=>c.id===A).lead_total,1);
   assert.equal(r.json.lead_areas[0].area,'GL7');
   assert.ok(!JSON.stringify(r.json).includes('Private Person'));
   assert.ok(!JSON.stringify(r.json).includes('private@example.co.uk'));
   assert.ok(!JSON.stringify(r.json).includes('Secret details'));
-  r=await h.call('/api/dashboard?client=a');
+  r=await h.call('/api/dashboard?client='+A);
   assert.equal(r.res.status,200);
   assert.equal(r.json.leads.length,0,'Admin does not see individual lead contact details');
-  r=await h.call('/api/dashboard?client=a',{email:'roofer@example.co.uk'});
+  r=await h.call('/api/dashboard?client='+A,{email:'roofer@example.co.uk'});
   assert.equal(r.json.leads[0].full_name,'Private Person','Client can follow up on own submissions');
 });
 test('weekly research jobs enqueue once per client per week, never publish',async()=>{
