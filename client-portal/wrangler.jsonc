@@ -1,0 +1,29 @@
+{
+  // Deploy as a separate Cloudflare Worker, NOT as part of the marketing site.
+  "name": "prunus-website-clients",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "routes": [{ "pattern": "portal.prunusmedia.com", "custom_domain": true }],
+  "triggers": { "crons": ["13 3 * * *"] },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "prunus-website-clients",
+      "database_id": "REPLACE_WITH_REAL_CLOUDFLARE_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "prunus-website-client-files"
+    }
+  ],
+  "observability": { "enabled": true }
+}
