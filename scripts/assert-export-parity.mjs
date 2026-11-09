@@ -20,7 +20,7 @@ for (const route of routes) {
   // The homepage collection-driven gallery changes by design. Assert that
   // everything outside its one explicit section is still an exact match.
   const normalize = (html) => html.replace(/\r\n/g, '\n').trim().replace(
-    /<section class="pm-home-work"\b[\s\S]*?<\/section>/,
+    /<section class="pm-home-work"[^>]*>[\s\S]*?<\/section>/,
     '<section data-collection-driven-gallery></section>'
   );
   if (normalize(standaloneHtml) !== normalize(newHtml)) {
