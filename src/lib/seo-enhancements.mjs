@@ -103,10 +103,16 @@ export function improveImages(html){
     // Preserve image aspect ratio during load. Most original Breakdance images
     // already have intrinsic dimensions; only fill those lacking both values.
     if(!getAttr(tag,'width')&&!getAttr(tag,'height')&&getAttr(tag,'srcset')){
-      const match=getAttr(tag,'srcset').match(/-(\d{2,4})x(\d{2,4})\.(?:png|jpe?g|webp)\s+\d+w/i);
-      if(match){
-        tag=setAttr(tag,'width',match[1]);
-        tag=setAttr(tag,'height',match[2]);
+      const responsive=getAttr(tag,'srcset');
+      const sample=responsive.match(/-(\d{2,4})x(\d{2,4})\.(?:png|jpe?g|webp)\s+\d+w/i);
+      const intrinsic=responsive.match(/(?:^|,\s*)[^\s,]+\s+(\d+)w/);
+      if(sample&&intrinsic){
+        // Use full-size intrinsic dimensions for layout. Assigning the
+        // thumbnail's 300px width here shrinks the whole image in CSS!
+        const width=Number(intrinsic[1]);
+        const height=Math.round(width*Number(sample[2])/Number(sample[1]));
+        tag=setAttr(tag,'width',width);
+        tag=setAttr(tag,'height',height);
       }
     }
     return tag;
@@ -117,7 +123,7 @@ export function improveStructure(html,filename){
   if(filename==='index.html'){
     const hero=/(<)h2(\s+class="bde-dual-heading-35-625\b[^"]*"[^>]*>)([\s\S]*?)(<\/)h2(>)/i;
     if(!hero.test(html))throw new Error('Cannot locate the main homepage hero for semantic H1 correction');
-    html=html.replace(hero,(_,open,attrs,inside,close,end)=>open+'h1'+attrs+inside+close+'h1'+end);
+    html=html.replace(hero,(_,open,attrs,inside,close,end)=>open+'h1'+attrs.replace('class="','class="bde-h2 ')+inside+close+'h1'+end);
   }
   if(filename==='contact/index.html'){
     html=html.replace(/<h1(\s+class="bde-heading-30-125\b[^"]*"[^>]*>)([\s\S]*?)<\/h1>/i,
