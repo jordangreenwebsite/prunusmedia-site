@@ -1,6 +1,11 @@
 name: Deploy Prunus client portal (manual)
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'client-portal/**'
+      - '.github/workflows/prunus-portal-deploy.yml'
 
 permissions:
   contents: read

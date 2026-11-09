@@ -1,32 +1,37 @@
 ---
-import EditorialLayout from '../../layouts/EditorialLayout.astro';
-
-// Switch to the real Cloudflare Worker only after security, D1/R2, OTP,
-// delivery, domain and real client tests have passed. A static preview MUST
-// NOT pretend to offer an operational login.
-// Configure PUBLIC_PRUNUS_PORTAL_ACTIVE=true in Cloudflare Pages only then.
-const ready=import.meta.env.PUBLIC_PRUNUS_PORTAL_ACTIVE === 'true';
-const portalOrigin='https://portal.prunusmedia.com/';
-const safeOrigin = portalOrigin;
+const portalOrigin = 'https://portal.prunusmedia.com/';
 ---
-{ready ? (
-  <html lang="en">
-    <head><meta charset="utf-8" /><title>Prunus Client Portal</title>
-      <meta name="robots" content="noindex,nofollow" />
-      <meta http-equiv="refresh" content={'0;url='+safeOrigin} />
-      <link rel="canonical" href={safeOrigin} /></head>
-    <body><main><p>Opening your secure Prunus Client Portal…</p>
-      <a href={safeOrigin}>Continue to client sign-in</a></main>
-      <script is:inline>location.replace('https://portal.prunusmedia.com/');</script>
-    </body>
-  </html>
-) : (
-  <EditorialLayout noindex={true} title="Client Portal" description="Prunus Media client access information. Invited website customers receive secure email-code sign-in once their account is activated." pathname="/client-login/">
-    <p class="pm-editorial__eyebrow">Prunus Media / Client Portal</p>
-    <h1>Your website workspace.</h1>
-    <p class="pm-editorial__intro">A shared space for your website enquiries, change requests and updates.</p>
-    <p>We’re connecting the secure client sign-in to the new portal. Access is by invitation only, and the portal is not available for customer sign-in yet.</p>
-    <p>For existing website requests or questions about access, email <a href="mailto:contactprunusmedia@gmail.com">contactprunusmedia@gmail.com</a>.</p>
-    <p><a class="pm-editorial__button" href="/contact/">Contact Prunus Media →</a></p>
-  </EditorialLayout>
-)}
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>Client login | Prunus Media &amp; UK Trade Websites</title>
+    <meta name="description" content="One secure client sign-in for Prunus Media and UK Trade Websites." />
+    <link rel="canonical" href={portalOrigin} />
+    <meta http-equiv="refresh" content={'0;url='+portalOrigin} />
+    <style is:inline>
+      body{font:16px/1.6 system-ui,sans-serif;background:#f3efec;color:#203b35;min-height:100vh;display:grid;place-items:center;margin:0}
+      main{text-align:center;padding:32px}
+      h1{font:normal clamp(32px,6vw,54px)/1.2 Georgia,serif;letter-spacing:-.035em}
+      a{color:inherit;font-weight:750;text-underline-offset:4px}
+      p{max-width:560px}
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>PRUNUS MEDIA &nbsp;·&nbsp; UK TRADE WEBSITES</p>
+      <h1>Your client portal.</h1>
+      <p>Opening your secure shared sign-in.</p>
+      <p><a href={portalOrigin}>Continue to client sign-in →</a></p>
+    </main>
+    <script is:inline>
+      const target = new URL('https://portal.prunusmedia.com/');
+      const hint = new URL(location.href).searchParams.get('site');
+      if (hint && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(hint)) target.searchParams.set('site',hint);
+      location.replace(target.toString());
+    </script>
+  </body>
+</html>

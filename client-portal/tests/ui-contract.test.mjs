@@ -23,3 +23,14 @@ test('enquiry cards have contact actions and a saved pipeline',()=>{
   assert.match(html,/id="lead-filter"/);
   for(const status of ['new','contacted','dealt-with'])assert.ok(app.includes("'"+status+"'"));
 });
+
+test('one working sign-in serves both Prunus Media and UK Trade Websites',()=>{
+  assert.match(html,/id="login-panel"[^>]*shared-login/);
+  assert.match(html,/brand-half-prunus/);
+  assert.match(html,/brand-half-trades/);
+  assert.match(html,/UK TRADE WEBSITES/);
+  assert.equal((html.match(/id="email-form"/g)||[]).length,1);
+  assert.equal((html.match(/id="code-form"/g)||[]).length,1);
+  assert.match(app,/\/api\/auth\/request-code/);
+  assert.match(app,/\/api\/auth\/verify/);
+});
