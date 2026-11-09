@@ -161,4 +161,4 @@ html.prunus-menu-open .bde-header-builder.pm-scroll-header{transform:translateY(
 }
 /* The new semantic h1 retains exactly the same typographic treatment as the
    old hero h2: only the document outline changes. */
-h1.bde-dual-heading-35-625{font:inherit;margin-block:0}
+h1.bde-dual-heading-35-625{margin-block:0}
