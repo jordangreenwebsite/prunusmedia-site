@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import EditorialLayout from '../../layouts/EditorialLayout.astro';
 import { sortProjects, projectCardsHtml } from '../../lib/portfolio-ui.mjs';
+import { roofingComparisonHtml } from '../../lib/roofing-case-study.mjs';
 
 const projects = sortProjects(await getCollection('work', ({ data }) => !data.draft));
 const verifiedDated = [...projects.filter((project) => !!project.data.completedAt)]
@@ -22,6 +23,7 @@ const other = projects.filter((project) => !project.data.completedAt);
     <p class="pm-portfolio-intro">A wider selection of website design, creative concepts and our own products. Where original completion dates are not recorded, we have not invented them.</p>
     <Fragment set:html={projectCardsHtml(other)} />
   </section>}
+  <Fragment set:html={roofingComparisonHtml({id:"prunus-work-roofing",compact:true})}/>
   <nav class="pm-editorial__nav" aria-label="Explore Prunus">
     <a href="/website-design/">Website design</a>
     <a href="/contact/">Start a project</a>
