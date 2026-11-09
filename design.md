@@ -90,3 +90,12 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Approved scroll header: visible through the first ~1,100 px. Past that point, it hides after downward scrolling and reveals when scrolling up, with escape hatches for reduced motion, keyboard focus, and open mobile navigation.
 - The footer's **Client login** points to `/client-login/`. Shared Worker code lives in **draft PR #2**. The portal `portal.prunusmedia.com` is **NOT confirmed live**, so the login route currently shows a noindex access-information page and must NOT automatically redirect until D1/R2, Resend OTP, secrets, custom domain, rate limits and two-client privacy verification have passed. Once those gates pass, set the Cloudflare Pages environment variable `PUBLIC_PRUNUS_PORTAL_ACTIVE=true` to enable the secure handoff, rebuild and test the redirected login; do not set this early.
 - All exceptions remain **preview-only** pending review. Keep live `main` and custom domains untouched until merge/cutover approval.
+
+
+## Approved new visual case study (9 November 2026)
+
+- The Residential Roofing & Fascias before/after feature is a **specific owner-requested homepage addition**, not permission to change the existing hero, gallery, cursor, navigation or other historical layouts. Preserve export parity outside the approved case-study section.
+- `src/lib/roofing-case-study.mjs` provides the styled comparison for the homepage, Our Work index and the detailed roofing project; separate from UK Trade Websites' design system and using Prunus's cream, sage, charcoal, Playfair Display and Space Grotesk.
+- The three genuine tinified screenshots are hosted by the sister UK Trade Websites site at `/case-studies/roofing/{before.jpg,after.jpg,after-menu.png}`, sourced from the uploaded ZIP. Keep both screenshot windows independently scrollable and keyboard-accessible; show the redesigned menu below.
+- Fact claims: a newly launched but difficult-to-maintain site with little initial visibility; retained visual character; 17-page static rebuild including **15 additional** service/location pages; ongoing local SEO. Do **not** promise immediate rankings or fabricated conversions.
+- Keep this work in a review PR until the homepage's approved addition is inspected at desktop/mobile sizes per the visual-preservation contract.

@@ -1,11 +1,11 @@
 ---
 title: "Residential Roofing & Fascias"
-summary: "A complete 17-page rebuild of a poorly performing roofing website, with technical and local SEO plus ongoing optimisation."
+summary: "A new roofing website professionally rebuilt to retain its familiar look, with clearer navigation, 15 additional service and area pages and ongoing local SEO."
 addedAt: "2026-11-09"
 category: "Roofing & home improvement"
 status: "live"
 website: "https://residential-roofing-fascias.pages.dev/"
-services: ["17-page website rebuild","Technical SEO","Location and service pages","Ongoing SEO"]
+services: ["17-page website rebuild","15 additional service and area pages","Technical SEO","Clear mobile navigation","Ongoing local SEO"]
 priority: 2
 featured: true
 completedAt: "2026-11-06"
@@ -16,12 +16,14 @@ draft: false
 
 ### The challenge
 
-The business had a previous website at residentialroofingandfascias.co.uk that was not producing meaningful search traffic. Its structure and presentation were holding it back.
+The owner had recently launched a website for Residential Roofing & Fascias, but it had almost no visibility in search and was taking too much time to edit and manage. He liked the original colours and familiar appearance but wanted them rebuilt to a professional standard with a clearer structure.
 
 ### What we built
 
-We rebuilt it from the ground up as a **17-page** static website. That includes the homepage, services, location-specific roofing and fascias pages, areas served, about, contact and privacy information. The site is designed around Cirencester, Swindon, Gloucestershire and Wiltshire, with useful internal links, accessible layouts, metadata, structured data and mobile performance in mind.
+We kept the essential visual identity while rebuilding the site as a **17-page static Astro website**, including **15 additional pages** for the services and local areas the business covers. The new structure makes it easier to find roofing and fascia services for Cirencester, Swindon, Gloucestershire and Wiltshire.
+
+We also reorganised the navigation so visitors can choose an appropriate service or location quickly, and improved the mobile layout, internal links, metadata and structured data. The real before and after website screenshots, along with the redesigned menu, are presented above.
 
 ### Continuing work
 
-Prunus Media also provides **ongoing SEO**, developing the site's search visibility after launch. The technical foundations are intended to support discoverability; specific rankings and timescales are not guaranteed.
+Prunus Media also provides **ongoing local SEO** to help the business develop search visibility after launch. Relevant service and location pages create more useful destinations for potential customers and clearer information for search engines, but new pages do not guarantee immediate Google rankings or traffic.

@@ -62,5 +62,16 @@ else{
  if(/src="\/wp-content\/uploads\/2024\/08\/Copy-of-PRUNUS-MEDIA.png"/.test(homepage))
    failures.push('full resolution 1 MB logo still used in HTML');
 }
+// New approved roofing case study is present on the homepage, work gallery and project detail.
+for(const page of ['//','/our-work/','/our-work/residential-roofing-and-fascias/']){
+ const html=pages.find(p=>p.name===page)?.source;
+ if(!html){failures.push('Missing case-study route: '+page);continue;}
+ if(!html.includes('pm-roofing-story__comparison'))failures.push(page+' missing roofing comparison');
+ if((html.match(/class="pm-roofing-story__scroll"/g)||[]).length!==2)failures.push(page+' must have two independent screenshot scrollers');
+ for(const image of ['/case-studies/roofing/before.jpg','/case-studies/roofing/after.jpg','/case-studies/roofing/after-menu.png']){
+  if(!html.includes(image))failures.push(page+' missing image path '+image);
+ }
+ if(!html.includes('15</strong>'))failures.push(page+' missing additional-page count');
+}
 console.log('SEO OUTPUT AUDIT: '+pages.length+' pages; '+totalImages+' images checked; '+descriptions.size+' unique public descriptions; '+failures.length+' failures');
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}
