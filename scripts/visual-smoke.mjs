@@ -102,7 +102,7 @@ try {
       }
 
       // Skip link hidden visually until actual keyboard focus.
-      if(test.route==='/our-work/' || test.route==='/pricing/'){
+      { // Shared header: every page must have an accessible keyboard-only skip link.
         const skip=page.locator('.pm-skip-link');
         if(await skip.count()!==1) failures.push(test.label+': skip link absent or duplicated');
         else {
@@ -378,6 +378,15 @@ try {
       if (!response || response.status() !== 200) {
         routeErrors.push(url + ': invalid status ' + (response?.status() ?? 'no response'));
       }
+      // Check every generated legacy route, not only Our Work / Pricing.
+      // Must be hidden before interaction even if the external CSS is stale.
+      const skipState=await sweepPage.locator('a.pm-skip-link').evaluateAll(nodes=>{
+        if(nodes.length!==1) return {valid:false,reason:'expected one skip link; found '+nodes.length};
+        const el=nodes[0],cs=getComputedStyle(el),rect=el.getBoundingClientRect();
+        return {valid:cs.clipPath==='inset(50%)'&&rect.width<=2,reason:
+          'clip-path='+cs.clipPath+', width='+rect.width};
+      });
+      if(!skipState.valid)routeErrors.push(url+': skip link visible at rest ('+skipState.reason+')');
       await sweepPage.waitForTimeout(90);
       if (pageErrors.length) routeErrors.push(url + ': ' + pageErrors.slice(0, 3).join(' | '));
       visited++;
