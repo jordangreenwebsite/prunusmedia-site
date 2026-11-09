@@ -26,7 +26,7 @@ jobs:
       PORTAL_RESEND_API_KEY: ${{ secrets.PRUNUS_RESEND_API_KEY }}
       PORTAL_ADMIN_EMAILS: ${{ secrets.PRUNUS_ADMIN_EMAILS }}
       PORTAL_ADMIN_NOTIFY_EMAIL: ${{ secrets.PRUNUS_ADMIN_NOTIFY_EMAIL }}
-      PORTAL_OTP_FROM_EMAIL: ${{ secrets.PRUNUS_OTP_FROM_EMAIL }}
+      PORTAL_OTP_FROM_EMAIL: ${{ vars.PRUNUS_OTP_FROM_EMAIL }}
     steps:
       - name: Check out reviewed production commit
         uses: actions/checkout@v4
