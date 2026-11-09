@@ -1,10 +1,11 @@
 ---
 title: "Charley Hayes SMR"
-summary: "An earlier massage-therapy website design, presented as archived work rather than an active client project."
+summary: "An August 2026 massage-therapy website build, retained as a previous design project."
 addedAt: "2026-11-09"
 category: "Wellness"
 services: ["Website design","Service presentation"]
 status: "archived"
+completedAt: "2026-08-04"
 priority: 8
 featured: false
 website: "https://charleyhayessmr.pages.dev/"

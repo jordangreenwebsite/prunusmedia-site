@@ -8,7 +8,6 @@ status: "live"
 priority: 1
 featured: true
 completedAt: "2026-11-06"
-website: "https://residential-roofing-fascias.pages.dev/"
 draft: false
 ---
 
