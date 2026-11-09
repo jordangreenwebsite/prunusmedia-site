@@ -1,24 +1,30 @@
 ---
 import { getCollection } from 'astro:content';
 import EditorialLayout from '../../layouts/EditorialLayout.astro';
+import { sortProjects, projectCardsHtml } from '../../lib/portfolio-ui.mjs';
 
-const projects = (await getCollection('work', ({ data }) => !data.draft))
-  .sort((a, b) => b.data.addedAt.getTime() - a.data.addedAt.getTime());
+const projects = sortProjects(await getCollection('work', ({ data }) => !data.draft));
+const verifiedDated = [...projects.filter((project) => !!project.data.completedAt)]
+  .sort((a,b) => b.data.completedAt.getTime()-a.data.completedAt.getTime());
+const other = projects.filter((project) => !project.data.completedAt);
 ---
-<EditorialLayout title="Websites We Have Built" description="Selected website projects by Prunus Media, including the strategy, design and practical work behind each build." pathname="/our-work/">
-  <p class="pm-editorial__eyebrow">Prunus Media / Portfolio</p>
-  <h1>Some of our recent work.</h1>
-  <p class="pm-editorial__intro">Every business has its own customers and challenges. Here's a closer look at websites we've built and what each project needed to accomplish.</p>
-  {projects.length ? <div class="pm-editorial__grid">
-    {projects.map((project) => <article class="pm-editorial__card">
-      {project.data.image ? <img src={project.data.image} alt={project.data.imageAlt} loading="lazy" /> : <div class="pm-editorial__card-image-empty" aria-hidden="true" />}
-      <div class="pm-editorial__card-inner">
-        {project.data.category && <p class="pm-editorial__meta">{project.data.category}</p>}
-        <h3>{project.data.title}</h3>
-        <p>{project.data.summary}</p>
-        <a href={'/our-work/' + project.id + '/'}>View project →</a>
-      </div>
-    </article>)}
-  </div> : <p class="pm-editorial__empty">Project profiles will appear here as they are approved for publication.</p>}
-  <nav class="pm-editorial__nav" aria-label="Explore Prunus"><a href="/website-design/">Website design</a><a href="/contact/">Start a project</a><a href="/blog/">Journal</a></nav>
+<EditorialLayout title="Websites We Have Built" description="Explore website builds, SEO-led client projects, digital products and selected concept work by Prunus Media." pathname="/our-work/">
+  <p class="pm-editorial__eyebrow">Prunus Media / Selected work</p>
+  <h1>Websites with purpose.</h1>
+  <p class="pm-editorial__intro">From service-business websites to floral brands and practical tools. A collection of client builds, independent products and a few thoughtfully labelled concepts.</p>
+  {verifiedDated.length > 0 && <section class="pm-portfolio-group" aria-label="Latest completed builds">
+    <h2>Our latest completed builds</h2>
+    <p class="pm-portfolio-intro">These are the projects for which we have verified completion dates, newest first.</p>
+    <Fragment set:html={projectCardsHtml(verifiedDated)} />
+  </section>}
+  {other.length > 0 && <section class="pm-portfolio-group" aria-label="Other selected projects">
+    <h2>More of our work</h2>
+    <p class="pm-portfolio-intro">A wider selection of website design, creative concepts and our own products. Where original completion dates are not recorded, we have not invented them.</p>
+    <Fragment set:html={projectCardsHtml(other)} />
+  </section>}
+  <nav class="pm-editorial__nav" aria-label="Explore Prunus">
+    <a href="/website-design/">Website design</a>
+    <a href="/contact/">Start a project</a>
+    <a href="/blog/">Journal &amp; insights</a>
+  </nav>
 </EditorialLayout>

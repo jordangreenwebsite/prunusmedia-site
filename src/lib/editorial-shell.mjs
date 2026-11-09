@@ -10,7 +10,7 @@ import { cleanPageHtml } from './standalone.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const original = cleanPageHtml(readFileSync(path.join(root, 'index.html'), 'utf8'), 'index.html');
 const headerEnd = original.indexOf('</header>');
-const footerStart = original.indexOf('<section class="bde-section-26-100');
+const footerStart = original.indexOf('<footer class="pm-site-footer"');
 if (headerEnd === -1 || footerStart === -1 || footerStart < headerEnd) {
   throw new Error('Cannot locate the current Prunus header/footer. Inspect export before updating layout.');
 }

@@ -17,7 +17,12 @@ for (const route of routes) {
   const oldHtml = readFileSync(path.join(base, route.source), 'utf8');
   const newHtml = readFileSync(path.join(base, 'dist', route.output), 'utf8');
   const standaloneHtml = cleanPageHtml(oldHtml, route.source);
-  const normalize = (html) => html.replace(/\r\n/g, '\n').trim();
+  // The homepage collection-driven gallery changes by design. Assert that
+  // everything outside its one explicit section is still an exact match.
+  const normalize = (html) => html.replace(/\r\n/g, '\n').trim().replace(
+    /<section class="pm-home-work"\b[\s\S]*?<\/section>/,
+    '<section data-collection-driven-gallery></section>'
+  );
   if (normalize(standaloneHtml) !== normalize(newHtml)) {
     const older = normalize(standaloneHtml), newer = normalize(newHtml);
     let diff = 0;

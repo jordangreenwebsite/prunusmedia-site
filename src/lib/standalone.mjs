@@ -8,6 +8,7 @@
  * replacement before the project can be called fully dependency-free source.
  */
 import path from 'node:path';
+import { footerMarkup } from './footer.mjs';
 export function routeAssetName(filename) {
   if (filename === 'index.html') return 'home';
   if (filename === '404.html') return 'not-found';
@@ -114,23 +115,34 @@ export function cleanPageHtml(originalHtml, filename) {
   prependToDropdown('153', '/our-work/', 'Our Work');
   prependToDropdown('152', '/blog/', 'Blog');
 
-  // The central client login belongs in the shared footer, never the header.
-  // This transformation also runs on the Astro editorial shell, which reuses
-  // the approved original header and footer from the exported homepage.
-  const footerLogin = '<a class="bde-text-link prunus-footer-login breakdance-link"' +
-    ' href="/client-login/" target="_self" data-type="url">Client login</a>';
-  // Keep original footer links in order; Client login is a discreet final link.
-  const footerContact = /(<a class="bde-text-link-26-116[^"]*"[^>]*>[\s\S]*?<\/a>)/i;
-  const footerColumn = /(<div class="bde-div-26-113 bde-div">)/i;
-  if (!html.includes('class="bde-text-link prunus-footer-login')) {
-    if (footerContact.test(html)) html = html.replace(footerContact, '$1' + footerLogin);
-    else if (footerColumn.test(html)) html = html.replace(footerColumn, '$1' + footerLogin);
+
+  // Replace the original exported footer on every existing route with a
+  // semantic, consistent footer shared with Blog and Our Work. Never remove
+  // adjacent scripts or content.
+  const oldFooter = /<section class="bde-section-26-100\b[\s\S]*?<\/section>/i;
+  if (oldFooter.test(html)) html = html.replace(oldFooter, footerMarkup);
+  else if (html.includes('</body>')) html = html.replace('</body>', footerMarkup + '\n</body>');
+
+  // The homepage gallery is generated from exactly the same Markdown
+  // collection as /our-work/, not the unmaintainable builder tabs.
+  if (filename === 'index.html') {
+    const oldGallery = /<section class="bde-section-35-477\b[\s\S]*?<\/section>/i;
+    if (!oldGallery.test(html)) throw new Error('Original Recent Work section not found');
+    html = html.replace(oldGallery,
+      '<section class="pm-home-work" id="recent-work" aria-labelledby="recent-work-title">' +
+      '<div class="pm-home-work__inner"><div class="pm-home-work__top"><div>' +
+      '<p class="pm-work-eyebrow">Selected projects / Our work</p>' +
+      '<h2 id="recent-work-title">Some of our recent work.</h2>' +
+      '<p class="pm-home-work__intro">Thoughtful websites for real businesses, and a few concepts exploring what is possible.</p>' +
+      '</div></div><!--PRUNUS_RECENT_WORK_CARDS-->' +
+      '<a class="pm-home-work__more" href="/our-work/">See more of our recent work <span aria-hidden="true">→</span></a>' +
+      '</div></section>');
+    // The original hero button had a label saying See Our Work, but linked
+    // to Industries. Direct it to the actual portfolio.
+    html = html.replace(/(class="bde-button-35-359\b[\s\S]*?<a\b[^>]*\bhref=")\/industries\//i,
+      '$1/our-work/');
   }
-  if (!html.includes('prunus-footer-login') && html.includes('</body>')) {
-    // Older WP archive and 404 exports have no standard shared footer.
-    html = html.replace('</body>',
-      '<footer class="prunus-fallback-footer">' + footerLogin + '</footer></body>');
-  }
+
   // The header logo should never be deferred behind other lazy images.
   html = html.replace(/(<header\b[\s\S]*?<img\b[^>]*class="breakdance-image-object"[^>]*?)loading="lazy"/i,
     '$1loading="eager" fetchpriority="high"');
@@ -142,6 +154,9 @@ export function cleanPageHtml(originalHtml, filename) {
   const scripts = '<script defer src="/assets/prunus-scripts/prunus-interactions.js"></script>' +
     '<script defer src="/assets/prunus-scripts/prunus-cursor.js"></script>';
   if (html.includes('</body>')) html = html.replace('</body>', scripts + '\n</body>');
-  if (html.includes('</head>')) html = html.replace('</head>', '<link rel="stylesheet" href="/assets/prunus-styles/components.css">\n</head>');
+  if (html.includes('</head>')) html = html.replace('</head>',
+    '<link rel="stylesheet" href="/assets/prunus-styles/components.css">\n' +
+    '<link rel="stylesheet" href="/assets/prunus-styles/portfolio.css">\n' +
+    '<link rel="stylesheet" href="/assets/prunus-styles/footer.css">\n</head>');
   return html;
 }
