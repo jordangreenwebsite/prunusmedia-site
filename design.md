@@ -109,3 +109,13 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Preserve existing Formspree contact endpoint; pricing CTAs preselect the relevant service on the contact form.
 - On editorial routes including /our-work/, keep "Skip to main content" accessible but visually hide it until keyboard focus.
 - Preserve approved design language (warm cream, sage, serif headings) and industry-specific page styling.
+
+
+## Approved shared navigation cleanup — 2026-11-09
+- The homepage header is the sole approved structural source for all legacy and native editorial page headers. Historic Breakdance exports duplicated Industries as a second Website Design dropdown column and differed in logo/menu presentation. Never restore that extra column.
+- Preserve four top-level dropdowns, mobile controls, approved logo and header dimensions; do not add a crowded fifth top-level button.
+- Pricing (/pricing/) appears in a separate, high-contrast white box with black lettering as the first entry in each dropdown. Normal links underneath retain their order: Our Work follows Pricing and Blog follows Pricing in About/Contact.
+- Remove the old buried Website Design > Packages menu item. Keep 301 redirects to /pricing/ and a compact homepage pricing invitation immediately below the existing hero, without changing the hero illustration or actions.
+- Reaffirmed prices: one-off builds from £995 / £1,795 / £2,995, standalone hosting £99/month, SEO £195/month with hosting while active, social from £99/month, Meta/Google Ads management from £50/month (ad spend separate), website support £50/hour.
+- Historical builder pricing embedded in the excluded website-design/packages HTML source is not published and must never be linked or reintroduced.
+- Verify representative pages and every dropdown on mobile and desktop; check actual logo visibility, not just the presence of image markup.
