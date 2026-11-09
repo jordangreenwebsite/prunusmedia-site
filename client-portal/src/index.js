@@ -324,7 +324,7 @@ export default {
       headers.set('referrer-policy','strict-origin-when-cross-origin');
       headers.set('x-frame-options','DENY');
       if ((headers.get('content-type')||'').includes('text/html')) {
-        headers.set('content-security-policy',"default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
+        headers.set('content-security-policy',"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
         headers.set('cache-control','no-store');
       }
       return new Response(asset.body,{status:asset.status,headers});
