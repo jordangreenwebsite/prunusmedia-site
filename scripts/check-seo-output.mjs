@@ -55,10 +55,24 @@ else{
  const org=scripts.flatMap(o=>o['@graph']||[]).find(o=>o['@type']==='Organization');
  if(!org?.sameAs?.length)failures.push('official business social profiles missing from schema');
  const service=scripts.flatMap(o=>o['@graph']||[]).find(o=>o['@type']==='Service');
- if(service?.areaServed?.name!=='United Kingdom'){
+ if(!Array.isArray(service?.areaServed) ||
+    !service.areaServed.some(area=>area.name==='United Kingdom') ||
+    !service.areaServed.some(area=>area.name==='Worldwide')){
    failures.push('UK service area missing from Service schema');
    console.error('SCHEMA DEBUG '+JSON.stringify({services:scripts.flatMap(o=>o['@graph']||[]).filter(o=>o['@type']==='Service'),types:scripts.flatMap(o=>o['@graph']||[]).map(o=>o['@type'])}));
  }
+ if(!org?.contactPoint?.hoursAvailable?.opens || !org?.contactPoint?.hoursAvailable?.closes)
+   failures.push('UK enquiry hours missing from organization contact schema');
+ if(!Array.isArray(org?.areaServed) ||
+    !org.areaServed.some(area=>area.name==='United Kingdom') ||
+    !org.areaServed.some(area=>area.name==='Worldwide'))
+   failures.push('UK-first global agency coverage missing from organization schema');
+ if(/Swiss Post Service|Where can I subscribe to your newsletter\?|This is a basic text element/i.test(homepage))
+   failures.push('Old shop/template content remains in homepage output');
+ if(/name=["']generator["'][^>]*WordPress|rel=["']EditURI["']/i.test(homepage))
+   failures.push('WordPress export metadata still emitted');
+ if(!homepage.includes('class="pm-skip-link"') || !homepage.includes('id="main-content"'))
+   failures.push('Keyboard skip link or main target is missing');
  if(/src="\/wp-content\/uploads\/2024\/08\/Copy-of-PRUNUS-MEDIA.png"/.test(homepage))
    failures.push('full resolution 1 MB logo still used in HTML');
 }
