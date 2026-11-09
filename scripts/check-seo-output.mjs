@@ -24,7 +24,10 @@ let totalImages=0;
 for(const {name,source} of pages){
  const isPublic=!/^\/(?:page|author|qs|client-login)\//.test(name);
  const heading=(source.match(/<h1\b/gi)||[]).length;
- if(isPublic&&name!=='//'&&heading!==1)failures.push(name+' expected 1 H1, found '+heading);
+ if(isPublic&&name!=='//'&&heading!==1){
+  failures.push(name+' expected 1 H1, found '+heading);
+  console.error('HEADINGS '+name+': '+JSON.stringify([...source.matchAll(/<h1\\b[^>]*>[\\s\\S]*?<\\/h1>/gi)].map(m=>m[0].replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').slice(0,160))));
+}
  const images=[...source.matchAll(/<img\b[^>]*>/gi)].map(x=>x[0]);
  totalImages+=images.length;
  const missing=images.filter(tag=>!/\balt\s*=/i.test(tag)).length;
@@ -40,13 +43,22 @@ const homepage=pages.find(p=>p.name==='//')?.source;
 if(!homepage)failures.push('home page not found');
 else{
  const h1=homepage.match(/<h1 class="bde-dual-heading-35-625\b[\s\S]*?<\/h1>/i);
- if(!h1||!h1[0].includes('UK businesses more enquiries'))failures.push('homepage SEO H1 missing');
+ if(!h1||!h1[0].includes('UK businesses more enquiries')){
+   failures.push('homepage SEO H1 missing');
+   console.error('HOME DEBUG '+JSON.stringify({
+     h1tags:[...homepage.matchAll(/<h1\\b[^>]*>[\\s\\S]*?<\\/h1>/gi)].map(m=>m[0].slice(0,450)),
+     dual:homepage.slice(homepage.indexOf('bde-dual-heading-35-625')-100,homepage.indexOf('bde-dual-heading-35-625')+350)
+   }));
+ }
  const scripts=[...homepage.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)]
    .map(m=>{try{return JSON.parse(m[1])}catch{return null}}).filter(Boolean);
  const org=scripts.flatMap(o=>o['@graph']||[]).find(o=>o['@type']==='Organization');
  if(!org?.sameAs?.length)failures.push('official business social profiles missing from schema');
  const service=scripts.flatMap(o=>o['@graph']||[]).find(o=>o['@type']==='Service');
- if(service?.areaServed?.name!=='United Kingdom')failures.push('UK service area missing from Service schema');
+ if(service?.areaServed?.name!=='United Kingdom'){
+   failures.push('UK service area missing from Service schema');
+   console.error('SCHEMA DEBUG '+JSON.stringify({services:scripts.flatMap(o=>o['@graph']||[]).filter(o=>o['@type']==='Service'),types:scripts.flatMap(o=>o['@graph']||[]).map(o=>o['@type'])}));
+ }
  if(/src="\/wp-content\/uploads\/2024\/08\/Copy-of-PRUNUS-MEDIA.png"/.test(homepage))
    failures.push('full resolution 1 MB logo still used in HTML');
 }
