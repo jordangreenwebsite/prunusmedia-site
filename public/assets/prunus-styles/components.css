@@ -214,3 +214,89 @@ html.prunus-menu-open .bde-header-builder.pm-scroll-header{transform:translateY(
 .pm-growth-promo__inner>a{display:inline-flex;align-items:center;gap:10px;flex-shrink:0;border-radius:5px;background:#31523a;color:#fff!important;padding:13px 19px;font:650 14px/1.3 "Space Grotesk",sans-serif;text-decoration:none}
 .pm-growth-promo__inner>a:hover{background:#223d2a}
 @media(max-width:740px){.pm-growth-promo__inner{align-items:flex-start;flex-direction:column;gap:24px}.pm-growth-promo{padding:34px 19px}}
+
+
+/* One shared four-dropdown navigation. Pricing is a clear, separate first
+   action in every menu, rather than a second column or buried service link. */
+header .breakdance-dropdown-links > .prunus-pricing-dropdown-item {
+  display:block!important;
+  margin:10px 10px 13px!important;
+  padding:0!important;
+  background:#fff!important;
+  border:1px solid #2e2e2e!important;
+  border-radius:6px!important;
+  box-shadow:0 2px 7px rgba(32,46,33,.08);
+  overflow:hidden;
+}
+header .breakdance-dropdown-links > .prunus-pricing-dropdown-item .breakdance-dropdown-link {
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  min-height:46px!important;
+  padding:11px 17px!important;
+  margin:0!important;
+  background:#fff!important;
+  color:#1d1d1d!important;
+  text-decoration:none!important;
+  font:700 14px/1.4 "Space Grotesk",Arial,sans-serif!important;
+}
+header .prunus-pricing-dropdown-item .breakdance-dropdown-link__label,
+header .prunus-pricing-dropdown-item .breakdance-dropdown-link__text {
+  color:#1d1d1d!important;
+  font-weight:700!important;
+}
+header .prunus-pricing-dropdown-item .breakdance-dropdown-link:hover,
+header .prunus-pricing-dropdown-item .breakdance-dropdown-link:focus-visible {
+  background:#f2f6f0!important;
+  color:#111!important;
+}
+header .prunus-pricing-dropdown-item .breakdance-dropdown-link:focus-visible {
+  outline:3px solid #2e2e2e!important;
+  outline-offset:-4px!important;
+}
+/* Four consistent one-column menus: no exported two-column variants. */
+header .breakdance-dropdown-columns {
+  grid-template-columns:minmax(0,1fr)!important;
+}
+header .breakdance-dropdown-columns > .breakdance-dropdown-column {
+  width:100%!important;max-width:100%!important;min-width:0!important;
+}
+/* An understated, clearly visible homepage pricing invitation below hero. */
+.pm-home-pricing {
+  background:#e9efe6;
+  color:#2e2e2e;
+  border-top:1px solid #d8e1d3;
+  border-bottom:1px solid #d8e1d3;
+  padding:23px clamp(18px,4.2vw,70px);
+}
+.pm-home-pricing__inner {
+  width:min(100%,1150px);margin:0 auto;display:flex;
+  align-items:center;justify-content:space-between;gap:22px;
+}
+.pm-home-pricing__eyebrow {
+  font:700 11px/1.4 "Space Grotesk",Arial,sans-serif!important;
+  letter-spacing:.13em;text-transform:uppercase;color:#55725c;
+  margin:0 0 5px!important;
+}
+.pm-home-pricing__headline {
+  font:600 clamp(19px,2.5vw,26px)/1.25 "Playfair Display",Georgia,serif!important;
+  color:#2e2e2e;margin:0 0 5px!important;
+}
+.pm-home-pricing__detail {
+  font:400 15px/1.5 "Space Grotesk",Arial,sans-serif!important;
+  color:#485b4d;margin:0!important;
+}
+.pm-home-pricing__inner>a {
+  flex-shrink:0;display:inline-flex;align-items:center;gap:9px;
+  background:#fff!important;border:1px solid #34543c!important;
+  color:#182e1f!important;text-decoration:none!important;
+  padding:12px 17px;border-radius:5px;
+  font:700 13px/1.35 "Space Grotesk",Arial,sans-serif;
+}
+.pm-home-pricing__inner>a:hover {background:#f8fbf5!important}
+.pm-home-pricing__inner>a:focus-visible {outline:3px solid #2e2e2e!important;outline-offset:3px}
+@media (max-width:740px) {
+  .pm-home-pricing__inner{align-items:flex-start;flex-direction:column;gap:14px}
+  .pm-home-pricing__inner>a{min-height:44px}
+  header .breakdance-dropdown-links > .prunus-pricing-dropdown-item {margin:8px 4px 12px!important}
+}

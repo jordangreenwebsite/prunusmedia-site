@@ -47,7 +47,9 @@ try {
     { route: '/blog/', label: 'blog-desktop', width: 1440, height: 900 },
     { route: '/our-work/', label: 'portfolio-desktop', width: 1440, height: 900 },
     { route: '/pricing/', label: 'pricing-desktop', width: 1440, height: 900 },
-    { route: '/pricing/', label: 'pricing-mobile', width: 390, height: 844, mobile: true }
+    { route: '/pricing/', label: 'pricing-mobile', width: 390, height: 844, mobile: true },
+    { route: '/website-design/', label: 'website-menu-desktop', width: 1440, height: 900 },
+    { route: '/website-design/ecommerce-website-design/', label: 'ecommerce-menu-desktop', width: 1440, height: 900 }
   ];
   for (const test of cases) {
     console.log('Checking ' + test.label + ' on local Astro build');
@@ -82,7 +84,30 @@ try {
         failures.push(test.label + ': required Work / Blog dropdown links absent');
       } else {
         const firstWork = await page.locator('header .bde-menu-dropdown-27-153 .breakdance-dropdown-links > li:first-child a').getAttribute('href');
-        if (firstWork !== '/our-work/') failures.push(test.label + ': Our Work must be first in its dropdown');
+        const nextWork = await page.locator('header .bde-menu-dropdown-27-153 .breakdance-dropdown-links > li:nth-child(2) a').getAttribute('href');
+        if (firstWork !== '/pricing/' || nextWork !== '/our-work/') {
+          failures.push(test.label + ': Pricing must precede Our Work in its dropdown');
+        }
+        // Four menus, four single columns, a single visible logo.
+        const headerCols=await page.locator('header .breakdance-dropdown-column').count();
+        if(headerCols!==4) failures.push(test.label+': duplicate header columns, found '+headerCols);
+        const logo=page.locator('header img.breakdance-image-object').first();
+        if(await logo.count()!==1) failures.push(test.label+': header logo missing');
+        else {
+          const logoState=await logo.evaluate(el=>{
+            const b=el.getBoundingClientRect();
+            return {width:b.width,height:b.height,src:el.getAttribute('src')};
+          });
+          if(logoState.width<25 || logoState.height<25 || !logoState.src?.includes('Copy-of-PRUNUS-MEDIA-300x300.png')){
+            failures.push(test.label+': header logo hidden or not optimised');
+          }
+        }
+        for(const menuId of ['148','149','153','152']){
+          const list=page.locator('header .bde-menu-dropdown-27-'+menuId+' .breakdance-dropdown-links');
+          const first=await list.locator(':scope > li:first-child a').getAttribute('href');
+          const pricing=await list.locator(':scope > li.prunus-pricing-dropdown-item a[href="/pricing/"]').count();
+          if(first!=='/pricing/'||pricing!==1)failures.push(test.label+': Pricing missing or duplicated in dropdown '+menuId);
+        }
         for (const url of ['/blog/', '/our-work/']) {
           const result = await page.request.get(local + url);
           if (!result.ok()) failures.push(test.label + ': ' + url + ' returns ' + result.status());
@@ -118,6 +143,12 @@ try {
           });
           if(!shown) failures.push(test.label+': skip link not visible on focus');
           await skip.evaluate(el=>el.blur());
+        }
+      }
+      if(test.route==='/'){
+        const promo=page.locator('.pm-home-pricing');
+        if(await promo.count()!==1 || await promo.locator('a[href="/pricing/"]').count()!==1){
+          failures.push(test.label+': homepage pricing invitation missing');
         }
       }
       if(test.route==='/pricing/'){

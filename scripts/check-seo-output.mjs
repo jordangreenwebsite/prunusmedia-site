@@ -109,5 +109,38 @@ for(const route of ['//','/seo-agency-uk/','/social-media-marketing-uk/']){
   if(!html.includes('href="/pricing/"')) failures.push(route+' has no current pricing link');
   if(html.includes('href="/website-design/packages/"')) failures.push(route+' still links to old packages');
 }
+// One shared header must apply to native/editorial and legacy routes alike.
+// A legacy export with a second Industries column must never regress again.
+for(const {name,source} of pages){
+  const publicRoute=!/^\/(?:page|author|qs|client-login)\//.test(name);
+  if(!publicRoute || name==='/404.html') continue;
+  const header=source.match(/<header\b[^>]*>[\s\S]*?<\/header>/i)?.[0];
+  if(!header){failures.push(name+' missing shared header');continue;}
+  const columns=(header.match(/<div class="breakdance-dropdown-column\s*"/g)||[]).length;
+  const prices=(header.match(/class="breakdance-dropdown-item prunus-pricing-dropdown-item"/g)||[]).length;
+  const logos=(header.match(/<img\b[^>]*class="breakdance-image-object"/g)||[]).length;
+  if(columns!==4) failures.push(name+' has '+columns+' dropdown columns; expected 4');
+  if(prices!==4) failures.push(name+' has '+prices+' high-contrast Pricing items; expected 4');
+  if(logos!==1) failures.push(name+' has '+logos+' header logos; expected 1');
+  // The old package URL has a redirect but must not remain a clickable offer.
+  if(header.includes('href="/website-design/packages/"')) failures.push(name+' still links to old packages');
+  if(/href="\/(?:private-clinics|local-seo|website-design-ecommerce-web-design)\//.test(header)) {
+    failures.push(name+' includes an old broken header URL');
+  }
+  const visibleText=source
+    .replace(/<head\b[\s\S]*?<\/head>/gi,' ')
+    .replace(/<style\b[\s\S]*?<\/style>/gi,' ')
+    .replace(/<script\b[\s\S]*?<\/script>/gi,' ')
+    .replace(/<svg\b[\s\S]*?<\/svg>/gi,' ')
+    .replace(/<[^>]*>/g,' ')
+    .replace(/\s+/g,' ');
+  if(/£\s*(?:125|149|249|395|450|695|750)\s*(?:\/|per\s*)?\s*month\b/i.test(visibleText)) {
+    failures.push(name+' contains obsolete monthly package pricing');
+  }
+}
+if(!homepage?.includes('class="pm-home-pricing"') ||
+   !homepage?.includes('href="/pricing/">Explore our pricing')) {
+   failures.push('Homepage clear-pricing invitation is missing');
+}
 console.log('SEO OUTPUT AUDIT: '+pages.length+' pages; '+totalImages+' images checked; '+descriptions.size+' unique public descriptions; '+failures.length+' failures');
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}
