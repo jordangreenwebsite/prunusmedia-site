@@ -7,6 +7,7 @@ services: ["Website design","Gallery","Online shop"]
 status: "showcase"
 priority: 5
 featured: false
+draft: false
 ---
 
 ## The project

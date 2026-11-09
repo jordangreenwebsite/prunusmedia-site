@@ -7,6 +7,7 @@ services: ["Interactive calculator","UX","Frontend development"]
 status: "owned"
 priority: 6
 featured: false
+draft: false
 ---
 
 ## The project

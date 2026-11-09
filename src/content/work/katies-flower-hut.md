@@ -9,6 +9,7 @@ priority: 2
 featured: true
 completedAt: "2026-11-05"
 website: "https://katies-flower-hut.pages.dev/"
+draft: false
 ---
 
 ## The project

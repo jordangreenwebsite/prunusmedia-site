@@ -7,6 +7,7 @@ services: ["Website design"]
 status: "showcase"
 priority: 7
 featured: false
+draft: false
 ---
 
 ## The project

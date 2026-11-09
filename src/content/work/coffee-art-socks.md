@@ -7,6 +7,7 @@ services: ["Visual design","Commerce concept"]
 status: "concept"
 priority: 10
 featured: false
+draft: false
 ---
 
 ## The project

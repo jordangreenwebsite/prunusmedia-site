@@ -8,6 +8,7 @@ status: "archived"
 priority: 8
 featured: false
 website: "https://charleyhayessmr.pages.dev/"
+draft: false
 ---
 
 ## The project

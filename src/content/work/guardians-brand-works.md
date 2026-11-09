@@ -7,6 +7,7 @@ services: ["Design exploration","Brand presentation"]
 status: "concept"
 priority: 9
 featured: false
+draft: false
 ---
 
 ## The project

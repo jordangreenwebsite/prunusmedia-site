@@ -7,6 +7,7 @@ services: ["Website concept","Brand presentation"]
 status: "concept"
 priority: 11
 featured: false
+draft: false
 ---
 
 ## The project
