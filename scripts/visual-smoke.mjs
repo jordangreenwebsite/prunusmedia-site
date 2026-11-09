@@ -110,7 +110,7 @@ try {
       if(test.route==='/'){
         const mainHeading=page.locator('h1.bde-dual-heading-35-625');
         if(await mainHeading.count()!==1)failures.push(test.label+': one visible SEO hero H1 missing');
-        else if(!(await mainHeading.innerText()).includes('UK businesses more enquiries')){
+        else if(!(await mainHeading.innerText()).includes('to become your best source of new business.')){
           failures.push(test.label+': homepage SEO H1 wording missing');
         }
         const imagesWithoutAlt=await page.locator('img:not([alt])').count();
