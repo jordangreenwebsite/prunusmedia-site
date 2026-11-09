@@ -56,7 +56,9 @@ assert(/src="\/wp-content\/uploads\/2026\/09\/Hero-image-1024x724.png"/.test(hom
   'Homepage illustrative hero still uses a full resolution source');
 assert(/srcset=/.test(homepage),'Responsive srcset must be retained');
 const seoCss=readFileSync('dist/assets/prunus-styles/components.css','utf8');
-assert(seoCss.includes('Prunus-main-hero-768x432.png'),'Reduced mobile hero background missing');
+assert(seoCss.includes('aspect-ratio:2000/1414'),'Reserved hero aspect ratio missing');
+assert(!seoCss.includes('Prunus-main-hero-768x432.png'),
+  'Keep the original approved full-resolution hero background to protect design fidelity');
 
 console.log('SEO CHECK PASSED: '+documentCount+' exported pages, '+images+
   ' images with alt, correct homepage H1, unique meta, honest schema and responsive image resources');

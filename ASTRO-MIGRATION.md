@@ -71,7 +71,7 @@ Implemented in \`src/lib/seo-enhancements.mjs\` to preserve approved design:
 - Upgrade homepage existing heading to its sole H1 (no copy or animation change); repair Contact FAQ auxiliary H1 to H2.
 - Add \`alt\` to every exported \`img\`. Use meaningful descriptions only where the asset purpose is supported by its name/context. Repeated decorative marquee icons or unknown stock photographs receive \`alt=""\` (correct accessibility practice, not made-up descriptions).
 - Add trustworthy Organisation schema contactPoint (published email), UK service area and social profile \`sameAs\` links; remove obsolete WP SearchAction. No fabricated phone, physical address, opening hours or local-business subtype solely to improve an audit score.
-- Correct Content Creation description, speed up footer/header logo and decorative asset requests using present compressed WordPress variants, cap responsive image \`sizes\`, reserve the image hero aspect ratio and serve smaller mobile background art.
+- Correct Content Creation description, speed up footer/header logo and decorative asset requests using present compressed WordPress variants, cap responsive image \`sizes\`, reserve the image hero aspect ratio and retain the approved full-resolution photographic background to avoid visual mismatches.
 - Add automated source/image/heading/schema tests. Test the live site's actual Lighthouse and SEO-auditor result AFTER deployment to determine remaining gaps; never claim a new score without a new audit.
 
 Do not perform a visual redesign or treat the E grade as a verified physical carbon emission measurement.

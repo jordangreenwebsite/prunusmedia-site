@@ -147,18 +147,10 @@ html.prunus-menu-open .bde-header-builder.pm-scroll-header{transform:translateY(
 }
 
 
-/* Reserve the same aspect ratio and reduce unnecessary image transfer on the
-   approved homepage without changing the design, positioning or interaction. */
+/* Reserve the original hero image aspect ratio without changing the
+   approved full-resolution photographic background. */
 .bde-image2-35-620{aspect-ratio:2000/1414}
 .bde-image2-35-620 img{max-width:100%;height:auto}
-.bde-section-35-253{
-  background-image:url("/wp-content/uploads/2026/09/Prunus-main-hero-1536x864.png")!important;
-}
-@media(max-width:767px){
-  .bde-section-35-253{
-    background-image:url("/wp-content/uploads/2026/09/Prunus-main-hero-768x432.png")!important;
-  }
-}
 /* The new semantic h1 retains exactly the same typographic treatment as the
    old hero h2: only the document outline changes. */
 h1.bde-dual-heading-35-625{margin-block:0}
