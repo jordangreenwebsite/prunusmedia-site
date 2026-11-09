@@ -48,3 +48,11 @@ Status: implemented design for the shared client login and the signed-in website
 - A planned publication date does **not** imply that the blog has been published or even approved. Undated requests must never be given guessed deadlines.
 - Keep cream #f8f2e9, EB Garamond heading typography, Arial body copy, rounded ivory cards and visible focus states in every new navigation and calendar element.
 - Desktop/sidebar + mobile/bottom-nav experience must remain consistent when a newly invited client signs in with no other customer accounts.
+
+
+## Evidence integrations and MCP
+- Search Insights is a cream dashboard panel showing **actual Search Console API numbers** when the client's exact property is authorised. Missing credentials must display not connected; never substitute sample metrics.
+- Source discovery displays external candidate URLs and source title snippets labelled NOT VERIFIED until checked by a human. Do not add fabricated checked dates.
+- Dedicated-token MCP endpoint has **read-only** tools; it must never become a way to read private leads or uploads or publish content.
+- The optional GitHub feature only prepares a draft PR for the confirmed Prunus Media repo with draft: true. It does not publish and cannot affect client/Certificates repos.
+- Maintain aria-live statuses, visible focus, mobile scrollable metrics tables, EB Garamond headings, Arial forms, warm cream cards.

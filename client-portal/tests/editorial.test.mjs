@@ -201,3 +201,129 @@ test('unconfigured GSC remains clear and tenant scoped',async()=>{
   r=await h.call('/api/seo?client='+A,{email:'detailer@example.co.uk'});
   assert.equal(r.res.status,404);
 });
+
+
+test('MCP is off without its own token and exposes read-only tools only',async()=>{
+  const h=harness(),url=base+'/mcp';
+  const token='m'.repeat(64);
+  const headers={
+    'content-type':'application/json','accept':'application/json, text/event-stream',
+    'mcp-protocol-version':'2026-07-28','mcp-method':'tools/list',
+    authorization:'Bearer '+token
+  };
+  const body=JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list'});
+  let res=await worker.fetch(new Request(url,{method:'POST',headers,body}),h.env,{waitUntil(){}});
+  assert.equal(res.status,503);
+  h.env.MCP_ADMIN_TOKEN=token;
+  res=await worker.fetch(new Request(url,{method:'POST',headers:{...headers,origin:'https://other.example'},body}),h.env,{waitUntil(){}});
+  assert.equal(res.status,403);
+  res=await worker.fetch(new Request(url,{method:'POST',headers,body}),h.env,{waitUntil(){}});
+  assert.equal(res.status,200);
+  const tools=(await res.json()).result.tools;
+  assert.equal(tools.length,4);
+  assert.ok(tools.every(t=>t.annotations.readOnlyHint===true));
+  assert.ok(!tools.some(t=>/publish|write|delete/i.test(t.name)));
+  const other=await worker.fetch(new Request(url,{method:'POST',headers:{...headers,authorization:'Bearer '+'n'.repeat(64)},body}),h.env,{waitUntil(){}});
+  assert.equal(other.status,401);
+});
+
+
+test('Brave discovery creates source candidates, not verified citations or blogs',async()=>{
+  const h=harness(),fetchBefore=globalThis.fetch;
+  h.env.BRAVE_SEARCH_API_KEY='fixture-key';
+  h.sqlite.prepare('UPDATE clients SET industry=?,service_area=? WHERE id=?')
+    .run('Roofing and fascias','Cirencester',A);
+  const jobId='00000000-0000-4000-8000-000000000222';
+  h.sqlite.prepare("INSERT INTO research_jobs (id,client_id,week_start,status) VALUES (?,?,?,'queued')")
+    .run(jobId,A,'2026-11-09');
+  globalThis.fetch=async(url,options)=>{
+    assert.match(String(url),/api\.search\.brave\.com\/res\/v1\/web\/search/);
+    assert.equal(options.headers['x-subscription-token'],'fixture-key');
+    return new Response(JSON.stringify({web:{results:[
+      {title:'Official construction safety guidance',url:'https://www.hse.gov.uk/construction/',description:'Search summary only.'},
+      {title:'Unsafe local result skipped',url:'https://localhost/unsafe'}
+    ]}}),{status:200});
+  };
+  try{
+    let r=await h.call('/api/admin/research/'+jobId+'/discover',{method:'POST',email:'roofer@example.co.uk',data:{}});
+    assert.equal(r.res.status,403);
+    r=await h.call('/api/admin/research/'+jobId+'/discover',{method:'POST',data:{}});
+    assert.equal(r.res.status,200,JSON.stringify(r.json));
+    assert.equal(r.json.sources.length,1);
+    assert.equal(r.json.sources[0].status,'candidate-not-verified');
+    assert.equal(r.json.sources[0].checked_at,null);
+    const record=h.sqlite.prepare('SELECT status,candidate_sources_json FROM research_jobs WHERE id=?').get(jobId);
+    assert.equal(record.status,'working');
+    assert.equal(JSON.parse(record.candidate_sources_json).length,1);
+    assert.equal(h.sqlite.prepare('SELECT COUNT(*) n FROM editorial_posts').get().n,0);
+  }finally{globalThis.fetch=fetchBefore;}
+});
+
+
+test('Google Search Console data comes from an authorised API call, not made-up metrics',async()=>{
+  const h=harness(),original=globalThis.fetch;
+  const {privateKey}=generateKeyPairSync('rsa',{modulusLength:2048});
+  h.env.GSC_SERVICE_ACCOUNT_JSON=JSON.stringify({
+    type:'service_account',client_email:'site-reports@prunus-tests.iam.gserviceaccount.com',
+    private_key_id:'test',private_key:privateKey.export({type:'pkcs8',format:'pem'})
+  });
+  h.sqlite.prepare('UPDATE clients SET gsc_property=? WHERE id=?').run('sc-domain:roofer.example.co.uk',A);
+  let analytics=0;
+  globalThis.fetch=async(url,options)=>{
+    if(String(url)==='https://oauth2.googleapis.com/token')
+      return new Response(JSON.stringify({access_token:'fixture-token'}),{status:200});
+    assert.match(String(url),/www\.googleapis\.com\/webmasters\/v3\/sites\/sc-domain%3Aroofer/);
+    assert.equal(options.headers.authorization,'Bearer fixture-token');
+    analytics++;
+    if(JSON.parse(options.body).dimensions?.[0]==='query')
+      return new Response(JSON.stringify({rows:[{keys:['roof cleaning'],clicks:7,impressions:200,ctr:.035,position:9.1}]}),{status:200});
+    return new Response(JSON.stringify({rows:[{clicks:30,impressions:500,ctr:.06,position:12.3}]}),{status:200});
+  };
+  try{
+    let r=await h.call('/api/seo?client='+A,{email:'roofer@example.co.uk'});
+    assert.equal(r.res.status,200,JSON.stringify(r.json));
+    assert.equal(r.json.current.clicks,30);
+    assert.equal(r.json.queries[0].query,'roof cleaning');
+    assert.equal(analytics,3);
+    r=await h.call('/api/seo?client='+A,{email:'detailer@example.co.uk'});
+    assert.equal(r.res.status,404);
+  }finally{globalThis.fetch=original;}
+});
+
+
+test('GitHub reviewer PRs can target the live Prunus site only and remain drafts',async()=>{
+  const h=harness(),original=globalThis.fetch;
+  const postId='00000000-0000-4000-8000-000000000333';
+  h.sqlite.prepare(
+    "INSERT INTO editorial_posts (id,client_id,topic_key,title,suggested_by,audience_question,brief,draft,evidence_note,status) VALUES (?,?,?,?,?,?,?,?,?,'approved')"
+  ).run(postId,A,'prunus article','A practical website speed guide','admin@prunusmedia.com',
+    'How can a business improve its website speed?',
+    'A researched explanation of pages, loading and accessibility using real client data and measured SEO checks.',
+    ('Check real site performance and prioritise accessible mobile pages before changing code.\n').repeat(10),
+    'First-party interview and original evidence from client performance checks.');
+  let r=await h.call('/api/admin/editorial/'+postId+'/create-pr',{method:'POST',data:{}});
+  assert.equal(r.res.status,503,'Without separate GitHub secret no repository writes occur');
+  h.env.GITHUB_PRUNUS_CONTENT_TOKEN='fixture-for-test';
+  r=await h.call('/api/admin/editorial/'+postId+'/create-pr',{method:'POST',data:{}});
+  assert.equal(r.res.status,403,'Client roofing sites are never authorised in the Prunus repository writer');
+  h.sqlite.prepare('UPDATE clients SET domain=?,brand=? WHERE id=?').run('prunusmedia.com','prunus',A);
+  const calls=[];
+  globalThis.fetch=async(url,options)=>{
+    calls.push({url:String(url),method:options.method,body:options.body?JSON.parse(options.body):null});
+    if(String(url).endsWith('/git/ref/heads/main'))
+      return new Response(JSON.stringify({object:{sha:'a'.repeat(40)}}),{status:200});
+    if(String(url).endsWith('/pulls'))
+      return new Response(JSON.stringify({number:15,html_url:'https://github.com/jordangreenwebsite/prunusmedia-site/pull/15'}),{status:201});
+    return new Response(JSON.stringify({ok:true}),{status:201});
+  };
+  try{
+    r=await h.call('/api/admin/editorial/'+postId+'/create-pr',{method:'POST',data:{}});
+    assert.equal(r.res.status,201,JSON.stringify(r.json));
+    assert.equal(calls.length,4);
+    assert.ok(calls.every(x=>x.url.startsWith('https://api.github.com/repos/jordangreenwebsite/prunusmedia-site/')));
+    assert.equal(calls.at(-1).body.draft,true);
+    const content=Buffer.from(calls.find(x=>x.method==='PUT').body.content,'base64').toString();
+    assert.match(content,/draft: true/);
+    assert.equal(h.sqlite.prepare('SELECT github_pr_number FROM editorial_posts WHERE id=?').get(postId).github_pr_number,15);
+  }finally{globalThis.fetch=original;}
+});

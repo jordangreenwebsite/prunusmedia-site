@@ -99,3 +99,8 @@ The existing draft portal now includes the agency-wide editorial calendar, tenan
 7. Do not remove the marketing site's holding page or merge login-route redirects until the Worker and real cross-tenant tests are successful.
 
 Scheduled articles deliberately require a separate reviewed GitHub PR, successful build and verified live URL. This is the safe release gate for SEO clients.
+
+
+## Optional GSC, research discovery, MCP & GitHub PR integrations (2026-11-09)
+
+Read **INTEGRATIONS.md** for setup, scope and review gates. A separate D1 migration (0003_integrations.sql) adds per-client Search Console property identifiers, research source-candidate metadata and optional GitHub draft PR links. The new secrets are optional: existing portal OTP, dashboards, uploads and customer isolation continue without them. The integrations do not touch Certificates or another client repository. Source discovery is NOT source verification; a draft PR is NOT published.
