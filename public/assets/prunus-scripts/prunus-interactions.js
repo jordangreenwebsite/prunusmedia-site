@@ -234,6 +234,25 @@
       if (!motionDisabled) wrapper.classList.add('prunus-animated-phrase');
     });
 
+
+    // Restore the original hand-drawn RoughNotation highlight of the
+    // "Websites built" phrase, using native CSS instead of the old plugin.
+    document.querySelectorAll('.bde-dual-heading .js-annotate').forEach((text)=>{
+      const heading=text.closest('.bde-dual-heading');
+      if(!heading)return;
+      if(motionDisabled||!('IntersectionObserver' in window)){
+        text.classList.add('pm-highlight-drawn');return;
+      }
+      const observer=new IntersectionObserver((entries)=>{
+        entries.forEach((entry)=>{
+          if(!entry.isIntersecting)return;
+          text.classList.add('pm-highlight-drawn');
+          observer.unobserve(entry.target);
+        });
+      },{threshold:.35});
+      observer.observe(heading);
+    });
+
     // Original exported sections carry data-entrance; Astro renames that
     // marker to data-prunus-reveal. Respect preferred reduced motion, keep
     // all content visible if observers/JS aren't supported, and animate once
@@ -265,21 +284,44 @@
       element.classList.add('prunus-sticky');
     });
 
+
+    // Accessible sticky navigation: visible for the first 1,100px; once
+    // further down it hides on sustained downward scroll and returns on up.
     const header = document.querySelector('.bde-header-builder');
-    if (header) {
-      let previous = window.scrollY;
-      const onScroll = () => {
-        const current = window.scrollY;
-        header.classList.toggle('bde-header-builder--overlay', current < 48);
-        const scrollDown = current > previous + 5;
-        const scrollUp = current < previous - 5;
-        if (current < 120 || scrollUp) header.style.transform = '';
-        else if (scrollDown) header.style.transform = 'translateY(-100%)';
-        previous = current;
-      };
-      window.addEventListener('scroll', onScroll, { passive: true });
-      onScroll();
+    if(header){
+      header.classList.add('pm-scroll-header');
+      const threshold=1100;
+      let lastY=Math.max(0,scrollY),direction=0,distance=0,ticking=false;
+      function update(){
+        const y=Math.max(0,scrollY),delta=y-lastY;
+        header.classList.toggle('bde-header-builder--overlay',y<40);
+        header.classList.toggle('pm-header-scrolled',y>50);
+        const open=menu?.classList.contains('breakdance-menu--open');
+        const focus=header.contains(document.activeElement) &&
+          !['BODY','HTML'].includes(document.activeElement?.tagName);
+        if(y<=threshold||open||focus){
+          header.classList.remove('pm-header-hidden');
+          distance=0;
+        }else if(Math.abs(delta)>1){
+          const next=Math.sign(delta);
+          if(next!==direction){direction=next;distance=0;}
+          distance+=Math.abs(delta);
+          if(distance>=18){header.classList.toggle('pm-header-hidden',next>0);distance=0;}
+        }
+        lastY=y;ticking=false;
+      }
+      window.addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(update);}},
+        {passive:true});
+      window.addEventListener('focusin',()=>header.classList.remove('pm-header-hidden'));
+      toggle?.addEventListener('click',()=>header.classList.remove('pm-header-hidden'));
+      update();
     }
+    document.querySelectorAll('[data-prunus-back-to-top]').forEach((link)=>{
+      link.addEventListener('click',(event)=>{
+        event.preventDefault();
+        window.scrollTo({top:0,behavior:motionDisabled?'instant':'smooth'});
+      });
+    });
 
     // All existing case-study buttons lead to verified editorial entries.
     // The three project showcases remain in their original visual order.
