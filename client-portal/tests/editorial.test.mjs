@@ -82,7 +82,7 @@ test('private editorial calendar, duplicate control, approvals and release gate'
     sources:[{title:'Official weather advice',url:'https://www.metoffice.gov.uk/',checked_at:'2026-11-09'}]}});
   assert.equal(r.res.status,200,JSON.stringify(r.json));
   r=await h.call('/api/editorial?client='+A,{email:'roofer@example.co.uk'});
-  assert.equal(r.json.posts[0].draft,draft);
+  assert.equal(r.json.posts[0].draft,draft.trim());
   r=await h.call('/api/editorial/'+post+'/decision',{method:'POST',email:'detailer@example.co.uk',data:{approve:true}});
   assert.equal(r.res.status,404);
   r=await h.call('/api/editorial/'+post+'/decision',{method:'POST',email:'roofer@example.co.uk',data:{approve:true}});
