@@ -65,7 +65,7 @@ function replaceTag(html, regex, replacement) {
   return html.replace(regex, replacement);
 }
 
-export function getEditorialShell({ title, description, pathname, type = 'WebPage', image, date, noindex = false }) {
+export function getEditorialShell({ title, description, pathname, type = 'WebPage', image, date, noindex = false, stylesheet }) {
   const canonical = 'https://prunusmedia.com' + pathname;
   const safeTitle = esc(title + ' | Prunus Media');
   const safeDescription = esc(description);
@@ -143,7 +143,8 @@ export function getEditorialShell({ title, description, pathname, type = 'WebPag
   opening = replaceTag(opening, /<script type="application\/ld\+json" class="rank-math-schema">[\s\S]*?<\/script>/i,
     '<script type="application/ld+json">' + jsonSafe(schema) + '</script>');
   if (noindex) opening = opening.replace('</head>', '<meta name="robots" content="noindex,nofollow">\n</head>');
-  opening = opening.replace('</head>', editorialCss + '\n</head>');
+  const extraCss = typeof stylesheet === 'string' && /^\/assets\/prunus-styles\/[a-z0-9-]+\.css$/.test(stylesheet) ? '<link rel="stylesheet" href="' + esc(stylesheet) + '">\n' : '';
+  opening = opening.replace('</head>', editorialCss + '\n' + extraCss + '</head>');
 
   // Existing global header/footer scripts are left intact; homepage-only
   // interactions are stripped on new editorial pages to avoid missing targets.

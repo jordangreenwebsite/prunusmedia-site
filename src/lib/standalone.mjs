@@ -88,6 +88,11 @@ export function cleanPageHtml(originalHtml, filename) {
   html = html.replace(/<meta[^>]*(?:name=["']generator["']|name=["']ssp-config-path["'])[^>]*>/gi, '');
   html = html.replace(/<link[^>]*href=["']\/xmlrpc\.php[^>]*>/gi, '');
   html = html.replaceAll('http://prunus-media.local', 'https://prunusmedia.com');
+  // Point the established header navigation and every legacy internal link to
+  // one canonical, native Astro pricing page (the former URL redirects).
+  html = html.replaceAll('/website-design/packages/', '/pricing/');
+  html = html.replace(/(<span class="breakdance-dropdown-link__text">)\s*Packages(?=\s*<\/span>)/gi,'$1Pricing');
+
   // The live Astro site does not need WordPress's exported editor metadata,
   // emoji/plugin styles, or its obsolete XML-RPC/RSD discovery links.
   html = html.replace(/<style\b[^>]*id=["'](?:wp-img-auto-sizes-contain-inline-css|wp-emoji-styles-inline-css|wp-block-library-inline-css|classic-theme-styles-inline-css)["'][^>]*>[\s\S]*?<\/style>/gi, '');
@@ -159,6 +164,39 @@ export function cleanPageHtml(originalHtml, filename) {
   if (!/\bid=["']main-content["']/.test(html)) {
     html = html.replace(/(<\/header>[\s\S]*?<section\b)([^>]*>)/i,
       (match,begin,end) => begin + (/\bid=/.test(end) ? end.replace(/\bid=["'][^"']+["']/, 'id="main-content"') : ' id="main-content"' + end));
+  }
+
+
+  const currentOffers = {
+    'website-design/index.html': {
+      eyebrow:'Website design pricing',
+      heading:'Build it properly. Keep it growing.',
+      copy:'Prunus builds from £995 one-off. Every website has the same £99/month hosting option. With our £195/month ongoing SEO service, hosting is included while SEO is active.'
+    },
+    'seo-agency-uk/index.html': {
+      eyebrow:'Ongoing SEO & growth',
+      heading:'Real, ongoing SEO. £195/month.',
+      copy:'Five keywords tracked, up to five priority pages optimised a month, a researched weekly blog, eligible Google Business Profile support and monthly reporting. Your website hosting is included while SEO is active. Three-month minimum.'
+    },
+    'social-media-marketing-uk/index.html': {
+      eyebrow:'Flexible marketing services',
+      heading:'Social media support from £99/month.',
+      copy:'We quote the work your business actually needs, rather than forcing you into tiers. Meta and Google Ads management start from £50/month, with advertising spend paid separately.'
+    }
+  };
+  const offer=currentOffers[filename];
+  if(offer){
+    const htmlPromo='<section class="pm-growth-promo" aria-labelledby="pm-growth-heading">'+
+      '<div class="pm-growth-promo__inner"><div><p>'+offer.eyebrow+'</p>'+
+      '<h2 id="pm-growth-heading">'+offer.heading+'</h2>'+
+      '<div class="pm-growth-promo__body">'+offer.copy+'</div></div>'+
+      '<a href="/pricing/">View clear pricing <span aria-hidden="true">→</span></a></div></section>';
+    // Insert immediately before the semantic footer; do not change the
+    // existing page sections or interfere with the contact form.
+    html=html.replace('<footer class="pm-site-footer"', htmlPromo+'<footer class="pm-site-footer"');
+  }
+  if(filename==='contact/index.html' && !html.includes('pricing-contact.js')){
+    html=html.replace('</body>', '<script defer src="/assets/prunus-scripts/pricing-contact.js"></script>\n</body>');
   }
 
   // Search semantics, non-fabricated structured data, and image accessibility.

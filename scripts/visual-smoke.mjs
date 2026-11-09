@@ -45,7 +45,9 @@ try {
     { route: '/industries/accountants/', label: 'accountants-desktop', width: 1440, height: 900 },
     { route: '/industries/private-clinics/', label: 'clinics-desktop', width: 1440, height: 900 },
     { route: '/blog/', label: 'blog-desktop', width: 1440, height: 900 },
-    { route: '/our-work/', label: 'portfolio-desktop', width: 1440, height: 900 }
+    { route: '/our-work/', label: 'portfolio-desktop', width: 1440, height: 900 },
+    { route: '/pricing/', label: 'pricing-desktop', width: 1440, height: 900 },
+    { route: '/pricing/', label: 'pricing-mobile', width: 390, height: 844, mobile: true }
   ];
   for (const test of cases) {
     console.log('Checking ' + test.label + ' on local Astro build');
@@ -97,6 +99,30 @@ try {
           }
           if (test.mobile) await page.keyboard.press('Escape');
         }
+      }
+
+      // Skip link hidden visually until actual keyboard focus.
+      if(test.route==='/our-work/' || test.route==='/pricing/'){
+        const skip=page.locator('.pm-skip-link');
+        if(await skip.count()!==1) failures.push(test.label+': skip link absent or duplicated');
+        else {
+          const hidden=await skip.evaluate(el=> {
+            const css=getComputedStyle(el);
+            return css.clipPath==='inset(50%)' && el.getBoundingClientRect().width<=2;
+          });
+          if(!hidden) failures.push(test.label+': skip link visible without keyboard focus');
+          await skip.focus();
+          const shown=await skip.evaluate(el=>{
+            const css=getComputedStyle(el);
+            return css.clipPath!=='inset(50%)' && el.getBoundingClientRect().width>20;
+          });
+          if(!shown) failures.push(test.label+': skip link not visible on focus');
+          await skip.evaluate(el=>el.blur());
+        }
+      }
+      if(test.route==='/pricing/'){
+        if(await page.locator('.pm-pricing__build').count()!==3) failures.push(test.label+': expected three website build cards');
+        if(await page.locator('.pm-pricing__seo-card').count()!==1) failures.push(test.label+': expected one SEO price card');
       }
       if (await page.locator('header .prunus-client-login').count()) {
         failures.push(test.label + ': client login incorrectly still in header');

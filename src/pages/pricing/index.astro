@@ -1,0 +1,168 @@
+---
+import EditorialLayout from '../../layouts/EditorialLayout.astro';
+const builds = [
+  {
+    id:'build-10-15', eyebrow:'Launch / For growing businesses', name:'10–15 page website', price:'£995',
+    summary:'A proper business website with enough space to explain your services and turn visitors into enquiries.',
+    points:['Up to 15 planned pages','Custom responsive design','Service-focused site structure','Technical SEO at launch','Page titles, descriptions and internal links','Enquiry forms and conversion-ready calls to action','Analytics and Search Console setup']
+  },
+  {
+    id:'build-15-20', eyebrow:'Growth / Most popular', name:'15–20 page website', price:'£1,795',
+    summary:'For established businesses ready to cover more services, customer questions and locations.',
+    points:['Up to 20 structured pages','More detailed service and location coverage','Keyword and competitor research','Technical SEO and structured data','Conversion-led page layouts','Performance and accessibility checks','Analytics, Search Console and launch testing']
+  },
+  {
+    id:'build-custom', eyebrow:'Scale / Built around you', name:'Fully custom website', price:'£2,995',
+    summary:'When a straightforward brochure site is not enough. We plan the scope around the job.',
+    points:['Bespoke site architecture and design','Advanced features and integrations scoped together','Content migration or multi-location structures','Technical SEO built into development','Performance, security and accessibility planning','Custom quote and delivery milestones','A platform you can keep growing']
+  }
+];
+const addons=[
+  {id:'social', title:'Social media management', price:'From £99', unit:'/month', body:'Content, posting and ongoing management scoped around your business, channels and goals. We quote for the actual level of work.'},
+  {id:'ads', title:'Meta & Google Ads management', price:'From £50', unit:'/month', body:'Campaign setup, monitoring or management quoted to scope. Advertising spend is separate and paid directly to the platform.'},
+  {id:'hourly', title:'Help with an existing website', price:'£50', unit:'/hour', body:'Small changes, technical fixes, updates and practical website help when you do not need a complete rebuild or retainer.'}
+];
+---
+<EditorialLayout
+  title="Website Design & SEO Pricing UK"
+  description="Clear website design pricing for UK businesses: 10–15 page builds from £995, £99/month hosting and ongoing SEO from £195/month with hosting included."
+  pathname="/pricing/"
+  stylesheet="/assets/prunus-styles/pricing.css"
+>
+  <div class="pm-pricing">
+    <header class="pm-pricing__hero">
+      <p class="pm-editorial__eyebrow">Prunus Media / Pricing</p>
+      <h1>Built properly. <em>Priced clearly.</em></h1>
+      <p class="pm-editorial__intro">A website should be the start of something useful, not another bill with no clear purpose. We build substantial, search-led websites for businesses that want to be found, trusted and chosen.</p>
+      <div class="pm-pricing__hero-points">
+        <span>One-off build cost</span><span>£99/month standalone hosting</span><span>SEO from £195/month</span>
+      </div>
+      <a class="pm-pricing__link" href="/our-work/">See the websites we've built <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <section aria-labelledby="builds-heading" class="pm-pricing__section">
+      <div class="pm-pricing__section-head">
+        <p class="pm-pricing__eyebrow">01 / Your website</p>
+        <h2 id="builds-heading">Choose the size of your next build.</h2>
+        <p>Every build is quoted as a <strong>one-off project</strong>, with technical SEO included from the start. The page ranges give you a useful starting point; the final price depends on content, complexity and integrations.</p>
+      </div>
+      <div class="pm-pricing__builds">
+        {builds.map((build, index) => <article class:list={['pm-pricing__build', {'pm-pricing__build--featured':index===1}]}>
+          {index===1 && <div class="pm-pricing__popular">Popular choice</div>}
+          <p class="pm-pricing__eyebrow">{build.eyebrow}</p>
+          <h3>{build.name}</h3>
+          <p class="pm-pricing__cost-label">One-off build cost from</p>
+          <p class="pm-pricing__cost">{build.price}</p>
+          <p class="pm-pricing__summary">{build.summary}</p>
+          <ul>{build.points.map(point=><li>{point}</li>)}</ul>
+          <a class="pm-pricing__button" href={'/contact/#interest='+build.id}>Talk to us about this build <span aria-hidden="true">→</span></a>
+        </article>)}
+      </div>
+      <p class="pm-pricing__fine-print">These are the established Prunus build starting prices, not fixed quotes. Content production, complex integrations and unusual migrations are scoped before work begins. New hosted website packages have a 12-month hosting term; SEO has a three-month minimum. Hosting is included during active SEO months and is £99/month when SEO is inactive.</p>
+    </section>
+
+    <section class="pm-pricing__rebuild" aria-labelledby="rebuild-heading">
+      <div>
+        <p class="pm-pricing__eyebrow">02 / Outgrown your website?</p>
+        <h2 id="rebuild-heading">Rebuild what isn't working. Keep what is.</h2>
+        <p>Already have a site? We can rebuild it around a clearer structure, lighter code, better mobile usability and solid technical SEO. We assess the existing page count, content, migration and functionality before quoting an upfront price.</p>
+        <p><strong>Then you choose what happens next:</strong> keep it hosted and maintained for £99/month, or add our £195/month SEO service and your hosting is included for every month you remain on SEO.</p>
+        <a class="pm-pricing__button pm-pricing__button--light" href="/contact/#interest=rebuild">Discuss a website rebuild <span aria-hidden="true">→</span></a>
+      </div>
+      <aside class="pm-pricing__proof">
+        <p class="pm-pricing__eyebrow">The work behind the offer</p>
+        <h3>Real businesses. Real projects.</h3>
+        <p>Residential Roofing &amp; Fascias is an example of a substantial rebuild, with stronger service and location structure and an SEO foundation designed for ongoing improvement.</p>
+        <p>Our work also includes J Piper Cleaning Services, our own UK Trade Websites, and SEO work for PP Power Detailing.</p>
+        <a href="/our-work/residential-roofing-and-fascias/">Explore the roofing rebuild <span aria-hidden="true">↗</span></a>
+        <small>Results are measured over time. We do not promise rankings or invent performance figures.</small>
+      </aside>
+
+    </section>
+
+    <section class="pm-pricing__comparison" aria-label="Before and after example of a website rebuild">
+      <div class="pm-pricing__section-head">
+        <p class="pm-pricing__eyebrow">A real rebuild / Residential Roofing &amp; Fascias</p>
+        <h2>See the difference a thoughtful rebuild makes.</h2>
+        <p>We preserved the familiar character of the business while creating a clearer, more expandable website with dedicated service and location pages. Scroll through the two screenshots to compare the layouts.</p>
+      </div>
+      <div class="pm-pricing__comparison-grid">
+        <figure>
+          <figcaption>Before — existing website</figcaption>
+          <div class="pm-pricing__comparison-scroll" role="region" tabindex="0" aria-label="Scroll through original roofing website screenshot">
+            <img src="https://uktradewebsites.co.uk/case-studies/roofing/before.jpg" loading="lazy" decoding="async" alt="Original Residential Roofing and Fascias website before the rebuild" />
+          </div>
+        </figure>
+        <figure>
+          <figcaption>After — rebuilt Astro website</figcaption>
+          <div class="pm-pricing__comparison-scroll" role="region" tabindex="0" aria-label="Scroll through the rebuilt roofing website screenshot">
+            <img src="https://uktradewebsites.co.uk/case-studies/roofing/after.jpg" loading="lazy" decoding="async" alt="Rebuilt Residential Roofing and Fascias website with clearer layout and local services" />
+          </div>
+        </figure>
+      </div>
+      <p class="pm-pricing__comparison-foot">From the original website to a 17-page rebuild with 15 additional service and location pages. <a href="/our-work/residential-roofing-and-fascias/">Read the complete case study →</a></p>
+    </section>
+
+    <section class="pm-pricing__seo" aria-labelledby="seo-heading">
+      <div class="pm-pricing__seo-copy">
+        <p class="pm-pricing__eyebrow">03 / Ongoing growth</p>
+        <h2 id="seo-heading">A website that keeps earning its place.</h2>
+        <p class="pm-pricing__seo-lede">We want your business to grow because that gives you a reason to keep working with us. We're here to be a practical supporter of your business, improving what people find, what they read and how easily they can enquire.</p>
+        <p>Search engine optimisation isn't a one-off switch. It means consistent improvements, useful content, monitoring and adapting when the evidence changes.</p>
+        <p class="pm-pricing__seo-note">Every SEO plan starts with a <strong>three-month minimum</strong>. There are no guaranteed rankings or enquiry numbers.</p>
+      </div>
+      <div class="pm-pricing__seo-card">
+        <p class="pm-pricing__eyebrow">One clear SEO service</p>
+        <p class="pm-pricing__seo-price">£195 <small>/month</small></p>
+        <p class="pm-pricing__seo-hosting">Website hosting included while SEO is active</p>
+        <ul>
+          <li>Five priority keywords tracked</li>
+          <li>Up to five priority pages reviewed and optimised each month</li>
+          <li>One researched, relevant blog post each week</li>
+          <li>Google Business Profile setup or optimisation, where eligible</li>
+          <li>Search Console monitoring and technical SEO checks</li>
+          <li>Internal linking and content improvements</li>
+          <li>Monthly results report and next priorities</li>
+        </ul>
+        <a class="pm-pricing__button" href="/contact/#interest=seo">Talk about growing my business <span aria-hidden="true">→</span></a>
+        <p class="pm-pricing__fine-print">If SEO ends, hosting returns to the standard £99/month where we continue to host your website. The blog schedule is subject to necessary business input and approval.</p>
+      </div>
+    </section>
+
+    <section class="pm-pricing__hosting" aria-labelledby="hosting-heading">
+      <div>
+        <p class="pm-pricing__eyebrow">One straightforward rate</p>
+        <h2 id="hosting-heading">Hosting &amp; technical upkeep</h2>
+        <p>Managed hosting, SSL, basic security and technical upkeep for your Prunus website. New hosted website builds have a 12-month minimum hosting term. Content edits and additional development are separately agreed.</p>
+      </div>
+      <div class="pm-pricing__hosting-cost">
+        <strong>£99 <small>/month</small></strong>
+        <span>Or included with active £195/month SEO</span>
+        <a href="/contact/#interest=hosting">Ask about hosting <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+
+    <section class="pm-pricing__section pm-pricing__other" aria-labelledby="other-heading">
+      <div class="pm-pricing__section-head">
+        <p class="pm-pricing__eyebrow">04 / Other ways we can help</p>
+        <h2 id="other-heading">Just need a bit of help?</h2>
+        <p>Not everything needs a large package. We scope additional services individually instead of advertising rigid white-label-style bundles.</p>
+      </div>
+      <div class="pm-pricing__addons">
+        {addons.map(addon=><article class="pm-pricing__addon">
+          <h3>{addon.title}</h3>
+          <p class="pm-pricing__addon-price">{addon.price} <small>{addon.unit}</small></p>
+          <p>{addon.body}</p>
+          <a href={'/contact/#interest='+addon.id}>Enquire about this service <span aria-hidden="true">→</span></a>
+        </article>)}
+      </div>
+    </section>
+
+    <section class="pm-pricing__final" aria-labelledby="final-heading">
+      <p class="pm-pricing__eyebrow">No obligation / No confusing package ladder</p>
+      <h2 id="final-heading">Tell us what you want to achieve.</h2>
+      <p>We'll help you decide whether you need a new site, a rebuild, ongoing SEO or just a few changes. You only pay for the work we agree.</p>
+      <a class="pm-pricing__button pm-pricing__button--light" href="/contact/#interest=consultation">Start a conversation <span aria-hidden="true">→</span></a>
+    </section>
+  </div>
+</EditorialLayout>

@@ -99,3 +99,13 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - The three genuine tinified screenshots are hosted by the sister UK Trade Websites site at `/case-studies/roofing/{before.jpg,after.jpg,after-menu.png}`, sourced from the uploaded ZIP. Keep both screenshot windows independently scrollable and keyboard-accessible; show the redesigned menu below.
 - Fact claims: a newly launched but difficult-to-maintain site with little initial visibility; retained visual character; 17-page static rebuild including **15 additional** service/location pages; ongoing local SEO. Do **not** promise immediate rankings or fabricated conversions.
 - Keep this work in a review PR until the homepage's approved addition is inspected at desktop/mobile sizes per the visual-preservation contract.
+
+
+## Approved commercial update — 9 November 2026
+- Publish a single premium /pricing/ page (301 from /website-design/packages/ and /packages/), retain the established one-off build prices (£995 Launch, £1,795 Growth, £2,995 Scale / Custom), and show one £99/month managed hosting rate across plans.
+- £195/month SEO (three-month minimum), with hosting included while SEO is active; five keywords tracked, up to five priority pages worked on monthly, one useful weekly blog, relevant GBP setup/optimisation where eligible, and honest monthly reporting. No guaranteed rankings or enquiries.
+- Provide a rebuild offer, referencing the genuine roofing project and linking to real case studies. Do not invent search rankings or conversions.
+- Supplementary services: social management from £99/month, Meta/Google Ads management from £50/month excluding ad spend, existing-site help £50/hour. Avoid old fixed two-tier social cards.
+- Preserve existing Formspree contact endpoint; pricing CTAs preselect the relevant service on the contact form.
+- On editorial routes including /our-work/, keep "Skip to main content" accessible but visually hide it until keyboard focus.
+- Preserve approved design language (warm cream, sage, serif headings) and industry-specific page styling.
