@@ -55,7 +55,9 @@ async function loadSession() {
     }
     $('login-panel').hidden = true; $('dashboard-panel').hidden = false; $('logout').hidden = false;
     $('admin-panel').hidden = !state.session.admin;
-    if(state.session.admin) await loadNotifications();
+    if(state.session.admin) { await loadNotifications(); await loadAgencyOverview(); }
+    $('enquiries').hidden=state.session.admin;
+    document.querySelector('.tabs a[href="#enquiries"]').hidden=state.session.admin;
     const hasClients=state.session.clients.length>0;
     $('client-picker').disabled=!hasClients;
     $('back-to-website').hidden=!hasClients;
@@ -96,6 +98,8 @@ async function loadDashboard() {
     renderLeads(data.leads);
     renderRequests(data.requests);
     renderProfile(data);
+    await loadExtended();
+    if(state.session.admin) renderAgencyOverview();
   } catch (e) { showMessage('change-message',e.message,true); }
 }
 function ukWhatsApp(phone) {

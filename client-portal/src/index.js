@@ -1,3 +1,4 @@
+import { extraRoutes, enqueueWeeklyResearch } from './editorial.js';
 // Prunus Media shared website-client portal.
 // Deploy independently from the marketing site using client-portal/wrangler.jsonc.
 // Cloudflare Worker: D1 (tenant-scoped records), private R2 (PDFs), Resend (OTP + notices).
@@ -163,7 +164,9 @@ async function getDashboard(env, user, url) {
   const clientId = clean(url.searchParams.get('client'), 100);
   if (!(await access(env, user, clientId))) return error('Not found.', 404);
   const client = await env.DB.prepare('SELECT id,slug,name,domain,contact_email FROM clients WHERE id=?').bind(clientId).first();
-  const leads = (await env.DB.prepare('SELECT id,full_name,email,phone,postcode,service,message,source_page,status,created_at FROM leads WHERE client_id=? ORDER BY created_at DESC LIMIT 100').bind(clientId).all()).results;
+  // Agency admin reporting does not need individual customer contact information.
+  // Clients still receive full authorised lead details and contact actions.
+  const leads = user.admin ? [] : (await env.DB.prepare('SELECT id,full_name,email,phone,postcode,service,message,source_page,status,created_at FROM leads WHERE client_id=? ORDER BY created_at DESC LIMIT 100').bind(clientId).all()).results;
   const requests = (await env.DB.prepare('SELECT id,type,title,page_url,body,status,staff_note,file_name,file_size,created_at,updated_at FROM work_requests WHERE client_id=? ORDER BY created_at DESC LIMIT 100').bind(clientId).all()).results;
   const sites = (await env.DB.prepare('SELECT id,domain FROM sites WHERE client_id=? AND active=1').bind(clientId).all()).results;
   return response({ ok: true, client, leads, requests, sites });
@@ -358,6 +361,8 @@ export default {
       if (rotate && method==='POST') return await rotateSiteToken(request,env,user,rotate[1]);
       const ticket=path.match(/^\/api\/admin\/requests\/([a-f0-9-]{36})$/);
       if (ticket && method==='PATCH') return await updateTicket(request,env,user,ticket[1]);
+      const extra=await extraRoutes(request,env,user,url);
+      if (extra) return extra;
       return error('Not found.',404);
     } catch (e) {
       console.error('Portal request failed',path,clean(e.message,150));
@@ -374,5 +379,8 @@ export default {
       env.DB.prepare('DELETE FROM login_codes WHERE expires_at<?').bind(now),
       env.DB.prepare('DELETE FROM otp_ip_limits WHERE window_start<?').bind(Math.floor(now/3600000)-48)
     ]);
+    // Daily idempotent scheduling creates one weekly research task per active client.
+    // Research itself requires human/source verification and is never invented here.
+    await enqueueWeeklyResearch(env);
   }
 };

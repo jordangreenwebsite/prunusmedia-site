@@ -9,6 +9,7 @@
   <title>Client workspace | Prunus Media</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
+  <script src="/editorial-ui.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to main content</a>
@@ -57,7 +58,7 @@
         </div>
       </div>
       <div class="tabs" role="navigation" aria-label="Workspace sections">
-        <a href="#enquiries">Enquiries</a><a href="#changes">Website changes</a><a href="#blogs">Blog submissions</a><a href="#profile">Business profile</a>
+        <a href="#enquiries">Enquiries</a><a href="#editorial">Blog calendar</a><a href="#uploads">Files</a><a href="#changes">Website changes</a><a href="#blogs">Submit an article</a><a href="#profile">Business profile</a>
       </div>
       <div class="two-col">
         <section id="enquiries" class="panel">
@@ -101,6 +102,32 @@
           </section>
         </div>
       </div>
+
+      <section id="editorial" class="panel">
+        <div class="panel-heading"><div><p class="eyebrow">BLOGS AND SEO CONTENT</p><h2>Blog calendar</h2></div><span class="counter" id="editorial-count">0 articles</span></div>
+        <p class="subtle">See your ideas, articles in progress, approval requests and planned publication dates. Prunus reviews content before it goes live.</p>
+        <form id="idea-form" class="form-stack editorial-idea">
+          <label>Suggest a blog topic<input name="title" minlength="8" maxlength="180" required placeholder="How do I know if my roof or gutter is leaking?"></label>
+          <label>What question should it answer?<textarea name="audience_question" minlength="4" maxlength="500" rows="2" required placeholder="What would customers actually want to know?"></textarea></label>
+          <button type="submit" class="secondary">Add blog idea</button>
+          <p id="idea-message" class="message" role="status"></p>
+        </form>
+        <div class="calendar-header"><h3>Upcoming and in progress</h3><label for="editorial-filter">Show stage
+          <select id="editorial-filter"><option value="all">All stages</option><option value="idea">Ideas</option><option value="research">Research</option><option value="draft">Drafts</option><option value="internal-review">Internal review</option><option value="client-review">Waiting for approval</option><option value="approved">Approved</option><option value="scheduled">Scheduled</option><option value="published">Published</option></select></label>
+        </div>
+        <div id="editorial-list" class="item-list" aria-live="polite"></div>
+      </section>
+      <section id="uploads" class="panel">
+        <p class="eyebrow">SEND MATERIAL TO PRUNUS</p><h2>Photos and documents</h2>
+        <p class="subtle">Upload project photos, documents and PDFs for website updates. Files stay private to your business and Prunus Media.</p>
+        <form id="upload-form" class="form-stack">
+          <label>Choose a file (PDF, JPG, PNG or WebP, up to 8 MB)<input name="file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required></label>
+          <label>What is it for?<textarea name="notes" rows="2" maxlength="2000" placeholder="Please use this on our Cirencester roofing page."></textarea></label>
+          <button class="secondary" type="submit">Upload file</button>
+          <p id="upload-message" class="message" role="status"></p>
+        </form>
+        <h3>Files for this business</h3><div id="upload-list" class="item-list"></div>
+      </section>
       <section id="requests-panel" class="panel">
         <p class="eyebrow">CURRENT WORK</p><h2>Your requests &amp; drafts</h2>
         <div id="request-list" class="item-list"></div>
@@ -121,6 +148,33 @@
         </form>
         <p id="admin-message" class="message" role="status"></p>
         <div id="integration-token" class="token-output" hidden></div>
+
+        <div class="agency-overview">
+          <h3>All clients and SEO activity</h3>
+          <p class="subtle">An overview of enquiry counts, dates and postcode areas. Customer names, messages and contact details stay in each client's private enquiry view.</p>
+          <div id="agency-clients" class="agency-grid"></div>
+          <h3>Enquiry activity by date and area</h3><div id="agency-lead-areas" class="item-list"></div>
+          <h3>Weekly blog research</h3>
+          <p class="subtle">Weekly jobs are queued automatically. A job is not marked researched until sources and findings have been checked. This queue does not publish articles.</p>
+          <button id="research-queue-now" class="secondary" type="button">Check this week's research queue</button>
+          <p id="research-message" class="message" role="status"></p>
+          <div id="research-queue" class="item-list"></div>
+        </div>
+        <div id="client-settings" class="admin-preferences" hidden>
+          <h3>Selected client's content settings</h3>
+          <form id="settings-form" class="form-stack">
+            <label>Managed through<select name="brand"><option value="prunus">Prunus Media</option><option value="uk-trades">UK Trade Websites</option></select></label>
+            <label>Industry / niche<input name="industry" maxlength="160" placeholder="Roofing and fascias"></label>
+            <label>Real service areas<input name="service_area" maxlength="350" placeholder="Cirencester, Swindon and nearby towns"></label>
+            <label>Client's writing style<textarea name="voice_notes" rows="3" maxlength="2000" placeholder="Friendly, practical, first person, only verified examples from our work."></textarea></label>
+            <label>Google Search Console link (optional)<input name="search_console_url" type="url" maxlength="600" placeholder="https://search.google.com/search-console/..."></label>
+            <label class="checkline"><input type="checkbox" name="requires_blog_approval"> Client must approve blogs before scheduling</label>
+            <label class="checkline"><input type="checkbox" name="allow_client_ideas" checked> Client can submit blog ideas</label>
+            <label class="checkline"><input type="checkbox" name="allow_client_uploads" checked> Client can upload files</label>
+            <button class="secondary" type="submit">Save client settings</button>
+            <p id="settings-message" class="message" role="status"></p>
+          </form>
+        </div>
         <h3>Email delivery alerts</h3><div id="notification-errors" class="item-list" aria-live="polite"></div>
         <h3>Add a team member</h3>
         <form id="member-form" class="inline-form">

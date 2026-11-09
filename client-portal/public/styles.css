@@ -20,3 +20,35 @@
 
 /* Explicitly honour hidden state on links and all layout elements. */
 [hidden]{display:none!important}
+
+
+/* Shared portal editorial and agency reporting, responsive and keyboard accessible. */
+[hidden]{display:none!important}
+#editorial,#uploads{scroll-margin-top:24px}
+.editorial-idea{background:#f7faf9;border:1px solid var(--line);padding:18px;margin:17px 0 28px}
+.calendar-header{display:flex;justify-content:space-between;gap:20px;align-items:center;margin:16px 0}
+.calendar-header h3{margin:0}
+.calendar-header label{font-size:13px;color:var(--muted);display:grid;gap:5px}
+.calendar-header select,.editorial-edit select,.admin-preferences select,.lead-workflow select,.agency-overview select{border:1px solid #c5d0d0;border-radius:3px;padding:8px;background:#fff;max-width:100%}
+.blog-item .blog-question{font-size:14px;margin:12px 0 5px}
+.editorial-edit,.draft-preview{border-top:1px solid var(--line);padding-top:12px;margin-top:16px}
+.editorial-edit summary,.draft-preview summary{cursor:pointer;font-weight:700;font-size:13px;color:#2c6982}
+.editorial-edit form{padding-top:16px}
+.editorial-edit textarea{width:100%;min-height:100px;white-space:pre-wrap}
+.draft-copy{white-space:pre-wrap;padding:18px;background:#fff;max-height:440px;overflow:auto}
+.editorial-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0}
+.editorial-actions button{min-height:39px}
+.agency-overview{border-top:1px solid var(--line);padding-top:20px;margin-top:25px}
+.agency-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:16px 0 26px}
+.agency-client{background:#f8faf9;border:1px solid var(--line);padding:18px;min-width:0}
+.agency-client strong{font-size:16px;display:block;margin-bottom:5px}
+.agency-client .meta{font-size:12px;word-break:break-word;color:var(--muted)}
+.agency-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.agency-stats span{background:#eaf0ef;padding:8px;font-size:12px}
+.agency-client .editorial-actions a{font-size:13px;color:#2c6982}
+.stat-line{display:flex;justify-content:space-between;align-items:center;gap:18px;background:#fbfcfb;border-bottom:1px solid var(--line);padding:10px 12px;font-size:13px}
+.admin-preferences{padding:20px 0;border-top:1px solid var(--line);margin:20px 0}
+.checkline{display:flex!important;align-items:center;gap:12px!important}
+.checkline input{width:18px;height:18px;min-height:0}
+#research-queue{margin-top:16px}
+@media(max-width:760px){.calendar-header{align-items:start;flex-direction:column}.agency-grid{grid-template-columns:1fr}.agency-stats{grid-template-columns:1fr 1fr}}
