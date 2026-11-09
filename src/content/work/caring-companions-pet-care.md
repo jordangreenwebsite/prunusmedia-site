@@ -7,6 +7,9 @@ services:
   - "Website design"
 image: "/wp-content/uploads/2026/09/Screenshot-2026-09-23-080741.png"
 imageAlt: "Screenshot of a pet-care website from the existing Prunus Media project showcase"
+priority: 15
+status: "live"
+website: "https://caringcompanionspetcare.co.uk/"
 draft: false
 ---
 

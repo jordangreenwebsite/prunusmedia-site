@@ -10,6 +10,9 @@ services:
   - "Quote calculator"
 image: "/wp-content/uploads/2026/09/Screenshot-2026-09-23-064622.png"
 imageAlt: "Screenshot of the J Piper Cleaning Services website featured in the original Prunus Media portfolio"
+priority: 14
+status: "live"
+website: "https://jpipercleaning.com/"
 draft: false
 ---
 

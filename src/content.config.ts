@@ -23,7 +23,11 @@ const work = defineCollection({
   schema: z.object({
     title: z.string().min(3),
     summary: z.string().min(20),
-    addedAt: z.coerce.date(),
+    addedAt: z.coerce.date(), // Date added to the portfolio; NOT the launch date.
+    completedAt: z.coerce.date().optional(), // Include only where the build date is confirmed.
+    priority: z.number().int().positive().optional(), // Editorial display order for undated work.
+    status: z.enum(['live','concept','archived','closed','owned','showcase']).default('showcase'),
+    featured: z.boolean().default(false),
     category: z.string().optional(),
     services: z.array(z.string()).default([]),
     image: z.string().optional(),
