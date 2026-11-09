@@ -8,6 +8,8 @@
  * replacement before the project can be called fully dependency-free source.
  */
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { footerMarkup } from './footer.mjs';
 import { improveLegacySeo } from './seo-enhancements.mjs';
 export function routeAssetName(filename) {
@@ -32,9 +34,28 @@ export function cssWithAbsoluteUrls(css, sourcePath) {
     return 'url(' + (quote || '') + normalized + (quote || '') + ')';
   });
 }
+// The approved homepage header is our single source of truth for navigation.
+// Original Breakdance exports have different header versions: some accidentally
+// include a second Industries column inside Website Design. Using one shared
+// header also restores the logo and keeps the four top-level dropdowns aligned.
+const headerPattern = /<header\\b[^>]*class="[^"]*bde-header-builder-27-100[^"]*"[^>]*>[\\s\\S]*?<\\/header>/i;
+const originalHome = readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8');
+const sourceHeader = originalHome.match(headerPattern)?.[0];
+if (!sourceHeader) throw new Error('Approved Prunus homepage header not found');
+
 export function cleanPageHtml(originalHtml, filename) {
   let html = originalHtml;
-  const styles = extractCssPaths(html);
+  if (!headerPattern.test(html)) {
+    throw new Error('Expected shared website header on '+filename);
+  }
+  if (filename !== 'index.html') {
+    html = html.replace(headerPattern, sourceHeader);
+    // The homepage is the markup source, not the active navigation item on
+    // every inner page. Retain submenu behaviour and avoid a false active tab.
+    html = html.replace(headerPattern, match => match.replace(
+      /\\sbreakdance-menu-item--active|\\sbreakdance-dropdown-item--active/g, ''));
+  }
+  const styles = extractCssPaths(originalHtml);
 
   // The original exported DOM already records the exact per-section effect.
   // Breakdance's entrance.css hides [data-entrance] until its removed runtime
@@ -127,6 +148,23 @@ export function cleanPageHtml(originalHtml, filename) {
   prependToDropdown('153', '/our-work/', 'Our Work');
   prependToDropdown('152', '/blog/', 'Blog');
 
+  // Remove the original buried packages item from the Website Design list.
+  // Pricing is now a distinct, high-contrast first item in EACH of the four
+  // existing dropdowns. No fifth top-level item crowds the logo or mobile nav.
+  html = html.replace(headerPattern, header => header.replace(
+    /<li\\b[^>]*class="breakdance-dropdown-item[^"]*"[^>]*>\\s*<a\\b[^>]*href="\\/pricing\\/"[^>]*>[\\s\\S]*?<\\/a>\\s*<\\/li>/gi, ''));
+  const pricingEntry = '<li class="breakdance-dropdown-item prunus-pricing-dropdown-item">' +
+    '<a class="breakdance-link breakdance-dropdown-link" href="/pricing/" target="_self" data-type="url">' +
+    '<span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">Pricing</span></span></a></li>';
+  for (const number of ['148', '149', '153', '152']) {
+    const pattern = new RegExp('(<li class="bde-menu-dropdown-27-' + number +
+      '\\\\b[\\\\s\\\\S]*?<ul class="breakdance-dropdown-links">)', 'i');
+    if (!pattern.test(html)) throw new Error('Missing menu dropdown '+number+' on '+filename);
+    html = html.replace(pattern, match => match + pricingEntry);
+  }
+  const pricingMenuCount = (html.match(/class="breakdance-dropdown-item prunus-pricing-dropdown-item"/g)||[]).length;
+  if (pricingMenuCount !== 4) throw new Error('Expected four pricing dropdown links, found '+pricingMenuCount+' on '+filename);
+
 
   // Replace the original exported footer on every existing route with a
   // semantic, consistent footer shared with Blog and Our Work. Never remove
@@ -149,6 +187,18 @@ export function cleanPageHtml(originalHtml, filename) {
       '</div></div><!--PRUNUS_RECENT_WORK_CARDS-->' +
       '<a class="pm-home-work__more" href="/our-work/">See more of our recent work <span aria-hidden="true">→</span></a>' +
       '</div></section>');
+    // A compact price preview sits directly below the original hero so people
+    // need not hunt for commercial terms in the dropdowns.
+    const pricingTeaser =
+      '<aside class="pm-home-pricing" aria-label="Website and SEO pricing">' +
+      '<div class="pm-home-pricing__inner"><div>' +
+      '<p class="pm-home-pricing__eyebrow">Clear prices · Built for growth</p>' +
+      '<p class="pm-home-pricing__headline">Your next website starts here.</p>' +
+      '<p class="pm-home-pricing__detail">Websites from £995 · One hosting rate of £99/month · SEO £195/month with hosting included</p>' +
+      '</div><a href="/pricing/">Explore our pricing <span aria-hidden="true">→</span></a></div></aside>';
+    const heroEnd = /(<section class="bde-section-35-253\\b[\\s\\S]*?<\\/section>)/i;
+    if (!heroEnd.test(html)) throw new Error('Cannot locate approved homepage hero for pricing link');
+    html = html.replace(heroEnd, match => match + pricingTeaser);
     // The original hero button had a label saying See Our Work, but linked
     // to Industries. Direct it to the actual portfolio.
     html = html.replace(/(class="bde-button-35-359\b[\s\S]*?<a\b[^>]*\bhref=")\/industries\//i,
