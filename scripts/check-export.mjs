@@ -25,7 +25,7 @@ for (const important of ['about','contact','industries/accountants','industries/
 // must retain its original four dropdowns, primary CTA and room for its logo.
 for (const route of ['index.html','about/index.html','website-design/index.html']) {
   const html=getLegacyDocument(route);
-  if (!html.includes('class="bde-text-link prunus-footer-login breakdance-link"') ||
+  if (!html.includes('class="prunus-footer-login"') ||
       !html.includes('href="/client-login/"') ||
       !html.includes('Start a Project')) {
     throw new Error('Footer client login or original CTA missing from ' + route);
