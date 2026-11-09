@@ -34,3 +34,21 @@ test('one working sign-in serves both Prunus Media and UK Trade Websites',()=>{
   assert.match(app,/\/api\/auth\/request-code/);
   assert.match(app,/\/api\/auth\/verify/);
 });
+
+
+test('cream visual identity, accessible local botanicals and shared sign-in stay intact',()=>{
+  const css=readFileSync(new URL('../public/styles.css',import.meta.url),'utf8');
+  const worker=readFileSync(new URL('../src/index.js',import.meta.url),'utf8');
+  assert.match(css,/--paper:#f8f2e9/);
+  assert.match(css,/body\{margin:0;font:16px\/1\.6 Arial,Helvetica,sans-serif/);
+  assert.match(css,/h1,h2,h3,h4,h5,h6\{font-family:"EB Garamond"/);
+  assert.match(html,/fonts\.googleapis\.com\/css2\?family=EB\+Garamond/);
+  assert.match(worker,/font-src https:\/\/fonts\.gstatic\.com/);
+  assert.match(html,/prunus-botanical\.svg/);
+  assert.match(html,/class="trades-ribbons"/);
+  assert.match(html,/id="portal-header-label"/);
+  assert.match(app,/label\.textContent='YOUR WEBSITE WORKSPACE'/);
+  assert.match(html,/id="portal-footer-label"/);
+  assert.equal((html.match(/id="email-form"/g)||[]).length,1);
+  assert.equal((html.match(/id="code-form"/g)||[]).length,1);
+});

@@ -33,6 +33,11 @@ function busy(button, isBusy) {
 }
 function openLogin() {
   $('login-panel').hidden = false; $('dashboard-panel').hidden = true; $('logout').hidden = true;
+  const label=$('portal-header-label');
+  if(label)label.textContent='PRUNUS MEDIA · UK TRADE WEBSITES';
+  const footer=$('portal-footer-label');
+  if(footer)footer.textContent='Prunus Media & UK Trade Websites · Secure client workspace';
+  document.title='Client sign in | Prunus Media & UK Trade Websites';
 }
 async function loadNotifications() {
   const root=$('notification-errors');root.replaceChildren();
@@ -54,6 +59,12 @@ async function loadSession() {
       openLogin();showMessage('login-message','Your account has no active business assigned.',true);return;
     }
     $('login-panel').hidden = true; $('dashboard-panel').hidden = false; $('logout').hidden = false;
+    // Keep the signed-in experience agency-neutral. Both brands meet only at sign-in.
+    const label=$('portal-header-label');
+    if(label)label.textContent='YOUR WEBSITE WORKSPACE';
+    const footer=$('portal-footer-label');
+    if(footer)footer.textContent='Secure website client workspace';
+    document.title='Client workspace | Your website';
     $('admin-panel').hidden = !state.session.admin;
     if(state.session.admin) { await loadNotifications(); await loadAgencyOverview(); }
     $('enquiries').hidden=state.session.admin;
