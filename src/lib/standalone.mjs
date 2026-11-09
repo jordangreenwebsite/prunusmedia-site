@@ -38,7 +38,7 @@ export function cssWithAbsoluteUrls(css, sourcePath) {
 // Original Breakdance exports have different header versions: some accidentally
 // include a second Industries column inside Website Design. Using one shared
 // header also restores the logo and keeps the four top-level dropdowns aligned.
-const headerPattern = /<header\\b[^>]*class="[^"]*bde-header-builder-27-100[^"]*"[^>]*>[\\s\\S]*?<\\/header>/i;
+const headerPattern = /<header\b[^>]*class="[^"]*bde-header-builder-27-100[^"]*"[^>]*>[\s\S]*?<\/header>/i;
 const originalHome = readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8');
 const sourceHeader = originalHome.match(headerPattern)?.[0];
 if (!sourceHeader) throw new Error('Approved Prunus homepage header not found');
@@ -152,13 +152,13 @@ export function cleanPageHtml(originalHtml, filename) {
   // Pricing is now a distinct, high-contrast first item in EACH of the four
   // existing dropdowns. No fifth top-level item crowds the logo or mobile nav.
   html = html.replace(headerPattern, header => header.replace(
-    /<li\\b[^>]*class="breakdance-dropdown-item[^"]*"[^>]*>\\s*<a\\b[^>]*href="\\/pricing\\/"[^>]*>[\\s\\S]*?<\\/a>\\s*<\\/li>/gi, ''));
+    /<li\b[^>]*class="breakdance-dropdown-item[^"]*"[^>]*>\s*<a\b[^>]*href="\/pricing\/"[^>]*>[\s\S]*?<\/a>\s*<\/li>/gi, ''));
   const pricingEntry = '<li class="breakdance-dropdown-item prunus-pricing-dropdown-item">' +
     '<a class="breakdance-link breakdance-dropdown-link" href="/pricing/" target="_self" data-type="url">' +
     '<span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">Pricing</span></span></a></li>';
   for (const number of ['148', '149', '153', '152']) {
     const pattern = new RegExp('(<li class="bde-menu-dropdown-27-' + number +
-      '\\\\b[\\\\s\\\\S]*?<ul class="breakdance-dropdown-links">)', 'i');
+      '\\b[\\s\\S]*?<ul class="breakdance-dropdown-links">)', 'i');
     if (!pattern.test(html)) throw new Error('Missing menu dropdown '+number+' on '+filename);
     html = html.replace(pattern, match => match + pricingEntry);
   }
@@ -196,7 +196,7 @@ export function cleanPageHtml(originalHtml, filename) {
       '<p class="pm-home-pricing__headline">Your next website starts here.</p>' +
       '<p class="pm-home-pricing__detail">Websites from £995 · One hosting rate of £99/month · SEO £195/month with hosting included</p>' +
       '</div><a href="/pricing/">Explore our pricing <span aria-hidden="true">→</span></a></div></aside>';
-    const heroEnd = /(<section class="bde-section-35-253\\b[\\s\\S]*?<\\/section>)/i;
+    const heroEnd = /(<section class="bde-section-35-253\b[\s\S]*?<\/section>)/i;
     if (!heroEnd.test(html)) throw new Error('Cannot locate approved homepage hero for pricing link');
     html = html.replace(heroEnd, match => match + pricingTeaser);
     // The original hero button had a label saying See Our Work, but linked
