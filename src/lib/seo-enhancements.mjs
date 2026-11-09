@@ -123,8 +123,8 @@ export function improveLegacySeo(html,filename){
   }
   if(filename==='contact/index.html'){
     html=html.replace(
-      /<h1 class="bde-heading-30-125 bde-heading">([\s\S]*?)<\/h1>/i,
-      '<h2 class="bde-heading-30-125 bde-heading">$1</h2>');
+      /<h1 class="bde-heading-30-125 bde-heading"([^>]*)>([\s\S]*?)<\/h1>/i,
+      '<h2 class="bde-heading-30-125 bde-heading"$1>$2</h2>');
   }
   if(filename==='website-design/content-creation/index.html'){
     html=html.replace(

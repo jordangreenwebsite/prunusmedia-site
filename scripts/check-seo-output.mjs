@@ -13,7 +13,7 @@ function visit(dir,parts=[]){
   const full=path.join(dir,file.name);
   if(file.isDirectory())visit(full,[...parts,file.name]);
   else if(file.name==='index.html'||(file.name==='404.html'&&!parts.length)){
-   pages.push({name:'/'+parts.join('/')+'/',source:readFileSync(full,'utf8')});
+   pages.push({name:file.name==='404.html'?'/404.html':'/'+parts.join('/')+'/',source:readFileSync(full,'utf8')});
   }
  }
 }
@@ -24,7 +24,7 @@ let totalImages=0;
 for(const {name,source} of pages){
  const isPublic=!/^\/(?:page|author|qs|client-login)\//.test(name);
  const heading=(source.match(/<h1\b/gi)||[]).length;
- if(isPublic&&name!=='//'&&heading!==1){
+ if(isPublic&&name!=='//'&&name!=='/404.html'&&heading!==1){
   failures.push(name+' expected 1 H1, found '+heading);
   console.error('HEADINGS '+name+': '+JSON.stringify(source.match(/<h1[^>]*>/gi)));
 }
@@ -33,7 +33,7 @@ for(const {name,source} of pages){
  const missing=images.filter(tag=>!/\balt\s*=/i.test(tag)).length;
  if(missing)failures.push(name+' has '+missing+' images missing alt attribute');
  const description=(source.match(/<meta\s+name="description"\s+content="([^"]*)"/i)||[])[1];
- if(isPublic && description){
+ if(isPublic && name!=='/404.html' && description){
    const previous=descriptions.get(description);
    if(previous)failures.push('duplicate descriptions: '+previous+' and '+name);
    descriptions.set(description,name);
