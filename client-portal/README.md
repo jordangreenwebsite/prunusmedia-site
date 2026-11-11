@@ -114,3 +114,9 @@ Business cards, published/planned blog statistics and admin AI/MCP controls now 
 ## 2026-11-11: Adding client website domain validation
 
 The agency's Add a business form accepts bare hostnames (e.g. `www.example.co.uk`) or a complete HTTP(S) *homepage URL* (e.g. `https://www.example.co.uk/`). Backend `normalizeWebsiteDomain()` validates it and stores only the lowercase domain; it does not silently accept arbitrary paths, credentials, ports or local hosts. Duplicate domains/slugs and invalid owner details return specific errors instead of the misleading former generic required-fields error. The UI explicitly says both formats are supported. This change does not modify website domains already saved in D1 or any client website repositories.
+
+
+## November 11 2026 — customer list and PP intake
+- Tenant's website leads can be marked 'Add to customers' via an authorised client login. This inserts an idempotent lead_customers record linked to the original lead, with no duplicated personal details. The dedicated Customers page lists converted contacts and provides Call, Email and WhatsApp shortcuts. Removing from Customers does not delete the enquiry.
+- Website form ingestion accepts phone **or** email, matching PP Power Detailing's optional name and dual-purpose contact field. Tenant identity comes solely from a per-site hashed bearer token.
+- Migration 0005_lead_customers.sql must apply before deployment. Validate a cross-tenant owner cannot access or convert a different client's lead; agency admin lead PII remains hidden by design.

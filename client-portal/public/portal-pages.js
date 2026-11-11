@@ -6,8 +6,8 @@
  * of authority. Navigation state never grants server permissions.
  */
 const agencyViews=new Set(['dashboard','businesses','ai','team']);
-const businessViews=new Set(['overview','calendar','editorial','content','change','submissions','enquiries','files','insights','settings']);
-const clientViews=new Set(['overview','calendar','content','change','submissions','enquiries','files']);
+const businessViews=new Set(['overview','calendar','editorial','content','change','submissions','enquiries','customers','files','insights','settings']);
+const clientViews=new Set(['overview','calendar','content','change','submissions','enquiries','customers','files']);
 let portalMounted=false,portalBusy=false,portalAiLoaded=false,portalGbpClient='',portalPublishingClient='';
 const portalView=()=>new URL(location.href).searchParams.get('view')||'';
 const portalId=()=>new URL(location.href).searchParams.get('client')||'';
@@ -214,7 +214,7 @@ function portalRender(){
   $('sidebar-context').textContent=agency?'Agency workspace':(state.dashboard?.client?.name||'Your business');
   const names={dashboard:'Your businesses',businesses:'All businesses',ai:'AI & MCP',team:'Team and alerts',
     overview:'Overview',calendar:'Calendar',editorial:'Blog planner',content:'Content request',
-    change:'Request a change',submissions:'Submissions',enquiries:'Enquiries',files:'Photos and documents',
+    change:'Request a change',submissions:'Submissions',enquiries:'Enquiries',customers:'Customers',files:'Photos and documents',
     insights:'Search insights',settings:'Business settings'};
   document.title=names[view]+' | Client portal';
   if(admin&&agency)renderAgencyHome();

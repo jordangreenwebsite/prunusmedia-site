@@ -112,6 +112,7 @@ async function loadDashboard() {
     back.hidden=!validDomain;
     if(validDomain) back.href='https://'+domain+'/';
     renderLeads(data.leads);
+    renderCustomers(data.customers||[]);
     renderRequests(data.requests);
     renderProfile(data);
     await loadExtended();
@@ -172,6 +173,23 @@ function renderLeads(leads) {
       select.append(option);
     }
     select.value=statuses.includes(lead.status)?lead.status:'new';
+    const asCustomer=add(workflow,'button',lead.is_customer?'✓ In customers':'+ Add to customers','secondary');
+    asCustomer.type='button';
+    asCustomer.setAttribute('aria-pressed',String(!!lead.is_customer));
+    asCustomer.addEventListener('click',async()=>{
+      const addCustomer=!lead.is_customer;
+      asCustomer.disabled=true;
+      try{
+        await api('/api/leads/'+encodeURIComponent(lead.id)+'/customer',{method:addCustomer?'POST':'DELETE'});
+        lead.is_customer=addCustomer?1:0;
+        const customers=state.dashboard.customers||[];
+        if(addCustomer&&!customers.some(c=>c.id===lead.id))customers.unshift({...lead,customer_since:new Date().toISOString()});
+        if(!addCustomer){const i=customers.findIndex(c=>c.id===lead.id);if(i>=0)customers.splice(i,1);}
+        state.dashboard.customers=customers;
+        renderLeads(state.dashboard.leads);
+        renderCustomers(customers);
+      }catch(e){asCustomer.disabled=false;asCustomer.textContent=e.message;}
+    });
     const message=add(workflow,'span','','meta');
     select.addEventListener('change',async()=>{
       const previous=lead.status;
@@ -189,6 +207,27 @@ function renderLeads(leads) {
         select.disabled=false;
       }
     });
+  }
+}
+function renderCustomers(customers){
+  const list=$('customer-list'),count=$('customer-count');
+  if(!list||!count)return;
+  list.replaceChildren();
+  count.textContent=customers.length+' customers';
+  if(!customers.length){add(list,'p','No customers added yet. Open Enquiries and select Add to customers when someone becomes a customer.','empty');return;}
+  for(const customer of customers){
+    const card=add(list,'article',null,'item lead-card');
+    add(card,'strong',customer.full_name||'Customer');
+    add(card,'p',(customer.service||'Website booking')+' · '+date(customer.customer_since),'meta');
+    if(customer.postcode)add(card,'p',customer.postcode,'meta');
+    const links=add(card,'div',null,'contact-actions');
+    const phone=String(customer.phone||'').trim();
+    const tel=phone.replace(/[^+\d]/g,'');
+    const email=String(customer.email||'').trim();
+    if(/^\+?\d{9,15}$/.test(tel))contactAction(links,'Call','tel:'+tel,'call');
+    if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))contactAction(links,'Email','mailto:'+encodeURIComponent(email).replace(/%40/g,'@'),'email');
+    const wa=ukWhatsApp(phone);
+    if(wa)contactAction(links,'WhatsApp','https://wa.me/'+wa,'whatsapp',true);
   }
 }
 function renderRequests(requests) {

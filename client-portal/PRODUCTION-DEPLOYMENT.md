@@ -48,3 +48,7 @@ Do not migrate past emails automatically. Client approvals and scheduled blog re
 ## Troubleshooting
 
 A failed GitHub Action does not mean clients can log in. Open the failed Actions step; never paste secret values. If D1 migration fails, check the database UUID and binding, then inspect Cloudflare migration backup. If the Worker domain cannot attach, check DNS conflict and Cloudflare zone/account permissions. If sign-in email fails, check verified Resend sender, quota, and account secrets. Do not expose the Worker or switch the marketing redirect until acceptance tests pass.
+
+
+## Customer list (migration 0005)
+Worker deploy must apply 0005_lead_customers.sql to the portal's D1 before updating code. The production GitHub deployment workflow applies all pending migrations if correctly configured. A passing GitHub build does not prove Cloudflare secrets, PP client provision, OTP login, per-site token or live email intake are functional. Complete real tenant-separated acceptance tests before saying the integration is live.
