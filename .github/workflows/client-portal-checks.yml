@@ -20,6 +20,7 @@ jobs:
         working-directory: client-portal
         run: |
           node --check src/index.js
+          node --check src/website-domain.js
           node --check src/editorial.js
           node --check src/gsc.js
           node --check src/research.js

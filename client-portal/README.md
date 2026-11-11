@@ -109,3 +109,8 @@ Read **INTEGRATIONS.md** for setup, scope and review gates. A separate D1 migrat
 ## November 11 2026: Business-focused backend v3
 
 Business cards, published/planned blog statistics and admin AI/MCP controls now live in distinct URL-based agency pages. Each business has a separate calendar, planner, content request, submissions, files, Search Console and settings view. Clients receive only their own business pages and no Search Console or agency panels. Publishing destinations are recorded but customer repository writers are not enabled. Google Business Profile OAuth is implemented but requires a separate approved Google Cloud application and protected secrets. MCP is read-only and defaults to off. Apply 0004_workspaces.sql before deploying the code; see DESIGN.md and INTEGRATIONS.md.
+
+
+## 2026-11-11: Adding client website domain validation
+
+The agency's Add a business form accepts bare hostnames (e.g. `www.example.co.uk`) or a complete HTTP(S) *homepage URL* (e.g. `https://www.example.co.uk/`). Backend `normalizeWebsiteDomain()` validates it and stores only the lowercase domain; it does not silently accept arbitrary paths, credentials, ports or local hosts. Duplicate domains/slugs and invalid owner details return specific errors instead of the misleading former generic required-fields error. The UI explicitly says both formats are supported. This change does not modify website domains already saved in D1 or any client website repositories.

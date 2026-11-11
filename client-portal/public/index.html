@@ -406,7 +406,7 @@
         <form id="client-form" class="form-stack admin-fields">
           <label>Business name<input name="name" required minlength="3" maxlength="150" placeholder="Residential Roofing & Fascias"></label>
           <label>Unique slug<input name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="80" placeholder="residential-roofing-fascias"></label>
-          <label>Website domain<input name="domain" required placeholder="www.example.co.uk"></label>
+          <label>Website address<input name="domain" required placeholder="https://www.example.co.uk" maxlength="500" autocomplete="url"><small class="hint">Paste the homepage URL or just the domain. We’ll save the domain automatically.</small></label>
           <label>Owner email<input name="owner_email" type="email" required placeholder="owner@example.co.uk"></label>
           <button class="primary" type="submit">Create client &amp; site token</button>
         </form>

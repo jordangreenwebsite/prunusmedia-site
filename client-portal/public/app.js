@@ -308,6 +308,8 @@ $('client-form').addEventListener('submit',async e=>{
   busy(btn,true);
   try{
     const data=Object.fromEntries(new FormData(form).entries());
+    // The server independently validates and normalises the full pasted URL.
+    // Keeping the original here means error messages refer to exactly what was entered.
     const result=await jsonPost('/api/admin/clients',data);
     displayToken(result.ingest_token);form.reset();
     showMessage('admin-message','Client created. Connect the secret on their website and invite the owner to sign in.');
