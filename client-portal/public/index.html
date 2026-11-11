@@ -112,6 +112,7 @@
         <a href="/?view=change" data-portal-route="change" data-context="business" data-permission="client" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg><span>Request a change</span></a>
         <a href="/?view=submissions" data-portal-route="submissions" data-context="business" data-permission="both" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Submissions</span></a>
         <a href="/?view=enquiries" data-portal-route="enquiries" data-context="business" data-permission="client" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Enquiries</span></a>
+        <a href="/?view=customers" data-portal-route="customers" data-context="business" data-permission="client" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>Customers</span></a>
         <a href="/?view=files" data-portal-route="files" data-context="business" data-permission="both" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-files"></use></svg><span>Photos & documents</span></a>
         <a href="/?view=insights" data-portal-route="insights" data-context="business" data-permission="admin" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Search insights</span></a>
         <a href="/?view=settings" data-portal-route="settings" data-context="business" data-permission="admin" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Business settings</span></a>
@@ -143,6 +144,7 @@
           <a href="/?view=change" data-portal-route="change" data-context="business" data-permission="client" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg><span>Request a change</span></a>
           <a href="/?view=submissions" data-portal-route="submissions" data-context="business" data-permission="both" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Submissions</span></a>
           <a href="/?view=enquiries" data-portal-route="enquiries" data-context="business" data-permission="client" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Enquiries</span></a>
+        <a href="/?view=customers" data-portal-route="customers" data-context="business" data-permission="client" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>Customers</span></a>
           <a href="/?view=files" data-portal-route="files" data-context="business" data-permission="both" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-files"></use></svg><span>Photos & documents</span></a>
           <a href="/?view=insights" data-portal-route="insights" data-context="business" data-permission="admin" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Search insights</span></a>
           <a href="/?view=settings" data-portal-route="settings" data-context="business" data-permission="admin" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Business settings</span></a>
@@ -234,6 +236,13 @@
       <section id="screen-change" class="portal-screen" hidden><p class="eyebrow">WEBSITE SUPPORT</p><h1>Request a website change</h1><div id="business-change-slot"></div></section>
       <section id="screen-submissions" class="portal-screen" hidden><p class="eyebrow">REQUEST HISTORY</p><h1>Submissions</h1><p class="subtle">Content requests, website changes, files and progress updates, all in one place.</p><div id="business-submissions-slot"></div><div id="client-approval-slot"></div></section>
       <section id="screen-enquiries" class="portal-screen" hidden><p class="eyebrow">YOUR CUSTOMERS</p><h1>Website enquiries</h1><div id="business-enquiry-slot"></div></section>
+      <section id="screen-customers" class="portal-screen" hidden>
+        <p class="eyebrow">CUSTOMER RECORDS</p><h1>Your customers</h1>
+        <section class="panel"><div class="panel-heading"><div><p class="eyebrow">FROM WEBSITE ENQUIRIES</p><h2>Customer list</h2></div><span id="customer-count" class="counter">0 customers</span></div>
+          <p class="subtle">Mark a website enquiry as a customer once a booking is confirmed. Your private list includes direct Call, Email and WhatsApp links. You can remove someone from this list from their enquiry card.</p>
+          <div id="customer-list" class="item-list" aria-live="polite"></div>
+        </section>
+      </section>
       <section id="screen-files" class="portal-screen" hidden><p class="eyebrow">MEDIA LIBRARY</p><h1>Photos &amp; documents</h1><div id="business-files-slot"></div></section>
       <section id="screen-insights" class="portal-screen" hidden><p class="eyebrow">AGENCY / SEO</p><h1>Search insights</h1><div id="business-seo-slot"></div></section>
       <section id="screen-settings" class="portal-screen" hidden>

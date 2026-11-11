@@ -174,12 +174,13 @@ async function getDashboard(env, user, url) {
   const client = await env.DB.prepare('SELECT id,slug,name,domain,contact_email FROM clients WHERE id=?').bind(clientId).first();
   // Agency admin reporting does not need individual customer contact information.
   // Clients still receive full authorised lead details and contact actions.
-  const leads = user.admin ? [] : (await env.DB.prepare('SELECT id,full_name,email,phone,postcode,service,message,source_page,status,created_at FROM leads WHERE client_id=? ORDER BY created_at DESC LIMIT 100').bind(clientId).all()).results;
+  const leads = user.admin ? [] : (await env.DB.prepare('SELECT l.id,l.full_name,l.email,l.phone,l.postcode,l.service,l.message,l.source_page,l.status,l.created_at,CASE WHEN lc.id IS NULL THEN 0 ELSE 1 END AS is_customer FROM leads l LEFT JOIN lead_customers lc ON lc.lead_id=l.id AND lc.client_id=l.client_id WHERE l.client_id=? ORDER BY l.created_at DESC LIMIT 100').bind(clientId).all()).results;
+  const customers = user.admin ? [] : (await env.DB.prepare('SELECT l.id,l.full_name,l.email,l.phone,l.postcode,l.service,lc.created_at AS customer_since FROM lead_customers lc JOIN leads l ON l.id=lc.lead_id AND l.client_id=lc.client_id WHERE lc.client_id=? ORDER BY lc.created_at DESC LIMIT 200').bind(clientId).all()).results;
   const requests = (await env.DB.prepare('SELECT id,type,title,page_url,body,status,staff_note,file_name,file_size,created_at,updated_at FROM work_requests WHERE client_id=? ORDER BY created_at DESC LIMIT 100').bind(clientId).all()).results;
   const attachments = (await env.DB.prepare('SELECT id,request_id,file_name,file_type,file_size FROM request_attachments WHERE client_id=? ORDER BY created_at DESC LIMIT 400').bind(clientId).all()).results;
   for(const item of requests)item.attachments=attachments.filter(f=>f.request_id===item.id);
   const sites = (await env.DB.prepare('SELECT id,domain FROM sites WHERE client_id=? AND active=1').bind(clientId).all()).results;
-  return response({ ok: true, client, leads, requests, sites });
+  return response({ ok: true, client, leads, customers, requests, sites });
 }
 async function createRequest(request, env, user, context, isBlog) {
   if (Number(request.headers.get('content-length') || 0) > 6200000) return error('Upload too large.', 413);
@@ -318,6 +319,20 @@ async function updateLeadStatus(request, env, user, leadId) {
   return response({ ok: true, id: leadId, status });
 }
 
+async function convertLeadToCustomer(env,user,leadId,method){
+  // Admin sees aggregate stats only; personal lead management belongs to an invited business member.
+  if(user.admin)return error('Forbidden.',403);
+  const lead=await env.DB.prepare('SELECT id,client_id FROM leads WHERE id=?').bind(leadId).first();
+  if(!lead||!(await access(env,user,lead.client_id)))return error('Not found.',404);
+  if(method==='POST'){
+    await env.DB.prepare('INSERT INTO lead_customers(id,client_id,lead_id) VALUES(?,?,?) ON CONFLICT(lead_id) DO NOTHING').bind(crypto.randomUUID(),lead.client_id,lead.id).run();
+    await audit(env,user.email,'lead.customer_added',lead.client_id,lead.id);
+    return response({ok:true,id:lead.id,is_customer:true});
+  }
+  await env.DB.prepare('DELETE FROM lead_customers WHERE client_id=? AND lead_id=?').bind(lead.client_id,lead.id).run();
+  await audit(env,user.email,'lead.customer_removed',lead.client_id,lead.id);
+  return response({ok:true,id:lead.id,is_customer:false});
+}
 async function ingest(request, env) {
   const bearer = request.headers.get('authorization') || '';
   if (!/^Bearer [a-f0-9]{64}$/.test(bearer)) return error('Unauthorized.',401);
@@ -328,7 +343,7 @@ async function ingest(request, env) {
   const externalId = clean(d.external_id,100), name=clean(d.name,120), email=normEmail(d.email),
     phone=clean(d.phone,50),postcode=clean(d.postcode,20),service=clean(d.service,160),
     message=clean(d.message,5000),source=clean(d.source_page,300);
-  if (!/^[a-zA-Z0-9._:-]{8,100}$/.test(externalId) || name.length<2 || !phone || !source.startsWith('/')) return error('Invalid lead data.');
+  if (!/^[a-zA-Z0-9._:-]{8,100}$/.test(externalId) || name.length<2 || (!phone&&!email) || !source.startsWith('/')) return error('Invalid lead data.');
   const id = crypto.randomUUID();
   await env.DB.prepare('INSERT INTO leads (id,client_id,site_id,external_id,full_name,email,phone,postcode,service,message,source_page) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(site_id,external_id) DO NOTHING')
     .bind(id,site.client_id,site.id,externalId,name,email||null,phone,postcode,service,message,source).run();
@@ -368,6 +383,8 @@ export default {
       if (path==='/api/dashboard' && method==='GET') return await getDashboard(env,user,url);
       const leadStatus=path.match(/^\/api\/leads\/([a-f0-9-]{36})\/status$/);
       if (leadStatus && method==='PATCH') return await updateLeadStatus(request,env,user,leadStatus[1]);
+       const customerLead=path.match(/^\/api\/leads\/([a-f0-9-]{36})\/customer$/);
+       if(customerLead && (method==='POST'||method==='DELETE'))return await convertLeadToCustomer(env,user,customerLead[1],method);
       if (path==='/api/requests/change' && method==='POST') return await createRequest(request,env,user,context,false);
       if (path==='/api/requests/blog' && method==='POST') return await createRequest(request,env,user,context,true);
       const file = path.match(/^\/api\/files\/([a-f0-9-]{36})$/);
