@@ -108,6 +108,7 @@ export async function getGscMetrics(env,client){
 }
 export async function gscRoute(request,env,user,url){
   if(url.pathname!=='/api/seo'||request.method!=='GET')return null;
+  if(!user.admin)return json({error:'Search Console is an agency-only view.'},403);
   const clientId=clean(url.searchParams.get('client'),100);
   const client=await allowedClient(env,user,clientId);
   if(!client)return json({error:'Not found.'},404);

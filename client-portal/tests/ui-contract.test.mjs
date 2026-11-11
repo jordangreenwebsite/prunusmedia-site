@@ -54,35 +54,38 @@ test('cream visual identity, accessible local botanicals and shared sign-in stay
 });
 
 
-test('desktop sidebar and mobile app navigation are role-scoped and linked to real sections',()=>{
+
+test('agency workspace uses page routing, distinct screens and no scroll-to-sections menu',()=>{
+  const script=readFileSync(new URL('../public/portal-pages.js',import.meta.url),'utf8');
   const css=readFileSync(new URL('../public/styles.css',import.meta.url),'utf8');
-  const workspace=readFileSync(new URL('../public/workspace-ui.js',import.meta.url),'utf8');
   assert.match(html,/id="workspace-sidebar"/);
   assert.match(html,/id="workspace-mobile-nav"/);
-  assert.match(html,/id="mobile-more-sheet"[^>]*hidden/);
-  assert.match(html,/id="mobile-more-toggle"[^>]*aria-expanded="false"/);
-  for(const id of ['overview','calendar','agency-clients','enquiries','editorial','uploads','changes','blogs','profile','admin-panel','research-queue']){
-    assert.match(html,new RegExp('id="'+id+'"'));
-  }
-  assert.match(html,/href="#agency-clients"[^>]*data-role="admin"/);
-  assert.match(html,/href="#enquiries"[^>]*data-role="client"/);
-  assert.match(workspace,/entry\.hidden=\(role && role!==/);
-  assert.match(workspace,/aria-current/);
-  assert.match(css,/position:sticky;top:17px/);
-  assert.match(css,/\.workspace-mobile-nav\{/);
-  assert.match(css,/position:fixed;left:0;right:0;bottom:0/);
-  assert.match(css,/safe-area-inset-bottom/);
+  assert.match(html,/id="screen-dashboard"/);
+  for(const id of ['screen-businesses','screen-ai','screen-team','screen-overview','screen-calendar',
+    'screen-editorial','screen-content','screen-submissions','screen-change','screen-files',
+    'screen-settings','screen-insights','screen-enquiries'])assert.ok(html.includes('id="'+id+'"'));
+  assert.match(html,/data-portal-route="dashboard"/);
+  assert.match(html,/data-portal-route="submissions"/);
+  assert.match(script,/history\.pushState/);
+  assert.match(script,/window\.addEventListener\('popstate'/);
+  assert.match(script,/portalClearScreens\(\)/);
+  assert.match(script,/const clientViews=new Set\(/);
+  assert.match(script,/state\.session\?\.admin/);
+  assert.match(css,/\[hidden\]\{display:none!important\}/);
+  assert.match(css,/\.portal-legacy-hidden\{display:none!important\}/);
 });
-test('compact calendar is navigable, backed by tenant-scoped API and never invents due dates',()=>{
-  const workspace=readFileSync(new URL('../public/workspace-ui.js',import.meta.url),'utf8');
-  const worker=readFileSync(new URL('../src/editorial.js',import.meta.url),'utf8');
-  assert.match(html,/id="calendar-prev"/);
-  assert.match(html,/id="calendar-next"/);
-  assert.match(html,/id="calendar-day-grid"/);
-  assert.match(html,/id="calendar-upcoming"/);
-  assert.match(html,/id="calendar-client-filter"/);
-  assert.match(workspace,/\/api\/calendar\?month=/);
-  assert.match(worker,/if\(!user\.admin && !\(await canRead/);
-  assert.match(worker,/research=\(await env\.DB\.prepare/);
-  assert.match(html,/Unscheduled work isn't shown as a deadline/);
+test('business content form, calendar date planner and GSC admin-only separation',()=>{
+  const script=readFileSync(new URL('../public/portal-pages.js',import.meta.url),'utf8');
+  const api=readFileSync(new URL('../src/gsc.js',import.meta.url),'utf8');
+  assert.match(html,/id="content-request-form"/);
+  assert.match(html,/id="content-upload-drop"/);
+  assert.match(html,/type="file"[^>]*multiple/);
+  assert.match(html,/id="calendar-create-form"/);
+  assert.match(html,/id="calendar-create-business"/);
+  assert.match(script,/\/api\/content-requests/);
+  assert.match(script,/scheduled_at:date\.toISOString\(\)/);
+  assert.match(api,/if\(!user\.admin\)return json/);
+  assert.match(html,/id="screen-ai"/);
+  assert.match(html,/id="publishing-settings-form"/);
+  assert.match(html,/id="gbp-connect"/);
 });

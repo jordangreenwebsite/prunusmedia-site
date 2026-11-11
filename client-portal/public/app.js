@@ -82,6 +82,7 @@ async function loadSession() {
       $('business-title').textContent='Create your first client';
       $('business-subtitle').textContent='No websites have been connected yet. Use the agency admin form below to add your first client.';
       await loadCompactCalendar();
+      if(window.portalPagesReady)window.portalPagesReady();
       return;
     }
     const picker = $('client-picker'); picker.replaceChildren();
@@ -94,6 +95,7 @@ async function loadSession() {
     if (!state.clientId || !state.session.clients.some(c=>c.id===state.clientId)) state.clientId=(requested||state.session.clients[0]).id;
     picker.value=state.clientId;
     await loadDashboard();
+    if(window.portalPagesReady)window.portalPagesReady();
   } catch { state.session=null;openLogin(); }
 }
 async function loadDashboard() {
@@ -113,8 +115,9 @@ async function loadDashboard() {
     renderRequests(data.requests);
     renderProfile(data);
     await loadExtended();
-    await loadSeoInsights();
+    if(state.session.admin)await loadSeoInsights();
     if(state.session.admin) renderAgencyOverview();
+    if(window.portalBusinessDataReady)window.portalBusinessDataReady();
   } catch (e) { showMessage('change-message',e.message,true); }
 }
 function ukWhatsApp(phone) {
@@ -196,7 +199,7 @@ function renderRequests(requests) {
     const top=add(box,'div',null,'row');
     add(top,'strong',item.title);
     add(top,'span',item.status.replace(/-/g,' '),'tag');
-    add(box,'div',(item.type==='blog'?'Blog draft':'Website change')+' · '+date(item.created_at),'meta');
+    add(box,'div',(item.type==='blog'?'Content request':'Website change')+' · '+date(item.created_at),'meta');
     if(item.page_url) add(box,'p','Page: '+item.page_url);
     if(item.body) add(box,'p',item.body.length>250?item.body.slice(0,250)+'…':item.body);
     if(item.file_name) {
@@ -204,6 +207,12 @@ function renderRequests(requests) {
       link.href='/api/files/'+encodeURIComponent(item.id);
       link.rel='nofollow';
       link.download=item.file_name;
+    }
+    for(const file of item.attachments||[]){
+      const link=add(box,'a','Download '+file.file_name);
+      link.href='/api/content-attachments/'+file.id;
+      link.rel='nofollow';link.download=file.file_name;
+      link.className='portal-request-attachment';
     }
     if(item.staff_note) add(box,'p','Prunus update: '+item.staff_note);
     if(state.session.admin) {
@@ -308,7 +317,7 @@ $('client-form').addEventListener('submit',async e=>{
 $('member-form').addEventListener('submit',async e=>{
   e.preventDefault();const form=e.currentTarget,btn=form.querySelector('button');
   busy(btn,true);
-  try{await jsonPost('/api/admin/members',{client_id:state.clientId,email:value(form,'email')});form.reset();showMessage('member-message','Team member can now sign in using their email code.');}
+  try{await jsonPost('/api/admin/members',{client_id:$('team-business-select').value,email:value(form,'email')});form.reset();showMessage('member-message','Team member can now sign in to that business with their email code.');}
   catch(err){showMessage('member-message',err.message,true);}finally{busy(btn,false);}
 });
 loadSession();

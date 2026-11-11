@@ -36,6 +36,9 @@ jobs:
       PORTAL_BRAVE_SEARCH_API_KEY: ${{ secrets.PRUNUS_BRAVE_SEARCH_API_KEY }}
       PORTAL_MCP_ADMIN_TOKEN: ${{ secrets.PRUNUS_PORTAL_MCP_ADMIN_TOKEN }}
       PORTAL_GITHUB_CONTENT_TOKEN: ${{ secrets.PRUNUS_GITHUB_CONTENT_TOKEN }}
+      PORTAL_GBP_OAUTH_CLIENT_ID: ${{ secrets.PRUNUS_GBP_OAUTH_CLIENT_ID }}
+      PORTAL_GBP_OAUTH_CLIENT_SECRET: ${{ secrets.PRUNUS_GBP_OAUTH_CLIENT_SECRET }}
+      PORTAL_GBP_ENCRYPTION_KEY: ${{ secrets.PRUNUS_GBP_ENCRYPTION_KEY }}
     steps:
       - name: Check out reviewed production commit
         uses: actions/checkout@v4
@@ -56,10 +59,14 @@ jobs:
           node --check src/research.js
           node --check src/mcp.js
           node --check src/github-pr.js
+          node --check src/gbp.js
+          node --check src/workspace-admin.js
+          node --check src/content-requests.js
           node --check public/app.js
           node --check public/editorial-ui.js
           node --check public/workspace-ui.js
           node --check public/integrations-ui.js
+          node --check public/portal-pages.js
           node --check scripts/prepare-deploy.mjs
 
       - name: Verify tenant isolation and editorial workflow

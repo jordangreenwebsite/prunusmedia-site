@@ -48,7 +48,10 @@ const extra=[
   ['PORTAL_GSC_SERVICE_ACCOUNT_JSON','GSC_SERVICE_ACCOUNT_JSON'],
   ['PORTAL_BRAVE_SEARCH_API_KEY','BRAVE_SEARCH_API_KEY'],
   ['PORTAL_MCP_ADMIN_TOKEN','MCP_ADMIN_TOKEN'],
-  ['PORTAL_GITHUB_CONTENT_TOKEN','GITHUB_PRUNUS_CONTENT_TOKEN']
+  ['PORTAL_GITHUB_CONTENT_TOKEN','GITHUB_PRUNUS_CONTENT_TOKEN'],
+  ['PORTAL_GBP_OAUTH_CLIENT_ID','GBP_OAUTH_CLIENT_ID'],
+  ['PORTAL_GBP_OAUTH_CLIENT_SECRET','GBP_OAUTH_CLIENT_SECRET'],
+  ['PORTAL_GBP_ENCRYPTION_KEY','GBP_TOKEN_ENCRYPTION_KEY']
 ];
 for(const [source,target] of extra){
   const value=String(process.env[source]||'').trim();
@@ -61,6 +64,13 @@ if(secrets.GSC_SERVICE_ACCOUNT_JSON){
   if(creds.type!=='service_account'||!creds.private_key?.includes('BEGIN PRIVATE KEY')||
     !/\.iam\.gserviceaccount\.com$/.test(creds.client_email||''))
     throw new Error('GSC secret requires a valid Google service-account JSON key.');
+}
+if([secrets.GBP_OAUTH_CLIENT_ID,secrets.GBP_OAUTH_CLIENT_SECRET,secrets.GBP_TOKEN_ENCRYPTION_KEY].some(Boolean)){
+  if(![secrets.GBP_OAUTH_CLIENT_ID,secrets.GBP_OAUTH_CLIENT_SECRET,secrets.GBP_TOKEN_ENCRYPTION_KEY].every(Boolean))
+    throw new Error('Google Business Profile OAuth requires client ID, client secret and a separate encryption key together.');
+  const base=secrets.GBP_TOKEN_ENCRYPTION_KEY.replace(/-/g,'+').replace(/_/g,'/');
+  if(!/^[A-Za-z0-9+/]{43}=?$/.test(base))
+    throw new Error('Google Business Profile token encryption key must be 32 random bytes in base64url format.');
 }
 if(secrets.MCP_ADMIN_TOKEN&&secrets.MCP_ADMIN_TOKEN.length<48)
   throw new Error('MCP token must be at least 48 randomly generated characters.');

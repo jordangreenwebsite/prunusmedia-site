@@ -12,7 +12,7 @@ const base='https://portal.prunusmedia.com';
 const A='00000000-0000-4000-8000-00000000000a', B='00000000-0000-4000-8000-00000000000b';
 function harness() {
   const sqlite=new DatabaseSync(':memory:');
-  for(const name of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql'])
+  for(const name of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql'])
     sqlite.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
   const db={
     prepare(sql) {
@@ -195,11 +195,11 @@ test('research candidates never masquerade as checked evidence',()=>{
 });
 test('unconfigured GSC remains clear and tenant scoped',async()=>{
   const h=harness();
-  let r=await h.call('/api/seo?client='+A,{email:'roofer@example.co.uk'});
+  let r=await h.call('/api/seo?client='+A);
   assert.equal(r.res.status,200);
   assert.equal(r.json.configured,false);
   r=await h.call('/api/seo?client='+A,{email:'detailer@example.co.uk'});
-  assert.equal(r.res.status,404);
+  assert.equal(r.res.status,403);
 });
 
 
@@ -215,6 +215,7 @@ test('MCP is off without its own token and exposes read-only tools only',async()
   let res=await worker.fetch(new Request(url,{method:'POST',headers,body}),h.env,{waitUntil(){}});
   assert.equal(res.status,503);
   h.env.MCP_ADMIN_TOKEN=token;
+  h.sqlite.prepare('UPDATE portal_ai_settings SET mcp_enabled=1 WHERE id=1').run();
   res=await worker.fetch(new Request(url,{method:'POST',headers:{...headers,origin:'https://other.example'},body}),h.env,{waitUntil(){}});
   assert.equal(res.status,403);
   res=await worker.fetch(new Request(url,{method:'POST',headers,body}),h.env,{waitUntil(){}});
@@ -280,13 +281,13 @@ test('Google Search Console data comes from an authorised API call, not made-up 
     return new Response(JSON.stringify({rows:[{clicks:30,impressions:500,ctr:.06,position:12.3}]}),{status:200});
   };
   try{
-    let r=await h.call('/api/seo?client='+A,{email:'roofer@example.co.uk'});
+    let r=await h.call('/api/seo?client='+A);
     assert.equal(r.res.status,200,JSON.stringify(r.json));
     assert.equal(r.json.current.clicks,30);
     assert.equal(r.json.queries[0].query,'roof cleaning');
     assert.equal(analytics,3);
     r=await h.call('/api/seo?client='+A,{email:'detailer@example.co.uk'});
-    assert.equal(r.res.status,404);
+    assert.equal(r.res.status,403,'Clients have no Search Console access in the redesigned workspace');
   }finally{globalThis.fetch=original;}
 });
 
@@ -326,4 +327,100 @@ test('GitHub reviewer PRs can target the live Prunus site only and remain drafts
     assert.match(content,/draft: true/);
     assert.equal(h.sqlite.prepare('SELECT github_pr_number FROM editorial_posts WHERE id=?').get(postId).github_pr_number,15);
   }finally{globalThis.fetch=original;}
+});
+
+
+test('admin dashboard reports published/planned blogs without exposing enquiry contacts',async()=>{
+  const h=harness();
+  h.sqlite.prepare("INSERT INTO editorial_posts (id,client_id,topic_key,title,suggested_by,audience_question,status,scheduled_at) VALUES (?,?,?,?,?,?,?,?)")
+    .run('post-live',A,'live roofing','Useful roofing guide','admin@prunusmedia.com','What is a good roof?','published',null);
+  h.sqlite.prepare("INSERT INTO editorial_posts (id,client_id,topic_key,title,suggested_by,audience_question,status,scheduled_at) VALUES (?,?,?,?,?,?,?,?)")
+    .run('post-plan',A,'winter roofing','Winter roof maintenance','admin@prunusmedia.com','What needs checking?','idea','2026-12-09T09:00:00Z');
+  let r=await h.call('/api/admin/overview');
+  assert.equal(r.res.status,200);
+  const client=r.json.clients.find(c=>c.id===A);
+  assert.equal(client.blog_published,1);
+  assert.equal(client.blog_planned,1);
+  assert.ok(!JSON.stringify(client).includes('roofer@example.co.uk')||client.contact_email==='roofer@example.co.uk');
+  r=await h.call('/api/calendar?client='+A+'&month=2026-12');
+  assert.equal(r.json.posts[0].title,'Winter roof maintenance');
+});
+test('one private content request holds mixed attachments and is tenant isolated',async()=>{
+  const h=harness();
+  const form=new FormData();
+  form.set('client_id',A);form.set('purpose','blog');form.set('title','Winter roofing checklist');
+  form.set('description','Please write a practical seasonal guide for local homeowners with our photos.');
+  form.set('page_url','/blogs/winter-roofing/');
+  form.append('files',new File([new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0])],'roof.png',{type:'image/png'}));
+  let r=await h.call('/api/content-requests',{method:'POST',form,email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,201,JSON.stringify(r.json));
+  assert.equal(r.json.files,1);
+  const ticket=r.json.id;
+  r=await h.call('/api/dashboard?client='+A,{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,200);
+  const work=r.json.requests.find(x=>x.id===ticket);
+  assert.ok(work);
+  assert.equal(work.attachments.length,1);
+  const file=work.attachments[0].id;
+  r=await h.call('/api/content-attachments/'+file,{email:'detailer@example.co.uk'});
+  assert.equal(r.res.status,404);
+  r=await h.call('/api/content-attachments/'+file,{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,200);
+  assert.match(r.res.headers.get('content-disposition'),/^attachment/);
+  r=await h.call('/api/content-requests',{method:'POST',form,email:'detailer@example.co.uk'});
+  assert.equal(r.res.status,404);
+});
+test('agency controls repository mapping and MCP toggles, clients cannot access them',async()=>{
+  const h=harness();
+  let r=await h.call('/api/admin/ai-settings');
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.settings.mcp_enabled,false);
+  assert.equal(r.json.connections.mcp_token,false);
+  r=await h.call('/api/admin/ai-settings',{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,403);
+  const settings={mcp_enabled:true,expose_search:true,expose_editorial:true,expose_research:false};
+  r=await h.call('/api/admin/ai-settings',{method:'PATCH',data:settings});
+  assert.equal(r.res.status,409,'MCP stays off until a new token is set');
+  h.env.MCP_ADMIN_TOKEN='a'.repeat(64);
+  r=await h.call('/api/admin/ai-settings',{method:'PATCH',data:settings});
+  assert.equal(r.res.status,200);
+  assert.equal(h.sqlite.prepare('SELECT expose_research FROM portal_ai_settings WHERE id=1').get().expose_research,0);
+  const p={repo:'agency/customer-site',path:'src/content/blog/',branch:'main',gbp_url:'https://business.google.com/locations'};
+  r=await h.call('/api/admin/clients/'+A+'/publishing',{email:'roofer@example.co.uk',method:'PATCH',data:p});
+  assert.equal(r.res.status,403);
+  r=await h.call('/api/admin/clients/'+A+'/publishing',{method:'PATCH',data:p});
+  assert.equal(r.res.status,200,JSON.stringify(r.json));
+  r=await h.call('/api/admin/clients/'+A+'/publishing');
+  assert.equal(r.json.publishing.repo,'agency/customer-site');
+  assert.equal(r.json.publishing.active_git_writer,false);
+  const invalid={...p,repo:'../../certificates'};
+  r=await h.call('/api/admin/clients/'+A+'/publishing',{method:'PATCH',data:invalid});
+  assert.equal(r.res.status,400);
+});
+test('Google Business Profile correctly requires OAuth configuration and never accepts a bare key',async()=>{
+  const h=harness();
+  let r=await h.call('/api/admin/gbp/status?client='+A);
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.configured,false);
+  assert.equal(r.json.connected,false);
+  r=await h.call('/api/admin/gbp/status?client='+A,{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,403);
+  r=await h.call('/api/admin/gbp/connect?client='+A);
+  assert.equal(r.res.status,503);
+});
+
+
+test('internal agency article ideas do not appear in client submissions until released',async()=>{
+  const h=harness();
+  const planned={client_id:A,title:'When to inspect roofing and gutters in winter',
+    audience_question:'What should homeowners check before cold weather?',
+    scheduled_at:'2026-12-11T09:00:00.000Z'};
+  let r=await h.call('/api/editorial',{method:'POST',data:planned});
+  assert.equal(r.res.status,201,JSON.stringify(r.json));
+  r=await h.call('/api/editorial?client='+A,{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.posts.length,0,'Internal editorial idea cannot be read in client submissions');
+  r=await h.call('/api/calendar?month=2026-12&client='+A);
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.posts.length,1,'Admin calendar sees planned editorial idea');
 });
