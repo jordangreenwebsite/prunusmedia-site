@@ -21,7 +21,7 @@ export const footerMarkup = String.raw`
           <span>Prunus <span>Media.</span></span>
         </a>
         <p>Websites and SEO built for businesses that want to be <strong>found, trusted and chosen.</strong></p>
-        <p class="pm-footer-geography">Based around UK clients, working with businesses worldwide.</p>
+        <p class="pm-footer-geography">Based in Newent, Gloucestershire. We visit clients in person by appointment and work with businesses across the UK online.</p>
         <div class="pm-footer-social">
           <a href="https://www.facebook.com/people/Prunusmedia/61564233269657/" target="_blank" rel="noopener noreferrer" aria-label="Prunus Media on Facebook">Facebook <span aria-hidden="true">↗</span></a>
           <a href="https://www.instagram.com/prunus.media/" target="_blank" rel="noopener noreferrer" aria-label="Prunus Media on Instagram">Instagram <span aria-hidden="true">↗</span></a>
