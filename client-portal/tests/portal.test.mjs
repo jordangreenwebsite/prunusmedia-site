@@ -8,7 +8,7 @@ import { normalizeWebsiteDomain } from '../src/website-domain.js';
 const base = 'https://portal.prunusmedia.com';
 function environment() {
   const sqlite = new DatabaseSync(':memory:');
-  for(const file of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql'])
+  for(const file of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql','0005_lead_customers.sql'])
     sqlite.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));
   const db = {
     prepare(sql) {
@@ -129,6 +129,23 @@ test('tenant isolation, invited email codes, private PDFs and trusted lead intak
   assert.equal(ownLead.json.status,'contacted');
   const invalidLead=await h.call('/api/leads/'+bview.json.leads[0].id+'/status',{method:'PATCH',cookie:florist.cookie,data:{status:'deleted'}});
   assert.equal(invalidLead.res.status,400,'Only documented pipeline statuses are allowed');
+  const flowerLead=bview.json.leads[0].id;
+  const noCrossCustomer=await h.call('/api/leads/'+flowerLead+'/customer',{method:'POST',cookie:roofer.cookie});
+  assert.equal(noCrossCustomer.res.status,404,'One client cannot turn another client lead into their customer');
+  const converted=await h.call('/api/leads/'+flowerLead+'/customer',{method:'POST',cookie:florist.cookie});
+  assert.equal(converted.res.status,200);
+  const repeated=await h.call('/api/leads/'+flowerLead+'/customer',{method:'POST',cookie:florist.cookie});
+  assert.equal(repeated.res.status,200,'Adding same customer twice is idempotent');
+  const customerView=await h.call('/api/dashboard?client='+b,{cookie:florist.cookie});
+  assert.equal(customerView.json.customers.length,1);
+  assert.equal(customerView.json.leads[0].is_customer,1);
+  const otherCustomerView=await h.call('/api/dashboard?client='+a,{cookie:roofer.cookie});
+  assert.equal(otherCustomerView.json.customers.length,0,'Other business has no access to customer record');
+  const reverted=await h.call('/api/leads/'+flowerLead+'/customer',{method:'DELETE',cookie:florist.cookie});
+  assert.equal(reverted.res.status,200);
+  const afterRemove=await h.call('/api/dashboard?client='+b,{cookie:florist.cookie});
+  assert.equal(afterRemove.json.customers.length,0);
+  assert.equal(afterRemove.json.leads.length,1,'Original lead remains when removed from customers');
   const updatedB=await h.call('/api/dashboard?client='+b,{cookie:florist.cookie});
   assert.equal(updatedB.json.leads[0].status,'contacted');
   const crossOrigin=await h.call('/api/leads/'+bview.json.leads[0].id+'/status',{method:'PATCH',cookie:florist.cookie,origin:'https://external.invalid',data:{status:'dealt-with'}});

@@ -12,7 +12,7 @@ const base='https://portal.prunusmedia.com';
 const A='00000000-0000-4000-8000-00000000000a', B='00000000-0000-4000-8000-00000000000b';
 function harness() {
   const sqlite=new DatabaseSync(':memory:');
-  for(const name of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql'])
+  for(const name of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql','0005_lead_customers.sql'])
     sqlite.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
   const db={
     prepare(sql) {
