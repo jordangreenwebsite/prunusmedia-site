@@ -399,7 +399,8 @@ export default {
     await env.DB.batch([
       env.DB.prepare('DELETE FROM sessions WHERE expires_at<?').bind(now),
       env.DB.prepare('DELETE FROM login_codes WHERE expires_at<?').bind(now),
-      env.DB.prepare('DELETE FROM otp_ip_limits WHERE window_start<?').bind(Math.floor(now/3600000)-48)
+      env.DB.prepare('DELETE FROM otp_ip_limits WHERE window_start<?').bind(Math.floor(now/3600000)-48),
+      env.DB.prepare('DELETE FROM gbp_oauth_pending WHERE expires_at<?').bind(now)
     ]);
     // Daily idempotent scheduling creates one weekly research task per active client.
     // Research itself requires human/source verification and is never invented here.

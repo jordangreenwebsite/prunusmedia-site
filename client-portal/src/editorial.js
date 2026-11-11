@@ -59,8 +59,11 @@ function quality(row) {
 async function getEditorial(env,user,clientId) {
   if (!(await canRead(env,user,clientId))) return bad('Not found.',404);
   const config=await flags(env,clientId);
-  const posts=(await env.DB.prepare('SELECT * FROM editorial_posts WHERE client_id=? ORDER BY CASE WHEN status=? THEN 0 ELSE 1 END,created_at DESC LIMIT 250').bind(clientId,'client-review').all()).results;
+  let posts=(await env.DB.prepare('SELECT * FROM editorial_posts WHERE client_id=? ORDER BY CASE WHEN status=? THEN 0 ELSE 1 END,created_at DESC LIMIT 250').bind(clientId,'client-review').all()).results;
   if (!user.admin) {
+    // Customers see only articles released for their review, approval,
+    // scheduling or publication. Internal drafts/ideas stay agency-private.
+    posts=posts.filter(p=>['client-review','approved','scheduled','published'].includes(p.status));
     for (const p of posts) {
       // Drafts in progress remain internal until explicitly released to the client.
       if (!['client-review','approved','scheduled','published'].includes(p.status)) {

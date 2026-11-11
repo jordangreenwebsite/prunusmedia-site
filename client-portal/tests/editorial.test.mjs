@@ -287,7 +287,7 @@ test('Google Search Console data comes from an authorised API call, not made-up 
     assert.equal(r.json.queries[0].query,'roof cleaning');
     assert.equal(analytics,3);
     r=await h.call('/api/seo?client='+A,{email:'detailer@example.co.uk'});
-    assert.equal(r.res.status,404);
+    assert.equal(r.res.status,403,'Clients have no Search Console access in the redesigned workspace');
   }finally{globalThis.fetch=original;}
 });
 
@@ -407,4 +407,20 @@ test('Google Business Profile correctly requires OAuth configuration and never a
   assert.equal(r.res.status,403);
   r=await h.call('/api/admin/gbp/connect?client='+A);
   assert.equal(r.res.status,503);
+});
+
+
+test('internal agency article ideas do not appear in client submissions until released',async()=>{
+  const h=harness();
+  const planned={client_id:A,title:'When to inspect roofing and gutters in winter',
+    audience_question:'What should homeowners check before cold weather?',
+    scheduled_at:'2026-12-11T09:00:00.000Z'};
+  let r=await h.call('/api/editorial',{method:'POST',data:planned});
+  assert.equal(r.res.status,201,JSON.stringify(r.json));
+  r=await h.call('/api/editorial?client='+A,{email:'roofer@example.co.uk'});
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.posts.length,0,'Internal editorial idea cannot be read in client submissions');
+  r=await h.call('/api/calendar?month=2026-12&client='+A);
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.posts.length,1,'Admin calendar sees planned editorial idea');
 });
