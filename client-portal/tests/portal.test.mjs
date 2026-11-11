@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import worker from '../src/index.js';
+import { normalizeWebsiteDomain } from '../src/website-domain.js';
 
 const base = 'https://portal.prunusmedia.com';
 function environment() {
@@ -169,5 +170,61 @@ test('tenant isolation, invited email codes, private PDFs and trusted lead intak
   assert.equal(signedOut.res.status,200);
   r=await h.call('/api/dashboard?client='+a,{cookie:roofer.cookie});
   assert.equal(r.res.status,401);
+  await Promise.all(h.pending);
+});
+
+
+test('website domain validation accepts a pasted homepage URL but rejects unsafe addresses',()=>{
+  for(const [entered,expected] of [
+    ['https://www.pppowerdetailing.com','www.pppowerdetailing.com'],
+    ['HTTPS://WWW.PPPOWERDETAILING.COM/','www.pppowerdetailing.com'],
+    ['http://example.co.uk/','example.co.uk'],
+    ['www.example.co.uk','www.example.co.uk'],
+    ['example.co.uk/','example.co.uk'],
+    ['  https://example.co.uk  ','example.co.uk']
+  ]){
+    const result=normalizeWebsiteDomain(entered);
+    assert.equal(result.error,null,'Should accept '+entered);
+    assert.equal(result.domain,expected);
+  }
+  for(const entered of [
+    'https://example.co.uk/blog',
+    'https://example.co.uk/?token=abc',
+    'https://example.co.uk/#section',
+    'https://user:password@example.co.uk',
+    'https://example.co.uk:8080/',
+    'https://localhost/',
+    'https://127.0.0.1/',
+    'https://site..co.uk/',
+    'javascript:alert(1)',
+    '//example.co.uk/',
+    'https://intranet/'
+  ]){
+    assert.ok(normalizeWebsiteDomain(entered).error,'Should reject '+entered);
+  }
+});
+test('admin can create PP Power Detailing from a complete URL without touching another tenant',async()=>{
+  const env=environment(),h=harness(env);
+  const admin=await h.login('admin@prunusmedia.com');
+  const created=await h.call('/api/admin/clients',{method:'POST',cookie:admin.cookie,data:{
+    name:'PP Power Detailing',slug:'pp-power-detailing',domain:'https://www.pppowerdetailing.com',
+    owner_email:'info@pppowerdetailing.com'
+  }});
+  assert.equal(created.res.status,201,JSON.stringify(created.json));
+  const dashboard=await h.call('/api/dashboard?client='+created.json.client_id,{cookie:admin.cookie});
+  assert.equal(dashboard.res.status,200);
+  assert.equal(dashboard.json.client.domain,'www.pppowerdetailing.com');
+  const duplicate=await h.call('/api/admin/clients',{method:'POST',cookie:admin.cookie,data:{
+    name:'Different client',slug:'new-unique-client',domain:'https://www.pppowerdetailing.com/',
+    owner_email:'owner@example.co.uk'
+  }});
+  assert.equal(duplicate.res.status,409);
+  assert.match(duplicate.json.error,/already connected/i);
+  const invalid=await h.call('/api/admin/clients',{method:'POST',cookie:admin.cookie,data:{
+    name:'Wrong URL',slug:'wrong-url',domain:'https://www.pppowerdetailing.com/private',
+    owner_email:'owner@example.co.uk'
+  }});
+  assert.equal(invalid.res.status,400);
+  assert.match(invalid.json.error,/homepage address only/i);
   await Promise.all(h.pending);
 });

@@ -6,6 +6,7 @@ import { mcpHandler } from './mcp.js';
 import { contentRequestRoutes } from './content-requests.js';
 import { workspaceAdminRoutes } from './workspace-admin.js';
 import { gbpRoutes } from './gbp.js';
+import { normalizeWebsiteDomain } from './website-domain.js';
 // Prunus Media shared website-client portal.
 // Deploy independently from the marketing site using client-portal/wrangler.jsonc.
 // Cloudflare Worker: D1 (tenant-scoped records), private R2 (PDFs), Resend (OTP + notices).
@@ -241,8 +242,19 @@ async function createClient(request, env, user) {
   if (!user.admin) return error('Forbidden.', 403);
   let d; try { d = await parseJson(request, 2000); } catch { return error('Invalid client details.'); }
   const name = clean(d.name, 150), slug = clean(d.slug, 80).toLowerCase(),
-    domain = clean(d.domain, 200).toLowerCase(), owner = normEmail(d.owner_email);
-  if (name.length < 3 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain) || !owner) return error('Name, slug, domain and owner email are required.');
+    owner = normEmail(d.owner_email);
+  if (name.length < 3) return error('Enter a business name of at least 3 characters.');
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return error('Use a unique slug with lowercase letters, numbers and hyphens.');
+  if (!owner) return error('Enter a valid owner email address.');
+  // Accept a pasted website URL, but store only the validated hostname.
+  const parsedDomain = normalizeWebsiteDomain(d.domain);
+  if (parsedDomain.error) return error(parsedDomain.error);
+  const domain = parsedDomain.domain;
+  const duplicate = await env.DB.prepare('SELECT id,name,slug,domain FROM clients WHERE slug=? OR domain=? LIMIT 1')
+    .bind(slug,domain).first();
+  if (duplicate) return error(duplicate.slug===slug
+    ? 'This unique slug is already in use. Choose another slug.'
+    : 'This website is already connected as '+duplicate.name+'. Open its business card instead.',409);
   const id = crypto.randomUUID(), siteId = crypto.randomUUID(), raw = token();
   try {
     await env.DB.batch([
@@ -254,7 +266,7 @@ async function createClient(request, env, user) {
     await audit(env, user.email, 'client.created', id, siteId);
   } catch (e) {
     console.error('Client provisioning failed');
-    return error('Unable to create client. Check duplicate name/domain.', 409);
+    return error('Unable to create the business. Check whether the website domain or slug is already in use.', 409);
   }
   return response({ ok: true, client_id: id, site_id: siteId, ingest_token: raw, message: 'Copy the site token now. It cannot be retrieved later.' }, 201);
 }
