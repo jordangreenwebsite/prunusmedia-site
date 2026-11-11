@@ -370,3 +370,95 @@
   .seo-measure{padding:15px 13px}
   .seo-measure-number{font-size:2rem}
 }
+
+
+/* V3: real page views, not one long set of anchors. */
+[hidden]{display:none!important}
+.portal-legacy-hidden{display:none!important}
+.workspace-content>.portal-screen{width:100%;min-width:0;max-width:1280px;animation:portal-fade .14s ease both}
+@keyframes portal-fade{from{opacity:.72;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.portal-screen>h1{font-size:clamp(2.6rem,4.2vw,4.2rem);margin:5px 0 12px}
+.portal-screen>h2{font-size:clamp(2rem,3vw,2.8rem);margin:6px 0 18px}
+.portal-screen>.subtle{max-width:800px;margin-bottom:24px}
+.portal-business-heading{border-bottom:1px solid #e8dad0;padding:0 0 22px;margin-bottom:28px}
+.portal-business-heading .account-picker{display:none!important}
+.portal-business-heading h1{font-size:clamp(2.4rem,3.4vw,3.5rem)}
+.portal-screen-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:27px 0 15px}
+.portal-screen-head h2{margin:0}
+.portal-inline-link{text-decoration:none;white-space:nowrap}
+.portal-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:23px 0 29px}
+.portal-stat{min-width:0;display:flex;flex-direction:column;gap:5px;padding:20px 22px;border:1px solid #e9dad0;border-radius:12px;background:#fffcf7;box-shadow:0 8px 28px #493e3120}
+.portal-stat-label{font:700 11px/1.4 Arial,Helvetica,sans-serif;color:#87756f;letter-spacing:.07em}
+.portal-stat-number{font:600 clamp(2.2rem,3.4vw,3.4rem)/1.02 "EB Garamond",Georgia,serif;color:#4d4643;overflow-wrap:anywhere}
+.portal-stat small{font:12px/1.5 Arial,Helvetica,sans-serif;color:#796a65}
+.portal-business-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:15px 0 28px}
+.portal-business-card{display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:10px;min-width:0;min-height:178px;padding:25px 27px;border:1px solid #e4d5ca;border-radius:14px;background:linear-gradient(140deg,#fffaf4,#f8eee6);box-shadow:0 9px 25px #493e3112;color:#3a3b37;transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease;cursor:pointer}
+.portal-business-card:hover,.portal-business-card:focus-visible{transform:translateY(-2px);border-color:#ba9290;box-shadow:0 15px 35px #493e3129}
+.portal-business-card-head{display:flex;justify-content:space-between;align-items:center;gap:9px}
+.portal-business-card-head strong{font:600 clamp(1.7rem,2.6vw,2.4rem)/1.1 "EB Garamond",Georgia,serif;color:#403d3a}
+.portal-card-arrow{color:#aa727c;font-size:24px}
+.portal-business-domain{font-size:12px;color:#756d67;word-break:break-word}
+.portal-business-card-stats{display:flex;flex-wrap:wrap;gap:7px;margin-top:auto;font:11px Arial,Helvetica,sans-serif}
+.portal-business-card-stats span{background:#f0e2d8;border:1px solid #e3cfc5;border-radius:20px;padding:5px 9px;color:#5f5350}
+.portal-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 25px}
+.portal-shortcut{text-align:left;display:flex;flex-direction:column;gap:7px;min-height:105px;padding:20px;border:1px solid #e5d5c8;border-radius:10px;background:#fffaf3;color:#49423e}
+.portal-shortcut:hover{border-color:#bf9392;background:#fcf0e7}
+.portal-shortcut strong{font:600 25px/1.1 "EB Garamond",Georgia,serif}
+.portal-shortcut span{font:12px/1.55 Arial,Helvetica,sans-serif;color:#756b65}
+.portal-next-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 0;border-bottom:1px solid #ede0d7;cursor:pointer}
+.portal-next-row strong{font-size:13px}
+.portal-next-row .meta{font-size:11px;color:#8b786e}
+.portal-create-business{margin-top:28px}
+.portal-create-business summary{cursor:pointer;color:#6e4852;list-style:disclosure-closed}
+.portal-create-business[open] summary{margin-bottom:24px}
+.portal-upload-drop{border:2px dashed #cbb0aa;background:#fff9f3;border-radius:14px;padding:28px;text-align:center;transition:background-color .12s,border-color .12s}
+.portal-upload-drop.drag-active{border-color:#c17d89;background:#f9e7e5}
+.portal-upload-drop p{margin:5px 0}
+.portal-upload-drop input[type=file]{max-width:100%;padding:12px;background:#fffdf9;min-height:auto;margin-top:13px}
+.portal-request-panel{max-width:850px}
+.portal-actions{display:flex;flex-wrap:wrap;gap:12px}
+.portal-stat .message{font-size:12px}
+#calendar-new-post{margin-top:22px;border-color:#ddc7bf}
+#calendar-new-post .form-stack{max-width:650px}
+.portal-request-attachment{display:inline-block;margin:5px 12px 5px 0;padding:6px 10px;border:1px solid #dcc9c0;border-radius:7px;background:#fff6ef}
+#business-settings-slot .admin-preferences{display:block;padding:0;border:0}
+#screen-settings .panel,#screen-ai .panel,#screen-team .panel{margin-bottom:22px}
+#gbp-location-controls{margin-top:18px}
+#gbp-location-controls select{max-width:100%;padding:12px;border:1px solid #d8cabe;border-radius:7px;background:#fff}
+#team-business-select{min-height:44px;padding:9px;border:1px solid #d8cabe;border-radius:7px;background:#fff}
+#screen-team .inline-form{margin:17px 0}
+#screen-ai code{overflow-wrap:anywhere}
+.portal-admin #screen-overview .profile-panel{display:block}
+.portal-client #idea-form{display:none!important}
+.portal-client #screen-submissions #editorial .editorial-idea{display:none!important}
+.portal-client #screen-submissions #editorial .calendar-header{display:none!important}
+.workspace-nav-link.back-businesses{border-bottom:1px solid #e8dad0;margin-bottom:6px;padding-bottom:15px}
+.workspace-nav-link.is-active,.workspace-mobile-nav .is-active{background:#f0e0d7;color:#854f59}
+.mobile-more-sheet .more-route{gap:9px}
+.sidebar-label{margin-top:19px;margin-bottom:9px}
+@media(max-width:1100px){.portal-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){
+  .portal-business-grid{grid-template-columns:1fr}
+  .portal-screen-head{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:760px){
+  .portal-stat-grid{gap:10px;margin:17px 0 22px}
+  .portal-stat{padding:16px 13px}
+  .portal-stat-number{font-size:2.5rem}
+  .portal-stat small{font-size:10px}
+  .portal-shortcuts{gap:10px}
+  .portal-shortcut{min-height:105px;padding:14px 12px}
+  .portal-shortcut strong{font-size:22px}
+  .portal-screen>h1{font-size:clamp(2.5rem,9vw,3.3rem)}
+  .workspace-mobile-nav>a{min-width:0}
+  .portal-business-card{padding:22px 23px}
+  .portal-upload-drop{padding:19px 13px}
+}
+@media(max-width:390px){
+  .portal-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .portal-shortcuts{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .workspace-content>.portal-screen{animation:none}
+  .portal-business-card{transition:none}
+}

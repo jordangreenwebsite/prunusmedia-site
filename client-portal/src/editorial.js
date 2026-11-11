@@ -82,11 +82,13 @@ async function addEditorial(request,env,user) {
   const title=str(d.title,180), key=topicKey(title), question=str(d.audience_question,500);
   if (title.length<8 || key.length<8 || !question)return bad('Enter a specific title and the question the article should answer.');
   const ownerId=id(), status=user.admin && d.status==='draft'?'draft':'idea';
+  const planned=user.admin&&d.scheduled_at?dateTime(d.scheduled_at):null;
+  if(user.admin&&d.scheduled_at&&!planned)return bad('Choose a real planned date.');
   const draft=user.admin?str(d.draft,70000):'';
   const brief=user.admin?str(d.brief,12000):'';
   try {
-    await env.DB.prepare('INSERT INTO editorial_posts (id,client_id,topic_key,title,suggested_by,audience_question,target_query,brief,draft,status,requires_approval) VALUES (?,?,?,?,?,?,?,?,?,?,?)')
-      .bind(ownerId,clientId,key,title,user.email,question,user.admin?str(d.target_query,180):'',brief,draft,status,config.requires_blog_approval?1:0).run();
+    await env.DB.prepare('INSERT INTO editorial_posts (id,client_id,topic_key,title,suggested_by,audience_question,target_query,brief,draft,status,requires_approval,scheduled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(ownerId,clientId,key,title,user.email,question,user.admin?str(d.target_query,180):'',brief,draft,status,config.requires_blog_approval?1:0,planned).run();
     await log(env,user,'editorial.idea_created',clientId,ownerId);
   } catch {return bad('This topic already exists in this client editorial calendar. Review it rather than adding a duplicate.',409);}
   return json({id:ownerId,status},201);
@@ -273,7 +275,7 @@ export async function enqueueWeeklyResearch(env) {
 }
 async function overview(env,user) {
   if (!user.admin)return bad('Forbidden.',403);
-  const clients=(await env.DB.prepare("SELECT c.id,c.name,c.domain,c.contact_email,c.brand,c.industry,c.service_area,c.requires_blog_approval,c.search_console_url,c.gsc_property,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id) lead_total,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id AND l.created_at>=datetime('now','-30 days')) lead_last30,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status NOT IN ('published','rejected')) blog_open,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status='client-review') awaiting_approval,(SELECT COUNT(*) FROM client_uploads f WHERE f.client_id=c.id) uploads FROM clients c WHERE c.active=1 ORDER BY c.name").all()).results;
+  const clients=(await env.DB.prepare("SELECT c.id,c.name,c.domain,c.contact_email,c.brand,c.industry,c.service_area,c.requires_blog_approval,c.search_console_url,c.gsc_property,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id) lead_total,(SELECT COUNT(*) FROM leads l WHERE l.client_id=c.id AND l.created_at>=datetime('now','-30 days')) lead_last30,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status NOT IN ('published','rejected')) blog_open,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status='published') blog_published,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.scheduled_at IS NOT NULL AND e.status NOT IN ('published','rejected')) blog_planned,(SELECT COUNT(*) FROM editorial_posts e WHERE e.client_id=c.id AND e.status='client-review') awaiting_approval,(SELECT COUNT(*) FROM client_uploads f WHERE f.client_id=c.id) uploads FROM clients c WHERE c.active=1 ORDER BY c.name").all()).results;
   // Do not expose names, messages, phone numbers, emails or full postcodes in admin reporting.
   const leadRows=(await env.DB.prepare("SELECT client_id,postcode,substr(created_at,1,10) day FROM leads WHERE created_at>=datetime('now','-90 days') ORDER BY created_at DESC LIMIT 3000").all()).results;
   const summary=new Map();

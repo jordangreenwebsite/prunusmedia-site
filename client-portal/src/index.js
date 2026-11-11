@@ -3,6 +3,9 @@ import { gscRoute } from './gsc.js';
 import { researchDiscoveryRoute, runAutomaticDiscovery } from './research.js';
 import { createPrRoute } from './github-pr.js';
 import { mcpHandler } from './mcp.js';
+import { contentRequestRoutes } from './content-requests.js';
+import { workspaceAdminRoutes } from './workspace-admin.js';
+import { gbpRoutes } from './gbp.js';
 // Prunus Media shared website-client portal.
 // Deploy independently from the marketing site using client-portal/wrangler.jsonc.
 // Cloudflare Worker: D1 (tenant-scoped records), private R2 (PDFs), Resend (OTP + notices).
@@ -172,6 +175,8 @@ async function getDashboard(env, user, url) {
   // Clients still receive full authorised lead details and contact actions.
   const leads = user.admin ? [] : (await env.DB.prepare('SELECT id,full_name,email,phone,postcode,service,message,source_page,status,created_at FROM leads WHERE client_id=? ORDER BY created_at DESC LIMIT 100').bind(clientId).all()).results;
   const requests = (await env.DB.prepare('SELECT id,type,title,page_url,body,status,staff_note,file_name,file_size,created_at,updated_at FROM work_requests WHERE client_id=? ORDER BY created_at DESC LIMIT 100').bind(clientId).all()).results;
+  const attachments = (await env.DB.prepare('SELECT id,request_id,file_name,file_type,file_size FROM request_attachments WHERE client_id=? ORDER BY created_at DESC LIMIT 400').bind(clientId).all()).results;
+  for(const item of requests)item.attachments=attachments.filter(f=>f.request_id===item.id);
   const sites = (await env.DB.prepare('SELECT id,domain FROM sites WHERE client_id=? AND active=1').bind(clientId).all()).results;
   return response({ ok: true, client, leads, requests, sites });
 }
@@ -366,6 +371,12 @@ export default {
       if (rotate && method==='POST') return await rotateSiteToken(request,env,user,rotate[1]);
       const ticket=path.match(/^\/api\/admin\/requests\/([a-f0-9-]{36})$/);
       if (ticket && method==='PATCH') return await updateTicket(request,env,user,ticket[1]);
+      const contents=await contentRequestRoutes(request,env,user,url,(clientId,event,title,body)=>notice(env,clientId,event,title,body));
+      if(contents)return contents;
+      const workspace=await workspaceAdminRoutes(request,env,user,url);
+      if(workspace)return workspace;
+      const gbp=await gbpRoutes(request,env,user,url);
+      if(gbp)return gbp;
       const extra=await extraRoutes(request,env,user,url);
       if (extra) return extra;
       const seo=await gscRoute(request,env,user,url);

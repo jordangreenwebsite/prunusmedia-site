@@ -15,6 +15,7 @@
   <script src="/editorial-ui.js" defer></script>
   <script src="/workspace-ui.js" defer></script>
   <script src="/integrations-ui.js" defer></script>
+  <script src="/portal-pages.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to main content</a>
@@ -95,47 +96,169 @@
     </section>
         <section id="dashboard-panel" class="dashboard" hidden>
 
-      <nav id="workspace-sidebar" class="workspace-sidebar" aria-label="Workspace navigation">
-        <div class="sidebar-heading"><span class="sidebar-mark" aria-hidden="true">P</span><span><strong>Client workspace</strong><small>Website management</small></span></div>
-        <p class="sidebar-label">YOUR WORKSPACE</p>
-        <a class="workspace-nav-link" href="#overview" data-workspace-link><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-home"></use></svg><span>Dashboard</span></a>
-        <a class="workspace-nav-link" href="#agency-clients" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>All clients</span></a>
-        <a class="workspace-nav-link" href="#enquiries" data-workspace-link data-role="client" data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Enquiries</span></a>
-        <a class="workspace-nav-link" href="#calendar" data-workspace-link><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-calendar"></use></svg><span>Calendar</span></a>
-        <a class="workspace-nav-link" href="#seo" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Search insights</span></a>
-        <a class="workspace-nav-link" href="#editorial" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Blog planner</span></a>
-        <a class="workspace-nav-link" href="#research-queue" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Weekly research</span></a>
-        <p class="sidebar-label">MANAGE</p>
-        <a class="workspace-nav-link" href="#uploads" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-files"></use></svg><span>Files & uploads</span></a>
-        <a class="workspace-nav-link" href="#changes" data-workspace-link data-role="client" data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg><span>Request a change</span></a>
-        <a class="workspace-nav-link" href="#blogs" data-workspace-link data-role="client" data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Submit a blog</span></a>
-        <a class="workspace-nav-link" href="#requests-panel" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg><span>Open requests</span></a>
-        <a class="workspace-nav-link" href="#profile" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Business details</span></a>
-        <a class="workspace-nav-link" href="#admin-panel" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Administration</span></a>
-        <div class="sidebar-footer"><span>Prunus website clients</span><small>Private, account-specific access</small></div>
+      <nav id="workspace-sidebar" class="workspace-sidebar" aria-label="Workspace pages">
+        <div class="sidebar-heading"><span class="sidebar-mark" aria-hidden="true">P</span><span><strong>Website workspace</strong><small id="sidebar-context">Agency</small></span></div>
+        <div id="sidebar-agency-heading" class="sidebar-label">AGENCY</div>
+        <a href="/?view=dashboard" data-portal-route="dashboard" data-context="agency" data-permission="admin" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-home"></use></svg><span>Dashboard</span></a>
+        <a href="/?view=businesses" data-portal-route="businesses" data-context="agency" data-permission="admin" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>Businesses</span></a>
+        <a href="/?view=ai" data-portal-route="ai" data-context="agency" data-permission="admin" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>AI & MCP</span></a>
+        <a href="/?view=team" data-portal-route="team" data-context="agency" data-permission="admin" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Team & alerts</span></a>
+        <div id="sidebar-business-heading" class="sidebar-label">BUSINESS</div>
+        <a href="/?view=businesses" class="workspace-nav-link back-businesses" data-back-businesses><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>← All businesses</span></a>
+        <a href="/?view=overview" data-portal-route="overview" data-context="business" data-permission="both" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-home"></use></svg><span>Business overview</span></a>
+        <a href="/?view=calendar" data-portal-route="calendar" data-context="business" data-permission="both" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-calendar"></use></svg><span>Calendar</span></a>
+        <a href="/?view=editorial" data-portal-route="editorial" data-context="business" data-permission="admin" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Blog planner</span></a>
+        <a href="/?view=content" data-portal-route="content" data-context="business" data-permission="both" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Content requests</span></a>
+        <a href="/?view=change" data-portal-route="change" data-context="business" data-permission="client" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg><span>Request a change</span></a>
+        <a href="/?view=submissions" data-portal-route="submissions" data-context="business" data-permission="both" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Submissions</span></a>
+        <a href="/?view=enquiries" data-portal-route="enquiries" data-context="business" data-permission="client" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Enquiries</span></a>
+        <a href="/?view=files" data-portal-route="files" data-context="business" data-permission="both" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-files"></use></svg><span>Photos & documents</span></a>
+        <a href="/?view=insights" data-portal-route="insights" data-context="business" data-permission="admin" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Search insights</span></a>
+        <a href="/?view=settings" data-portal-route="settings" data-context="business" data-permission="admin" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Business settings</span></a>
+        <div class="sidebar-footer"><span>Secure client portal</span><small>Your permissions determine the pages you can access</small></div>
       </nav>
-      <nav id="workspace-mobile-nav" class="workspace-mobile-nav" aria-label="Mobile workspace navigation">
-        <a href="#overview" data-workspace-link><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-home"></use></svg><span>Home</span></a>
-        <a href="#agency-clients" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>Clients</span></a>
-        <a href="#enquiries" data-workspace-link data-role="client" data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Enquiries</span></a>
-        <a href="#calendar" data-workspace-link><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-calendar"></use></svg><span>Calendar</span></a>
-        <a href="#editorial" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Blogs</span></a>
+      <nav id="workspace-mobile-nav" class="workspace-mobile-nav" aria-label="Mobile workspace pages">
+        <a href="/?view=dashboard" data-portal-route="dashboard" data-context="agency" data-permission="admin" data-mobile-tab="1" class="mobile-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-home"></use></svg><span>Dashboard</span></a>
+        <a href="/?view=businesses" data-portal-route="businesses" data-context="agency" data-permission="admin" data-mobile-tab="1" class="mobile-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>Businesses</span></a>
+        <a href="/?view=ai" data-portal-route="ai" data-context="agency" data-permission="admin" data-mobile-tab="1" class="mobile-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>AI & MCP</span></a>
+        <a href="/?view=overview" data-portal-route="overview" data-context="business" data-permission="both" data-mobile-tab="1" class="mobile-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-home"></use></svg><span>Business overview</span></a>
+        <a href="/?view=calendar" data-portal-route="calendar" data-context="business" data-permission="both" data-mobile-tab="1" class="mobile-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-calendar"></use></svg><span>Calendar</span></a>
+        <a href="/?view=editorial" data-portal-route="editorial" data-context="business" data-permission="admin" data-mobile-tab="1" class="mobile-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Blog planner</span></a>
+        <a href="/?view=content" data-portal-route="content" data-context="business" data-permission="both" data-mobile-tab="1" class="mobile-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Content requests</span></a>
+        <a href="/?view=submissions" data-portal-route="submissions" data-context="business" data-permission="both" data-mobile-tab="1" class="mobile-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Submissions</span></a>
+        <a href="/?view=settings" data-portal-route="settings" data-context="business" data-permission="admin" data-mobile-tab="1" class="mobile-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Business settings</span></a>
         <button type="button" id="mobile-more-toggle" aria-expanded="false" aria-controls="mobile-more-sheet"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-more"></use></svg><span>More</span></button>
       </nav>
       <div id="mobile-more-sheet" class="mobile-more-sheet" hidden>
-        <div class="mobile-sheet-head"><h2>More tools</h2><button type="button" id="mobile-more-close" aria-label="Close more tools"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-close"></use></svg></button></div>
-        <nav aria-label="More workspace tools">
-          <a href="#uploads" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-files"></use></svg> Files & uploads</a>
-          <a href="#changes" data-workspace-link data-role="client" data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg> Request a change</a>
-          <a href="#blogs" data-workspace-link data-role="client" data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg> Submit a blog</a>
-          <a href="#requests-panel" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg> Open requests</a>
-          <a href="#seo" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg> Search insights</a>
-          <a href="#research-queue" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg> Weekly research</a>
-          <a href="#admin-panel" data-workspace-link data-role="admin"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg> Administration</a>
-          <a href="#profile" data-workspace-link data-needs-client><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg> Business details</a>
+        <div class="mobile-sheet-head"><h2>More pages</h2><button type="button" id="mobile-more-close" aria-label="Close more pages"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-close"></use></svg></button></div>
+        <nav aria-label="Additional pages">
+          <a href="/?view=dashboard" data-portal-route="dashboard" data-context="agency" data-permission="admin" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-home"></use></svg><span>Dashboard</span></a>
+          <a href="/?view=businesses" data-portal-route="businesses" data-context="agency" data-permission="admin" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>Businesses</span></a>
+          <a href="/?view=ai" data-portal-route="ai" data-context="agency" data-permission="admin" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>AI & MCP</span></a>
+          <a href="/?view=team" data-portal-route="team" data-context="agency" data-permission="admin" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Team & alerts</span></a>
+          <a href="/?view=overview" data-portal-route="overview" data-context="business" data-permission="both" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-home"></use></svg><span>Business overview</span></a>
+          <a href="/?view=calendar" data-portal-route="calendar" data-context="business" data-permission="both" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-calendar"></use></svg><span>Calendar</span></a>
+          <a href="/?view=editorial" data-portal-route="editorial" data-context="business" data-permission="admin" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Blog planner</span></a>
+          <a href="/?view=content" data-portal-route="content" data-context="business" data-permission="both" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-article"></use></svg><span>Content requests</span></a>
+          <a href="/?view=change" data-portal-route="change" data-context="business" data-permission="client" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-changes"></use></svg><span>Request a change</span></a>
+          <a href="/?view=submissions" data-portal-route="submissions" data-context="business" data-permission="both" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Submissions</span></a>
+          <a href="/?view=enquiries" data-portal-route="enquiries" data-context="business" data-permission="client" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Enquiries</span></a>
+          <a href="/?view=files" data-portal-route="files" data-context="business" data-permission="both" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-files"></use></svg><span>Photos & documents</span></a>
+          <a href="/?view=insights" data-portal-route="insights" data-context="business" data-permission="admin" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Search insights</span></a>
+          <a href="/?view=settings" data-portal-route="settings" data-context="business" data-permission="admin" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Business settings</span></a>
+          <a href="/?view=businesses" data-back-businesses class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>← All businesses</span></a>
         </nav>
       </div>
       <div class="workspace-content">
+      <section id="screen-dashboard" class="portal-screen" hidden>
+        <p class="eyebrow">AGENCY DASHBOARD</p><h1>Your businesses</h1>
+        <p class="subtle">Choose a business to manage its calendar, content and website. Your agency controls stay separate from what the client sees.</p>
+        <div id="agency-stat-cards" class="portal-stat-grid" aria-live="polite"></div>
+        <div class="portal-screen-head"><h2>Businesses you manage</h2><a href="/?view=businesses" data-portal-route="businesses" class="secondary portal-inline-link">Manage businesses →</a></div>
+        <div id="agency-dashboard-cards" class="portal-business-grid" aria-live="polite"></div>
+      </section>
+      <section id="screen-businesses" class="portal-screen" hidden>
+        <p class="eyebrow">AGENCY / BUSINESSES</p><h1>All businesses</h1>
+        <p class="subtle">Open a client to work on its website. Adding a business grants no access to another company's repository.</p>
+        <div id="agency-business-list" class="portal-business-grid" aria-live="polite"></div>
+        <details class="panel portal-create-business"><summary><strong>+ Add a business</strong></summary><div id="client-create-slot"></div></details>
+      </section>
+      <section id="screen-ai" class="portal-screen" hidden>
+        <p class="eyebrow">AGENCY / AUTOMATION</p><h1>AI &amp; MCP controls</h1>
+        <p class="subtle">Control the portal's read-only MCP access and view which integrations are actually connected. No publishing, personal enquiry access or client-repository permissions are granted here.</p>
+        <div id="ai-connection-cards" class="portal-stat-grid"></div>
+        <div class="panel">
+          <h2>MCP access</h2>
+          <p class="subtle">Endpoint: <code>https://portal.prunusmedia.com/mcp</code>. Requires a separate private bearer token. ChatGPT app installation or OAuth onboarding is a further step.</p>
+          <form id="portal-ai-form" class="form-stack">
+            <label class="checkline"><input type="checkbox" name="mcp_enabled"> Enable read-only MCP access</label>
+            <label class="checkline"><input type="checkbox" name="expose_search"> Allow measured Search Console information</label>
+            <label class="checkline"><input type="checkbox" name="expose_editorial"> Allow article titles and dates</label>
+            <label class="checkline"><input type="checkbox" name="expose_research"> Allow research queue and unverified source candidates</label>
+            <button class="primary" type="submit">Save AI &amp; MCP settings</button>
+            <p id="ai-settings-message" class="message" role="status"></p>
+          </form>
+        </div>
+        <section class="panel"><p class="eyebrow">WEEKLY WORK</p><h2>Blog research</h2><p class="subtle">Review original sources before marking any research complete. Discovered results are suggestions, not verified claims.</p><div id="ai-research-slot"></div></section>
+        <details class="panel"><summary><strong>Enquiry activity by date and broad area</strong></summary><p class="subtle">No names or messages are available in this agency report.</p><div id="ai-lead-areas-slot"></div></details>
+      </section>
+      <section id="screen-team" class="portal-screen" hidden>
+        <p class="eyebrow">AGENCY / SETTINGS</p><h1>Team &amp; notifications</h1>
+        <section class="panel"><h2>Give a team member access</h2><p class="subtle">Add them to one specific client's workspace. This never grants agency administrator privileges.</p><label class="form-stack">Choose the business<select id="team-business-select"></select></label><div id="team-form-slot"></div></section>
+        <section class="panel"><h2>Email delivery alerts</h2><div id="team-alerts-slot"></div></section>
+      </section>
+      <section id="screen-overview" class="portal-screen" hidden>
+        <p class="eyebrow">BUSINESS WORKSPACE</p><h2>Overview</h2>
+        <div id="business-stat-cards" class="portal-stat-grid"></div>
+        <div id="business-quick-links" class="portal-shortcuts"></div>
+        <section class="panel"><h2>Coming up</h2><p class="subtle">Planned content and important dates for this business.</p><div id="business-next-items"></div></section>
+        <div id="business-details-slot"></div>
+      </section>
+      <section id="screen-calendar" class="portal-screen" hidden>
+        <p class="eyebrow">CONTENT SCHEDULE</p><h1>Calendar</h1><div id="business-calendar-slot"></div>
+        <section id="calendar-new-post" class="panel" hidden>
+          <p class="eyebrow">PLAN CONTENT</p><h2>Add a planned blog</h2>
+          <p class="subtle">Choose a date and a business. This creates a planned idea, not a published blog.</p>
+          <form id="calendar-create-form" class="form-stack">
+            <label>Business<select name="client_id" id="calendar-create-business" required></select></label>
+            <label>Planned date<input type="date" name="date" required></label>
+            <label>Time<input type="time" name="time" value="09:00" required></label>
+            <label>Blog title<input name="title" minlength="8" maxlength="180" required placeholder="A useful question your customers ask"></label>
+            <label>What should the blog answer?<textarea name="audience_question" minlength="4" maxlength="500" required rows="3"></textarea></label>
+            <div class="portal-actions"><button class="primary" type="submit">Save planned blog</button><button class="secondary" id="calendar-new-cancel" type="button">Cancel</button></div>
+            <p class="message" id="calendar-create-message" role="status"></p>
+          </form>
+        </section>
+      </section>
+      <section id="screen-editorial" class="portal-screen" hidden><p class="eyebrow">AGENCY / CONTENT</p><h1>Blog planner</h1><div id="editorial-slot"></div></section>
+      <section id="screen-content" class="portal-screen" hidden>
+        <p class="eyebrow">CONTENT FOR YOUR WEBSITE</p><h1>Content request</h1>
+        <p class="subtle">One request for blog ideas, page content, photographs or documents. Tell us what you need and add any files in the same form.</p>
+        <section class="panel portal-request-panel">
+          <form id="content-request-form" class="form-stack">
+            <label>What is this for?<select name="purpose"><option value="blog">A blog or article</option><option value="page">Website page content</option><option value="photos">Photos or documents</option><option value="other">Other content</option></select></label>
+            <label>Title or short description<input name="title" required minlength="4" maxlength="150" placeholder="e.g. Winter roof maintenance blog"></label>
+            <label>What would you like us to make or update?<textarea name="description" required minlength="10" maxlength="9000" rows="7" placeholder="Describe the idea, include any notes or wording, and tell us what customers need to know."></textarea></label>
+            <label>Target page (optional)<input name="page_url" maxlength="500" placeholder="/services/roofing/"></label>
+            <div class="portal-upload-drop" id="content-upload-drop" role="group" aria-label="Attach supporting documents">
+              <p><strong>Drag files here</strong> or choose files below</p>
+              <p class="subtle">PDF, JPG, PNG or WebP; up to 4 files, 8 MB each, 20 MB total.</p>
+              <input id="content-request-files" name="files" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" multiple>
+              <div id="content-file-summary" class="subtle" aria-live="polite"></div>
+            </div>
+            <button class="primary" type="submit">Send content request →</button>
+            <p id="content-request-message" class="message" role="status"></p>
+          </form>
+        </section>
+      </section>
+      <section id="screen-change" class="portal-screen" hidden><p class="eyebrow">WEBSITE SUPPORT</p><h1>Request a website change</h1><div id="business-change-slot"></div></section>
+      <section id="screen-submissions" class="portal-screen" hidden><p class="eyebrow">REQUEST HISTORY</p><h1>Submissions</h1><p class="subtle">Content requests, website changes, files and progress updates, all in one place.</p><div id="business-submissions-slot"></div><div id="client-approval-slot"></div></section>
+      <section id="screen-enquiries" class="portal-screen" hidden><p class="eyebrow">YOUR CUSTOMERS</p><h1>Website enquiries</h1><div id="business-enquiry-slot"></div></section>
+      <section id="screen-files" class="portal-screen" hidden><p class="eyebrow">MEDIA LIBRARY</p><h1>Photos &amp; documents</h1><div id="business-files-slot"></div></section>
+      <section id="screen-insights" class="portal-screen" hidden><p class="eyebrow">AGENCY / SEO</p><h1>Search insights</h1><div id="business-seo-slot"></div></section>
+      <section id="screen-settings" class="portal-screen" hidden>
+        <p class="eyebrow">AGENCY / BUSINESS</p><h1>Business settings</h1>
+        <p class="subtle">Only the agency can manage publishing destinations and external connections. A saved repository is not automatically authorised for uploads.</p>
+        <div id="business-settings-slot"></div>
+        <section class="panel"><h2>Publishing destination</h2><p class="subtle">Save where reviewed articles should go. Only the confirmed live Prunus Media repository currently has a prepared GitHub PR writer; client repositories require separate approval and scoped credentials.</p>
+          <form id="publishing-settings-form" class="form-stack">
+            <label>GitHub repository (owner/repo)<input name="repo" placeholder="example-company/example-website" maxlength="170"></label>
+            <label>Content destination<select name="path"><option value="src/content/blog/">Astro content blog</option><option value="src/pages/blog/">Astro blog pages</option><option value="content/blog/">Content/blog</option><option value="blog/">Blog directory</option></select></label>
+            <label>Target branch<input name="branch" value="main" maxlength="80"></label>
+            <p class="subtle">Target page for an individual request is chosen in its content request form. Website publishing always requires an approved review PR.</p>
+            <button class="secondary" type="submit">Save publishing settings</button>
+          </form>
+          <p id="publishing-settings-message" class="message" role="status"></p>
+        </section>
+        <section class="panel"><h2>Google Business Profile</h2><p class="subtle">Connect through Google OAuth consent, not an API key. Requires your Google Cloud app to be approved for Business Profile APIs. The connection is business-specific.</p>
+          <div id="gbp-status" class="subtle" aria-live="polite"></div>
+          <label class="form-stack">Business Profile link (optional shortcut)<input id="gbp-url-input" placeholder="https://business.google.com/..." type="url" maxlength="500"></label>
+          <div class="portal-actions"><button class="secondary" type="button" id="gbp-connect">Connect with Google</button><button class="secondary" type="button" id="gbp-disconnect" hidden>Disconnect</button></div>
+          <div id="gbp-location-controls" hidden><label class="form-stack">Select the correct Google listing<select id="gbp-location-select"></select></label><button class="secondary" type="button" id="gbp-location-save">Save Google listing</button></div>
+          <p id="gbp-message" class="message" role="status"></p>
+        </section>
+      </section>
+
       <div id="overview" class="dashboard-head">
         <div>
           <p class="eyebrow">YOUR WEBSITE WORKSPACE</p>

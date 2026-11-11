@@ -38,7 +38,8 @@ function sourceLines(text) {
 function renderEditorial(posts) {
   $('editorial-count').textContent=posts.length+' article'+(posts.length===1?'':'s');
   const filtered=$('editorial-filter').value;
-  const visible=filtered==='all'?posts:posts.filter(p=>p.status===filtered);
+  const displayPosts=state.session?.admin?posts:posts.filter(p=>['client-review','approved','scheduled','published'].includes(p.status));
+  const visible=filtered==='all'?displayPosts:displayPosts.filter(p=>p.status===filtered);
   const root=$('editorial-list');root.replaceChildren();
   if(!visible.length){add(root,'p',posts.length?'Nothing in this stage yet.':'No blog ideas yet. Add the first useful customer question above.','empty');return;}
   for(const post of visible) {
@@ -242,6 +243,7 @@ async function loadAgencyOverview() {
   try{
     agencyData=await api('/api/admin/overview');
     renderAgencyOverview();
+    if(window.portalAgencyDataReady)window.portalAgencyDataReady();
     await loadCompactCalendar();
   }catch(e){showMessage('research-message','Admin overview unavailable: '+e.message,true);}
 }

@@ -88,3 +88,24 @@ Check with two separate test client accounts that:
 - Missing secrets show clear configuration messages, never simulated metrics or fabricated source research.
 - MCP returns 503 when unconfigured and 401 for unauthorised requests.
 - GitHub action never writes to a client repo, never touches Certificates and always creates a draft PR, never publishes.
+
+
+## November 11, 2026: Business Settings and Google Business Profile OAuth
+
+**Website publishing mapping:** Agency dashboard > choose business > Business settings. You can save GitHub owner/repo, target content folder, default branch, optional page link, and Search Console property separately per business. A saved mapping is not an authorised write connection. The ONLY GitHub draft PR writer remains limited to jordangreenwebsite/prunusmedia-site for Prunus's own articles. Client repositories and Certificates have no permissions from this setting.
+
+**Google Business Profile:** API keys do not grant access to private listings. The Business Profile APIs use OAuth 2.0 user consent with the business.manage scope and can require Google's project API approval. Documentation: https://developers.google.com/my-business/content/implement-oauth and https://developers.google.com/my-business/content/prereqs.
+
+To connect:
+1. Create/use a dedicated Google Cloud project for the website client portal, get approval to use GBP APIs, enable the Business Information API, and create Web Application OAuth credentials and consent screen.
+2. Add the exact redirect URI https://portal.prunusmedia.com/api/gbp/callback.
+3. Add three separate protected GitHub portal-production environment secrets: PRUNUS_GBP_OAUTH_CLIENT_ID (web OAuth client ID), PRUNUS_GBP_OAUTH_CLIENT_SECRET, PRUNUS_GBP_ENCRYPTION_KEY (a dedicated securely generated 32-byte AES-GCM key encoded as base64url). Never put secrets in client-visible fields, the source repo, or ChatGPT messages.
+4. Run the portal deployment workflow on main to upload these secrets.
+5. In Business Settings click Connect with Google and authorise as a Google Account that owns/manages the right listing. Select the listing from the response. The refresh token is encrypted and stored in portal-only D1, isolated per client. Connection status and name show to the agency only.
+6. Disconnect in the portal; separately revoke Google permissions in the Google Account if no longer required. No GBP post is automatically created or updated.
+
+**MCP:** Agency Dashboard > AI & MCP. Set a separate PRUNUS_PORTAL_MCP_ADMIN_TOKEN environment secret and redeploy. Then explicitly turn on read-only MCP in the UI and select which read tools are allowed. It defaults to off. This is not yet an installed OAuth-based ChatGPT connector.
+
+**Content request:** A single client-facing ticket can include up to 4 signature-validated PDF/JPG/PNG/WebP files, max 8 MB per file and 20 MB total. Private portal R2 and request_attachments D1 table enforce tenant-only access. File upload and a new ticket do not trigger content publication.
+
+**No cross-system credentials:** All portal D1 and R2 resources are separate from Prunus Certificates. Only existing Resend can be reused.

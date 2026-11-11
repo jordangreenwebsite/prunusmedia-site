@@ -21,6 +21,15 @@ const definitions=[
   {name:'get_research_queue',description:'Show pending/working research tasks, discovered source candidate URLs and their unverified status.',
     inputSchema:{type:'object',properties:{client_id:{type:'string'}},required:['client_id'],additionalProperties:false},readOnlyHint:true}
 ].map(d=>({name:d.name,description:d.description,inputSchema:d.inputSchema,annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}}));
+const flagForTool={
+  list_clients:null,
+  get_search_performance:'expose_search',
+  get_editorial_plan:'expose_editorial',
+  get_research_queue:'expose_research'
+};
+async function mcpPolicy(env){
+  return await env.DB.prepare('SELECT * FROM portal_ai_settings WHERE id=1').first();
+}
 function eqToken(a,b){
   if(typeof a!=='string'||typeof b!=='string'||!a||!b||a.length!==b.length)return false;
   let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);
@@ -66,6 +75,9 @@ async function toolCall(env,name,args){
 }
 export async function mcpHandler(request,env){
   if(!env.MCP_ADMIN_TOKEN)return respond({error:'MCP is not activated.'},503);
+  const policy=await mcpPolicy(env);
+  if(!policy?.mcp_enabled)return respond({error:'MCP access is turned off in the agency AI settings.'},503);
+  const visible=definitions.filter(d=>!flagForTool[d.name]||policy[flagForTool[d.name]]);
   const url=new URL(request.url);
   const origin=request.headers.get('origin');
   if(origin&&origin!==url.origin)return respond({error:'Origin denied.'},403);
@@ -98,10 +110,10 @@ export async function mcpHandler(request,env){
     return respond(ok(id,result));
   }
   if(body.method==='ping')return respond(ok(id,{}));
-  if(body.method==='tools/list')return respond(ok(id,{tools:definitions}));
+  if(body.method==='tools/list')return respond(ok(id,{tools:visible}));
   if(body.method!=='tools/call')return respond(error(id,-32601,'Unknown method.'));
   const name=body.params?.name;
-  if(!definitions.some(d=>d.name===name))return respond(error(id,-32602,'Unknown tool name.'));
+  if(!visible.some(d=>d.name===name))return respond(error(id,-32602,'This read-only tool is not enabled.'));
   const args=body.params?.arguments||{};
   if(!args||typeof args!=='object'||Array.isArray(args))return respond(error(id,-32602,'Arguments must be an object.'));
   try{

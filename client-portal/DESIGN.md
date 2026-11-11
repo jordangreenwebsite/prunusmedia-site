@@ -56,3 +56,14 @@ Status: implemented design for the shared client login and the signed-in website
 - Dedicated-token MCP endpoint has **read-only** tools; it must never become a way to read private leads or uploads or publish content.
 - The optional GitHub feature only prepares a draft PR for the confirmed Prunus Media repo with draft: true. It does not publish and cannot affect client/Certificates repos.
 - Maintain aria-live statuses, visible focus, mobile scrollable metrics tables, EB Garamond headings, Arial forms, warm cream cards.
+
+
+## Workspace v3: separate page routes (2026-11-11)
+
+The signed-in backend is no longer a continuous scroll page. Every sidebar/bottom item opens its own ?view= URL and uses browser Back/Forward. Agency Dashboard shows clickable business cards and metrics for published/planned/open blogs. Each business has a distinct Overview, Calendar, Blog planner, Content request, Submissions, Files, Search insights and Settings page. Client access is simplified: Overview, Calendar, Content request, Request change, Submissions, Enquiries and Files. Clients never see agency AI, Google Search Console, business publishing settings, research queue or team controls.
+
+Clients send ONE content request with title, description, purpose, optional target page and multiple drag/drop files. Attachments are private to the business in D1/R2. Agency can choose a calendar day, business and blog idea with a planned date; the idea remains unpublished. Agency's Team page provisions client members only for the selected account, never administrators.
+
+MCP settings are a separate admin-only page: endpoint and optional service status, enable toggle and individual read-only tool permissions. The default is OFF even when the token is configured. Google Business Profile connects by OAuth consent and encrypted tenant-scoped refresh token, not a generic API key. Each publishing repository is a stored intended target, not permission to write to it.
+
+Retain cream #f8f2e9, ivory cards, EB Garamond headings, Arial body and fixed mobile bottom menu. Hide all noncurrent screens, legacy page containers, and all client-forbidden routes. Privacy is enforced by the API as well as menus.

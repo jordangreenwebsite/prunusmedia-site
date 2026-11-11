@@ -7,7 +7,8 @@ import worker from '../src/index.js';
 const base = 'https://portal.prunusmedia.com';
 function environment() {
   const sqlite = new DatabaseSync(':memory:');
-  sqlite.exec(readFileSync(new URL('../migrations/0001_initial.sql',import.meta.url),'utf8'));
+  for(const file of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql'])
+    sqlite.exec(readFileSync(new URL('../migrations/'+file,import.meta.url),'utf8'));
   const db = {
     prepare(sql) {
       const stmt = sqlite.prepare(sql);
