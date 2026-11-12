@@ -38,6 +38,9 @@ export function getLegacyRoutes() {
       if (entry.isDirectory()) {
         visit(absolute, [...urlSegments, entry.name]);
       } else if (entry.isFile() && entry.name === 'index.html') {
+        // The industry hub is now a native, responsive Astro page; no duplicate
+        // exported Breakdance route should shadow it.
+        if (urlSegments.join('/') === 'industries') continue;
         // This obsolete URL redirects to the new native Astro /pricing/ page.
         if (urlSegments.join('/') === 'website-design/packages') continue;
         routes.push({
