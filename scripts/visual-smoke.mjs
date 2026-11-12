@@ -622,8 +622,17 @@ try {
     await noJs.goto(local+'/',{waitUntil:'domcontentloaded'});
     const item=noJs.locator('.pm-faq__item').first(),answer=item.locator('.pm-faq__answer');
     await item.locator('summary').click();
-    if(!await item.evaluate(el=>el.open)||!await answer.isVisible()){
-      failures.push('homepage-mobile: native FAQ does not work without JavaScript');
+    await noJs.waitForTimeout(100);
+    const noJsState=await item.evaluate(el=>{
+      const answer=el.querySelector('.pm-faq__answer');
+      const rect=answer.getBoundingClientRect();
+      return {open:el.open,hasOpen:el.hasAttribute('open'),
+        display:getComputedStyle(answer).display,visibility:getComputedStyle(answer).visibility,
+        height:rect.height,question:el.querySelector('summary')?.textContent?.trim().slice(0,75)};
+    });
+    if(!noJsState.open||noJsState.height<20||noJsState.display==='none'){
+      failures.push('homepage-mobile: native FAQ does not work without JavaScript: '+
+        JSON.stringify(noJsState));
     }
     await noJsCtx.close();
   }
