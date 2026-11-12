@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { footerMarkup } from './footer.mjs';
 import { improveLegacySeo } from './seo-enhancements.mjs';
-import { industrySlugByName, additionalIndustryPages } from '../data/industry-pages.mjs';
+import { industrySlugByName, additionalIndustryPages, industryPages } from '../data/industry-pages.mjs';
 export function routeAssetName(filename) {
   if (filename === 'index.html') return 'home';
   if (filename === '404.html') return 'not-found';
@@ -186,7 +186,7 @@ export function cleanPageHtml(originalHtml, filename) {
   const groupedIndustryLinks = industryGroups.map(group => {
     const links = [
       ...group.legacy.map(([slug, label]) => ({ slug, label })),
-      ...additionalIndustryPages.filter(page => page.group === group.slug)
+      ...industryPages.filter(page => page.group === group.slug)
     ];
     if (!links.length) return '';
     return '<li class="pm-industry-menu-group"><span class="pm-industry-menu-heading">' +
