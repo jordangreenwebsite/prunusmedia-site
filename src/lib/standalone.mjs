@@ -332,23 +332,23 @@ export function cleanPageHtml(originalHtml, filename) {
   const heroDemos = {
     'industries/accountants/index.html': {
       id: '565', name: 'Easy Cloud Accounting',
-      url: 'https://easycloudaccounting.pages.dev/'
+      url: 'https://easycloudaccounting.pages.dev/', screenshot: '/images/website-previews/easy-cloud-accounting.jpg'
     },
     'industries/private-clinics/index.html': {
       id: '576', name: 'Ioana Aesthetics London',
-      url: 'https://ioana-aesthetics-london.pages.dev/'
+      url: 'https://ioana-aesthetics-london.pages.dev/', screenshot: '/images/website-previews/ioana-aesthetics-london.jpg'
     },
     'industries/physiotherapists/index.html': {
       id: '587', name: 'Charley Hayes SMR',
-      url: 'https://charleyhayessmr.pages.dev/',
+      url: 'https://charleyhayessmr.pages.dev/', screenshot: '/images/website-previews/charley-hayes-smr.jpg',
       archived: true
     }
   };
   const heroDemo = heroDemos[filename];
   if (heroDemo) {
-    const { id, name, url, archived } = heroDemo;
+    const { id, name, url, screenshot, archived } = heroDemo;
     const safeName = name.replace(/&/g, '&amp;');
-    const screenshotUrl = 'https://s.wordpress.com/mshots/v1/' + encodeURIComponent(url) + '?w=1200';
+    const screenshotUrl = screenshot;
     const demoMarkup = '<div class="pm-sector-demo-hero" aria-label="' + safeName + ' website preview">' +
       '<div class="pm-sector-demo-hero__top"><span>' + (archived ? 'OUR WORK / ARCHIVED WEBSITE' : 'OUR WORK / WEBSITE DEMO') + '</span><strong>' + safeName + '</strong></div>' +
       '<a class="pm-sector-demo-hero__window" href="' + url +
