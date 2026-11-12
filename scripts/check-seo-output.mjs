@@ -136,7 +136,7 @@ for(const page of ['//','/our-work/','/our-work/residential-roofing-and-fascias/
  if(!html){failures.push('Missing case-study route: '+page);continue;}
  if(!html.includes('pm-roofing-story__comparison'))failures.push(page+' missing roofing comparison');
  if((html.match(/class="pm-roofing-story__scroll"/g)||[]).length!==2)failures.push(page+' must have two independent screenshot scrollers');
- for(const image of ['/case-studies/roofing/before.jpg','/case-studies/roofing/after.jpg','/case-studies/roofing/after-menu.png']){
+ for(const image of ['/case-studies/roofing/before.jpg','/images/website-previews/residential-roofing-full.jpg','/case-studies/roofing/after-menu.png']){
   if(!html.includes(image))failures.push(page+' missing image path '+image);
  }
  if(!html.includes('15</strong>'))failures.push(page+' missing additional-page count');

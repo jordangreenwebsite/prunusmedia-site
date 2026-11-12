@@ -27,7 +27,7 @@ const browser = await chromium.launch({ headless: true });
 const missing = [];
 for (const [slug, url] of sites) {
   const path = join(targetDirectory, slug + '.jpg');
-  if (existsSync(path) && statSync(path).size > 18000) {
+  if (slug !== 'residential-roofing' && existsSync(path) && statSync(path).size > 18000) {
     console.log('Already captured: ' + slug);
     continue;
   }
@@ -54,6 +54,23 @@ for (const [slug, url] of sites) {
     if(bodySize.height < 280) throw new Error('Page body too small for a meaningful preview');
     await page.screenshot({ path, type: 'jpeg', quality: 78, animations: 'disabled', fullPage: false });
     if (statSync(path).size < 18000) throw new Error('Screenshot appears nearly empty');
+    if (slug === 'residential-roofing') {
+      // The portfolio thumbnail and before/after case study share one verified live capture.
+      // Keep desktop and mobile full-page versions so the final responsive build is represented accurately.
+      const desktopFull = join(targetDirectory, 'residential-roofing-full.jpg');
+      await page.screenshot({ path: desktopFull, type: 'jpeg', quality: 76, animations: 'disabled', fullPage: true });
+      if (statSync(desktopFull).size < 40000) throw new Error('Roofing desktop full-page screenshot is too small');
+      const mobilePage = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, reducedMotion: 'reduce', isMobile: true, hasTouch: true });
+      try {
+        const mobileResponse = await mobilePage.goto(url, { waitUntil: 'domcontentloaded', timeout: 35000 });
+        if (!mobileResponse?.ok()) throw new Error('Roofing mobile HTTP ' + (mobileResponse?.status() ?? 'no response'));
+        await mobilePage.evaluate(async () => { if (document.fonts?.ready) await document.fonts.ready; window.scrollTo(0, 0); });
+        await mobilePage.waitForTimeout(1700);
+        const mobileFull = join(targetDirectory, 'residential-roofing-mobile-full.jpg');
+        await mobilePage.screenshot({ path: mobileFull, type: 'jpeg', quality: 80, animations: 'disabled', fullPage: true });
+        if (statSync(mobileFull).size < 40000) throw new Error('Roofing mobile full-page screenshot is too small');
+      } finally { await mobilePage.close(); }
+    }
     console.log('Captured ' + slug + ' (' + statSync(path).size + ' bytes)');
   } catch (error) {
     console.log('CAPTURE FAILED ' + slug + ': ' + String(error));

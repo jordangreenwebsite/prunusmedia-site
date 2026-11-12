@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   capture:
-    if: github.head_ref == 'fix/local-website-preview-screenshots'
+    if: github.head_ref == 'fix/local-website-preview-screenshots' || github.head_ref == 'fix/pricing-no-emoji-roofing-20261112'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

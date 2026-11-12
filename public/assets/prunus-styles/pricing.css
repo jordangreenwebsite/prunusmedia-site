@@ -24,7 +24,7 @@
 .pm-pricing__summary{color:#505b52;font-size:17px!important;line-height:1.48!important;min-height:5.2em}
 .pm-pricing__build ul,.pm-pricing__seo-card ul{list-style:none;padding:0;margin:17px 0 24px}
 .pm-pricing__build li,.pm-pricing__seo-card li{position:relative;padding:0 0 10px 25px;margin:0;font-size:16px;line-height:1.4}
-.pm-pricing__build li::before,.pm-pricing__seo-card li::before{content:"✓";position:absolute;left:0;top:0;font-weight:800;color:#59815f}
+.pm-pricing__build li::before,.pm-pricing__seo-card li::before{content:"";position:absolute;left:0;top:.68em;width:12px;height:1px;background:#59815f}
 .pm-pricing__button{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding:13px 15px;background:#30543a!important;border:1px solid #30543a;border-radius:6px;color:#fff!important;text-decoration:none!important;font:650 13px/1.4 "Space Grotesk",Arial,sans-serif;transition:background .2s,transform .2s}
 .pm-pricing__button:hover{background:#1d3a24!important;transform:translateY(-2px)}
 .pm-pricing__button:focus-visible{outline:3px solid #ECCD82!important;outline-offset:3px}
