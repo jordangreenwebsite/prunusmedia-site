@@ -154,24 +154,42 @@ try {
           failures.push(test.label+': homepage pricing invitation missing');
         }
       }
-      // Homepage FAQs must reveal actual answer content, not merely flip
-      // their icons. Check open and close on desktop and touch-sized screens.
+      // Rebuilt native details must expose all six original answers.
+      // Test a real open and close for every question, not merely an icon.
       if(test.route==='/'){
-        const question=page.locator('.bde-faq__question').first();
-        if(await question.count()!==1){
-          failures.push(test.label+': homepage FAQ missing');
+        const faqs=page.locator('.pm-faq__item');
+        if(await faqs.count()!==6){
+          failures.push(test.label+': expected six rebuilt FAQs');
         }else{
-          const panelId=await question.getAttribute('aria-controls');
-          const answer=page.locator('[id="'+panelId+'"]');
-          await question.click();
-          const expanded=await question.getAttribute('aria-expanded');
-          const active=await question.locator('xpath=ancestor::*[contains(@class,"bde-faq__item")][1]').evaluate(el=>el.classList.contains('is-active'));
-          if(expanded!=='true'||!active||!await answer.isVisible()){
-            failures.push(test.label+': FAQ arrow toggles but answer does not open');
+          const titles=await faqs.locator('summary .pm-faq__title').allTextContents();
+          const expected=[
+            'How much does a business website cost in the UK?',
+            'Do you build small websites?',
+            'Is SEO included with website design?',
+            'Can you write all the website content?',
+            'Can you continue doing SEO after launch?',
+            'Do you use templates?'
+          ];
+          if(JSON.stringify(titles.map(s=>s.trim()))!==JSON.stringify(expected)){
+            failures.push(test.label+': FAQ question copy changed or missing');
           }
-          await question.click();
-          if(await question.getAttribute('aria-expanded')!=='false'||await answer.isVisible()){
-            failures.push(test.label+': FAQ answer does not close');
+          for(let i=0;i<6;i++){
+            const item=faqs.nth(i);
+            const summary=item.locator('summary');
+            const answer=item.locator('.pm-faq__answer');
+            if(!((await answer.textContent())||'').trim()){
+              failures.push(test.label+': FAQ '+(i+1)+' answer empty');
+            }
+            await summary.click();
+            if(!await item.evaluate(el=>el.open)||!await answer.isVisible()){
+              failures.push(test.label+': FAQ '+(i+1)+' answer does not open');
+            }
+            const contentHeight=await answer.evaluate(el=>el.getBoundingClientRect().height);
+            if(contentHeight<22)failures.push(test.label+': FAQ '+(i+1)+' has no visible answer height');
+            await summary.click();
+            if(await item.evaluate(el=>el.open)||await answer.isVisible()){
+              failures.push(test.label+': FAQ '+(i+1)+' answer does not close');
+            }
           }
         }
       }
@@ -594,6 +612,42 @@ try {
   if(industryFindings.length)failures.push(...industryFindings);
 
 
+  // iOS-compatible progressive enhancement: the FAQ is genuinely native.
+  // One run with scripts disabled proves a stale JS bundle cannot hide answers.
+  {
+    const noJsCtx=await browser.newContext({
+      viewport:{width:390,height:844},isMobile:true,hasTouch:true,javascriptEnabled:false
+    });
+    const noJs=await noJsCtx.newPage();
+    await noJs.goto(local+'/',{waitUntil:'domcontentloaded'});
+    const item=noJs.locator('.pm-faq__item').first(),answer=item.locator('.pm-faq__answer');
+    await item.locator('summary').click();
+    if(!await item.evaluate(el=>el.open)||!await answer.isVisible()){
+      failures.push('homepage-mobile: native FAQ does not work without JavaScript');
+    }
+    await noJsCtx.close();
+  }
+  // Separate full-motion test checks the actual 320ms open/290ms close.
+  {
+    const motionCtx=await browser.newContext({
+      viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'no-preference'
+    });
+    const motionPage=await motionCtx.newPage();
+    await motionPage.goto(local+'/',{waitUntil:'domcontentloaded'});
+    const item=motionPage.locator('.pm-faq__item').first(),answer=item.locator('.pm-faq__answer');
+    await item.locator('summary').click();
+    await motionPage.waitForTimeout(390);
+    if(!await item.evaluate(el=>el.open)||!await answer.isVisible()){
+      failures.push('homepage-mobile: animated FAQ does not reveal answer');
+    }
+    await item.locator('summary').click();
+    await motionPage.waitForTimeout(390);
+    if(await item.evaluate(el=>el.open)||await answer.isVisible()){
+      failures.push('homepage-mobile: animated FAQ does not close');
+    }
+    await motionCtx.close();
+  }
+
   // Beyond the 37 sector pages, inspect ALL other public Astro/legacy routes
   // at mobile and desktop widths. The previous industry-only test missed
   // overflow on shared pages, so treat this as a permanent regression guard.
@@ -622,19 +676,22 @@ try {
         if(response?.status()!==200){
           otherPageFindings.push(route+' '+width+'px: HTTP '+response?.status());continue;
         }
-        // Sitewide mobile regression check for retained legacy FAQs.
+        // All legacy FAQs are rebuilt into native details on any route.
         if(width===390){
-          const question=tab.locator('.bde-faq__question').first();
-          if(await question.count()){
-            const panelId=await question.getAttribute('aria-controls');
-            const answer=tab.locator('[id="'+panelId+'"]');
-            await question.click({timeout:3500});
-            if(await question.getAttribute('aria-expanded')!=='true'||!await answer.isVisible()){
-              otherPageFindings.push(route+': FAQ does not open on mobile');
+          const faqs=tab.locator('.pm-faq__item');
+          if(await tab.locator('.bde-faq__item').count()){
+            otherPageFindings.push(route+': obsolete builder FAQ still present');
+          }
+          for(let i=0,count=await faqs.count();i<count;i++){
+            const item=faqs.nth(i),answer=item.locator('.pm-faq__answer');
+            await item.locator('summary').click({timeout:3500});
+            if(!await item.evaluate(el=>el.open)||!await answer.isVisible() ||
+               await answer.evaluate(el=>el.getBoundingClientRect().height)<20){
+              otherPageFindings.push(route+': FAQ '+(i+1)+' does not reveal its answer');
             }
-            await question.click({timeout:3500});
-            if(await question.getAttribute('aria-expanded')!=='false'||await answer.isVisible()){
-              otherPageFindings.push(route+': FAQ does not close on mobile');
+            await item.locator('summary').click({timeout:3500});
+            if(await item.evaluate(el=>el.open)||await answer.isVisible()){
+              otherPageFindings.push(route+': FAQ '+(i+1)+' does not close');
             }
           }
         }
