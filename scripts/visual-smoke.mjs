@@ -233,12 +233,12 @@ try {
         const workDirectory=path.join(process.cwd(),'src/content/work');
         const approvedProjects=readdirSync(workDirectory).filter(file=>file.endsWith('.md'))
           .map(file=>readFileSync(path.join(workDirectory,file),'utf8'))
-          .filter(source=>!/^[ \\t]*draft:\\s*true\\s*$/m.test(source));
+          .filter(source=>!/^[ \t]*draft:\s*true\s*$/m.test(source));
         if(await cards.count()!==approvedProjects.length){
           failures.push(test.label+': expected '+approvedProjects.length+' approved portfolio entries');
         }
         const externalLinks=page.locator('.pm-project-card .pm-project-website');
-        const expectedLinked=approvedProjects.filter(source=>/^website:\\s*["']?https:\\/\\//m.test(source)).length;
+        const expectedLinked=approvedProjects.filter(source=>/^website:\s*["']?https:\/\//m.test(source)).length;
         if(await externalLinks.count()!==expectedLinked){
           failures.push(test.label+': expected '+expectedLinked+' externally linked portfolio projects');
         }
