@@ -298,6 +298,55 @@ export function cleanPageHtml(originalHtml, filename) {
   </style>`;
   html = html.replace('</head>', industryMenuCss + '</head>');
 
+  // Show the newly built accountant demo on the existing Accountant landing page.
+  // It is a design demo, not a claim of client ownership.
+  if (filename === 'industries/accountants/index.html') {
+    const accountancyDemo = `<section class="pm-accountancy-demo" aria-labelledby="pm-accountancy-demo-title">
+      <div class="pm-accountancy-demo__inner">
+        <div class="pm-accountancy-demo__copy">
+          <p class="pm-accountancy-demo__eyebrow">Accountancy website design / Demo project</p>
+          <h2 id="pm-accountancy-demo-title">See an accountancy website in action.</h2>
+          <p>Easy Cloud Accounting is a website demo showing how clear services, considered typography and straightforward enquiries can work together for an accountancy firm.</p>
+          <p class="pm-accountancy-demo__note">An illustrative website concept, not a commissioned client website.</p>
+          <a class="pm-accountancy-demo__button" href="https://easycloudaccounting.pages.dev/" target="_blank" rel="noopener noreferrer">Explore the Easy Cloud Accounting demo <span aria-hidden="true">↗</span></a>
+        </div>
+        <a class="pm-accountancy-demo__preview" href="https://easycloudaccounting.pages.dev/" target="_blank" rel="noopener noreferrer" aria-label="Open Easy Cloud Accounting website demo in a new tab">
+          <span class="pm-accountancy-demo__browser"><span aria-hidden="true">● ● ●</span><span>easycloudaccounting.pages.dev</span></span>
+          <span class="pm-accountancy-demo__previewbody">
+            <span class="pm-accountancy-demo__monogram">EC</span>
+            <span class="pm-accountancy-demo__preview-eyebrow">Website concept</span>
+            <strong>Easy Cloud<br>Accounting</strong>
+            <span class="pm-accountancy-demo__preview-line"></span>
+            <span class="pm-accountancy-demo__preview-footer">View the complete example website ↗</span>
+          </span>
+        </a>
+      </div>
+    </section>`;
+    const accountancyDemoStyles = `<style id="pm-accountancy-demo-styles">
+      .pm-accountancy-demo{padding:70px 22px;background:#f2f4f0;color:#233b37}
+      .pm-accountancy-demo *{box-sizing:border-box}
+      .pm-accountancy-demo__inner{width:min(1100px,100%);margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+      .pm-accountancy-demo__eyebrow,.pm-accountancy-demo__preview-eyebrow{font:600 12px/1.5 "Space Grotesk",Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#527166}
+      .pm-accountancy-demo h2{font:500 clamp(29px,3.5vw,48px)/1.1 "Playfair Display",Georgia,serif;color:#243e38;margin:16px 0}
+      .pm-accountancy-demo__copy p:not(.pm-accountancy-demo__eyebrow){font:400 18px/1.6 "Alegreya Sans",Arial,sans-serif;max-width:520px}
+      .pm-accountancy-demo__note{font-size:15px!important;color:#587067}
+      .pm-accountancy-demo__button{display:inline-block;margin-top:18px;padding:13px 20px;background:#243e38;color:#fff!important;text-decoration:none;border-radius:4px;font:600 14px/1.4 "Space Grotesk",Arial,sans-serif}
+      .pm-accountancy-demo__button:hover{background:#42645a}
+      .pm-accountancy-demo__preview{display:block;max-width:500px;width:100%;margin:0 auto;text-decoration:none!important;box-shadow:0 18px 42px #142e2526;border-radius:8px;overflow:hidden;background:#fff}
+      .pm-accountancy-demo__browser{display:flex;gap:14px;align-items:center;padding:12px 16px;background:#e9ede8;color:#66736b;font:500 12px/1.2 Arial,sans-serif}
+      .pm-accountancy-demo__browser span:first-child{color:#9fa9a0;white-space:nowrap}
+      .pm-accountancy-demo__previewbody{display:flex;flex-direction:column;align-items:flex-start;min-height:335px;padding:36px 44px;background:linear-gradient(145deg,#f7f8f4,#e5ede7)}
+      .pm-accountancy-demo__monogram{font:600 21px/1 Georgia,serif;color:#335b51;border:1px solid #89a99c;padding:13px;letter-spacing:-.08em;margin-bottom:30px}
+      .pm-accountancy-demo__previewbody strong{font:500 clamp(28px,3vw,45px)/1.12 Georgia,serif;color:#243e38;margin:8px 0 26px}
+      .pm-accountancy-demo__preview-line{height:1px;width:100%;background:#a9bdb3}
+      .pm-accountancy-demo__preview-footer{margin-top:18px;font:600 13px/1.4 "Space Grotesk",Arial,sans-serif;color:#335b51}
+      @media(max-width:750px){.pm-accountancy-demo{padding:45px 17px}.pm-accountancy-demo__inner{grid-template-columns:1fr;gap:28px}.pm-accountancy-demo__previewbody{min-height:300px}}
+    </style>`;
+    html = html.replace('</head>', accountancyDemoStyles + '</head>');
+    if (!html.includes('</body>')) throw new Error('Accountants document missing body');
+    html = html.replace('</body>', accountancyDemo + '</body>');
+  }
+
   // Replace the original exported footer on every existing route with a
   // semantic, consistent footer shared with Blog and Our Work. Never remove
   // adjacent scripts or content.
