@@ -13,8 +13,8 @@ const { industry } = Astro.props;
 const { ink, bg, accent } = industry.colors;
 const pathname = '/industries/' + industry.slug + '/';
 const demoScreenshot = industry.demo?.screenshot || null;
-const pageTitle = 'Websites for ' + industry.label + ' | UK Website Design';
-const description = 'Website design and SEO for ' + industry.label.toLowerCase() + '. Thoughtful service pages, useful content, clear enquiries and industry-specific design by Prunus Media.';
+const pageTitle = industry.seoH1 + ' | Prunus Media';
+const description = industry.seoH1 + ' from Prunus Media. ' + industry.intro + ' Explore our website examples and SEO-led page plans.';
 const demoType = { live: 'LIVE CLIENT WEBSITE', concept: 'WEBSITE CONCEPT', archived: 'ARCHIVED WEBSITE', owned: 'RELATED LIVE WEBSITE' };
 const styleVars = '--sector-ink:' + ink + ';--sector-bg:' + bg + ';--sector-accent:' + accent + ';';
 const displayGroup = {
@@ -30,7 +30,7 @@ const displayGroup = {
     <section class="pm-sector__hero" aria-labelledby="pm-sector-title">
       <div class="pm-sector__hero-copy">
         <p class="pm-sector__eyebrow">{displayGroup}</p>
-        <h1 id="pm-sector-title">{industry.headline}</h1>
+        <h1 id="pm-sector-title">{industry.seoH1}</h1>
         <p class="pm-sector__intro">{industry.intro}</p>
         <div class="pm-sector__actions">
           <a class="pm-sector__button" href={'/contact/?industry=' + encodeURIComponent(industry.slug)}>Talk about your website <span aria-hidden="true">→</span></a>
@@ -76,7 +76,7 @@ const displayGroup = {
     <section class="pm-sector__intro-section" aria-labelledby="pm-sector-decision">
       <p class="pm-sector__eyebrow">A website built around the decision</p>
       <div>
-        <h2 id="pm-sector-decision">Start with what your customers need to know.</h2>
+        <h2 id="pm-sector-decision">{industry.seoH2}</h2>
         <p>{industry.decision}</p>
       </div>
     </section>
@@ -84,7 +84,7 @@ const displayGroup = {
     <section class="pm-sector__plan" id="website-plan" aria-labelledby="pm-sector-plan-title">
       <div class="pm-sector__section-heading">
         <p class="pm-sector__eyebrow">Structure before decoration</p>
-        <h2 id="pm-sector-plan-title">Pages worth building for {industry.label.toLowerCase()}.</h2>
+        <h2 id="pm-sector-plan-title">Essential pages for a {industry.label.toLowerCase()} website</h2>
         <p>We would tailor the site map to your actual services and customer searches, rather than publishing pages for things the business does not offer.</p>
       </div>
       <div class="pm-sector__page-grid">
@@ -108,7 +108,7 @@ const displayGroup = {
       </div>
       <div class="pm-sector__strategy-block">
         <p class="pm-sector__eyebrow">Practical features</p>
-        <h2>Functionality with a purpose.</h2>
+        <h2>Website features for {industry.label.toLowerCase()}</h2>
         <ul>
           {industry.features.map((feature) => <li>{feature}</li>)}
         </ul>
@@ -119,7 +119,7 @@ const displayGroup = {
     <section class="pm-sector__examples" aria-labelledby="pm-sector-examples-title">
       <div class="pm-sector__section-heading">
         <p class="pm-sector__eyebrow">Visual direction and relevant work</p>
-        <h2 id="pm-sector-examples-title">What this could look like.</h2>
+        <h2 id="pm-sector-examples-title">{industry.label} website examples and design ideas</h2>
         <p>Every industry deserves its own visual identity. This is an illustrative design direction, not a claim that we've built a website for every sector.</p>
       </div>
       <div class="pm-sector__sample" aria-label={'Illustrative design concept for ' + industry.label}>
@@ -171,7 +171,7 @@ const displayGroup = {
 
     <aside class="pm-sector__cta" aria-label="Start a Prunus Media project">
       <p class="pm-sector__eyebrow">A useful website starts with a conversation</p>
-      <h2>Build something that actually fits your business.</h2>
+      <h2>Get a website designed for your {industry.label.toLowerCase()} business</h2>
       <p>Tell us what you do, what customers ask and where you want to grow. We'll talk through a sensible design and SEO structure.</p>
       <div class="pm-sector__actions">
         <a class="pm-sector__button" href={'/contact/?industry=' + encodeURIComponent(industry.slug)}>Start your project <span aria-hidden="true">→</span></a>
