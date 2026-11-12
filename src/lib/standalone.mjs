@@ -215,6 +215,24 @@ export function cleanPageHtml(originalHtml, filename) {
     min-width:0!important;max-width:calc(100vw - 40px)!important;
     box-sizing:border-box
   }
+  /* Three aligned quick actions: Pricing stays prominent without taking over. */
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3)>a.breakdance-dropdown-link{
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    min-height:44px!important;padding:10px 12px!important;
+    border:1px solid #646464!important;border-radius:5px!important;
+    background:#404040!important;color:#f7ead2!important;
+    box-shadow:none!important;text-align:center!important;
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li.prunus-pricing-dropdown-item>a.breakdance-dropdown-link{
+    background:#fff!important;color:#252525!important;border-color:#fff!important;
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3) .breakdance-dropdown-link__label{
+    width:auto!important;display:inline-block!important;margin:0!important;padding:0!important;
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3) .breakdance-dropdown-link__text{
+    font:600 13px/1.3 "Space Grotesk",Arial,sans-serif!important;
+    color:inherit!important;white-space:normal!important;
+  }
   .bde-menu-dropdown-27-153 .breakdance-dropdown-body{
     width:100%!important;min-width:0!important;box-sizing:border-box;
     max-height:min(72vh,640px);overflow:auto!important;
@@ -299,26 +317,44 @@ export function cleanPageHtml(originalHtml, filename) {
   html = html.replace('</head>', industryMenuCss + '</head>');
 
 
-  // Completed sector demos appear alongside the headline, never buried near the footer.
-  if (filename === 'industries/accountants/index.html') {
-    const demoUrl = 'https://easycloudaccounting.pages.dev/';
-    const demoHero = '<div class="pm-sector-demo-hero" aria-label="Easy Cloud Accounting website demo">' +
-      '<div class="pm-sector-demo-hero__top"><span>OUR WORK · WEBSITE DEMO</span><strong>Easy Cloud Accounting</strong></div>' +
-      '<div class="pm-sector-demo-hero__window"><iframe title="Easy Cloud Accounting website preview" src="' + demoUrl +
+
+  // Published demo examples appear in the hero alongside the sector sales copy.
+  // Use real URLs and truthful demo labels rather than invented portfolio imagery.
+  const heroDemos = {
+    'industries/accountants/index.html': {
+      id: '565', name: 'Easy Cloud Accounting',
+      url: 'https://easycloudaccounting.pages.dev/'
+    },
+    'industries/private-clinics/index.html': {
+      id: '576', name: 'Ioana Aesthetics London',
+      url: 'https://ioana-aesthetics-london.pages.dev/'
+    }
+  };
+  const heroDemo = heroDemos[filename];
+  if (heroDemo) {
+    const { id, name, url } = heroDemo;
+    const safeName = name.replace(/&/g, '&amp;');
+    const demoMarkup = '<div class="pm-sector-demo-hero" aria-label="' + safeName + ' website demo">' +
+      '<div class="pm-sector-demo-hero__top"><span>OUR WORK / WEBSITE DEMO</span><strong>' + safeName + '</strong></div>' +
+      '<div class="pm-sector-demo-hero__window"><iframe title="' + safeName + ' website preview" src="' + url +
       '" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>' +
-      '<a href="' + demoUrl + '" target="_blank" rel="noopener noreferrer" aria-label="Open Easy Cloud Accounting demo in a new tab"></a></div>' +
-      '<a class="pm-sector-demo-hero__visit" href="' + demoUrl +
-      '" target="_blank" rel="noopener noreferrer">Explore the complete demo ↗</a>' +
-      '<p class="pm-sector-demo-hero__disclaimer">A website demo built by Prunus Media, not a commissioned client project.</p>' +
-      '</div>';
-    const heroEnd = /(<\/div>)<\/div><\/div>\s*<\/section>(?=<section class="bde-section-565-110)/;
-    if (!heroEnd.test(html)) throw new Error('Accountants hero structure changed');
-    html = html.replace(heroEnd, '$1' + demoHero + '</div></div></section>');
+      '<a href="' + url + '" target="_blank" rel="noopener noreferrer" aria-label="Open ' + safeName + ' demo website"></a></div>' +
+      '<a class="pm-sector-demo-hero__visit" href="' + url +
+      '" target="_blank" rel="noopener noreferrer">Explore the full demo ↗</a>' +
+      '<p class="pm-sector-demo-hero__disclaimer">A Prunus Media demo website, not a commissioned client project.</p></div>';
+    const heroStart = html.indexOf('<section class="bde-section-' + id + '-100 bde-section">');
+    const heroFinish = html.indexOf('</section>', heroStart);
+    if (heroStart < 0 || heroFinish < 0) throw new Error('Hero missing on ' + filename);
+    const hero = html.slice(heroStart, heroFinish + 10);
+    const trailing = '</div></div></div>\n</section>';
+    if (!hero.includes(trailing)) throw new Error('Unexpected hero layout on ' + filename);
+    const adjusted = hero.replace(trailing, '</div></div>' + demoMarkup + '</div>\n</section>');
+    html = html.slice(0, heroStart) + adjusted + html.slice(heroFinish + 10);
     const demoCss = '<style id="pm-sector-demo-hero-styles">' +
-      '.bde-section-565-100 .section-container{max-width:1240px!important;width:min(100% - 32px,1240px)!important}' +
-      '.bde-section-565-100 .bde-columns-565-102{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:clamp(25px,4vw,55px)!important;align-items:center!important;width:100%!important}' +
-      '.bde-section-565-100 .bde-column-565-103{width:100%!important;max-width:100%!important;min-width:0}' +
-      '.bde-section-565-100 .bde-heading-565-104{font-size:clamp(2rem,3.1vw,3.65rem)!important;line-height:1.13!important}' +
+      '.bde-section-' + id + '-100 .section-container{max-width:1240px!important;width:min(100% - 32px,1240px)!important}' +
+      '.bde-section-' + id + '-100 .bde-columns-' + id + '-102{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:clamp(22px,3vw,48px)!important;align-items:center!important;width:100%!important}' +
+      '.bde-section-' + id + '-100 .bde-column-' + id + '-103{width:100%!important;max-width:100%!important;min-width:0}' +
+      '.bde-section-' + id + '-100 .bde-heading-' + id + '-104{font-size:clamp(2rem,3.1vw,3.65rem)!important;line-height:1.13!important}' +
       '.pm-sector-demo-hero{box-sizing:border-box;min-width:0;width:100%;padding:12px;border:1px solid #d7dfd9;border-radius:12px;background:#f7faf7;box-shadow:0 16px 46px rgba(26,51,42,.16);color:#253d35;text-align:left}' +
       '.pm-sector-demo-hero *{box-sizing:border-box}' +
       '.pm-sector-demo-hero__top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:7px 6px 13px;font:600 12px/1.4 "Space Grotesk",Arial,sans-serif}' +
@@ -329,8 +365,8 @@ export function cleanPageHtml(originalHtml, filename) {
       '.pm-sector-demo-hero__window>a:focus-visible{outline:4px solid #b6aa6c;outline-offset:-4px}' +
       '.pm-sector-demo-hero__visit{display:inline-block;margin:14px 6px 2px;color:#254b3b!important;font:700 14px/1.4 "Space Grotesk",Arial,sans-serif;text-decoration:underline;text-underline-offset:4px}' +
       '.pm-sector-demo-hero__disclaimer{font:400 12px/1.5 "Space Grotesk",Arial,sans-serif;color:#64776b;margin:9px 6px 5px}' +
-      '@media(max-width:840px){.bde-section-565-100 .bde-columns-565-102{grid-template-columns:minmax(0,1fr)!important}.pm-sector-demo-hero{max-width:620px;margin:0 auto}.pm-sector-demo-hero__window{height:clamp(290px,65vw,430px)}}' +
-      '@media(max-width:520px){.bde-section-565-100 .section-container{width:min(100% - 26px,1240px)!important}.pm-sector-demo-hero{padding:9px}.pm-sector-demo-hero__window{height:300px}}' +
+      '@media(max-width:840px){.bde-section-' + id + '-100 .bde-columns-' + id + '-102{grid-template-columns:minmax(0,1fr)!important}.pm-sector-demo-hero{max-width:620px;margin:0 auto}.pm-sector-demo-hero__window{height:clamp(290px,65vw,430px)}}' +
+      '@media(max-width:520px){.bde-section-' + id + '-100 .section-container{width:min(100% - 26px,1240px)!important}.pm-sector-demo-hero{padding:9px}.pm-sector-demo-hero__window{height:300px}}' +
       '</style>';
     html = html.replace('</head>', demoCss + '</head>');
   }
