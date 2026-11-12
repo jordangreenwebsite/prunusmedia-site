@@ -163,3 +163,7 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Preserve truthful project labels: Easy Cloud Accounting and Ioana Aesthetics London are demo/concept sites; Charley Hayes SMR is an archived historical website build, not a verified physiotherapy clinic client.
 - Source demo mapping: accountants → https://easycloudaccounting.pages.dev/ ; private clinics → https://ioana-aesthetics-london.pages.dev/ ; physiotherapists → https://charleyhayessmr.pages.dev/ . When a screenshot source fails, retain a useful graceful fallback and direct link instead of an error icon or empty grey box.
 - Residential Roofing & Fascias current live website is https://residential-roofing.co.uk/ . Do not link its Our Work card to the old pages.dev deployment.
+
+## Groundworks example — 12 November 2026
+- Groundworks industry page `/industries/groundworks/` must feature the hosted Gudgeons Groundworks website concept in a half-and-half hero: https://gudgeonsgroundworks.pages.dev/ . Its existing `/our-work/gudgeons-groundworks/` portfolio entry already links to the hosted example.
+- All new Astro industry hero demos must display a clickable website screenshot (or graceful labelled fallback), not an iframe that can be blocked by cross-origin frame restrictions. Keep an obvious direct link to the hosted demo and label concept vs client work accurately.
