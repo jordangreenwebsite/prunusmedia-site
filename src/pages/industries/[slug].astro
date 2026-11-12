@@ -15,6 +15,7 @@ const pathname = '/industries/' + industry.slug + '/';
 const demoScreenshot = industry.demo?.url ? (industry.demo.screenshot || 'https://s.wordpress.com/mshots/v1/' + encodeURIComponent(industry.demo.url) + '?w=1200') : null;
 const pageTitle = 'Websites for ' + industry.label + ' | UK Website Design';
 const description = 'Website design and SEO for ' + industry.label.toLowerCase() + '. Thoughtful service pages, useful content, clear enquiries and industry-specific design by Prunus Media.';
+const demoType = { live: 'LIVE CLIENT WEBSITE', concept: 'WEBSITE CONCEPT', archived: 'ARCHIVED WEBSITE', owned: 'RELATED LIVE WEBSITE' };
 const styleVars = '--sector-ink:' + ink + ';--sector-bg:' + bg + ';--sector-accent:' + accent + ';';
 const displayGroup = {
   professional: 'Professional and regulated businesses',
@@ -38,7 +39,7 @@ const displayGroup = {
         <p class="pm-sector__proof">Bespoke website design <span>•</span> Useful SEO-led content <span>•</span> Built for UK businesses</p>
       </div>
       {industry.demo?.url ? <div class="pm-sector__demo-preview" aria-label={industry.demo.name + ' website demo'}>
-        <div class="pm-sector__demo-top"><span>OUR WORK / WEBSITE DEMO</span><strong>{industry.demo.name}</strong></div>
+        <div class="pm-sector__demo-top"><span>{demoType[industry.demo.status] || 'WEBSITE EXAMPLE'}</span><strong>{industry.demo.name}</strong></div>
         <div class="pm-sector__demo-viewport">
           <a class="pm-sector__demo-screenshot" href={industry.demo.url} target="_blank" rel="noopener noreferrer" aria-label={'Open ' + industry.demo.name + ' website demo in a new tab'}>
             <span class="pm-sector__demo-fallback" aria-hidden="true"><strong>{industry.demo.name}</strong><small>View the complete example website ↗</small></span>
@@ -46,7 +47,16 @@ const displayGroup = {
           </a>
         </div>
         <a class="pm-sector__demo-link" href={industry.demo.url} target="_blank" rel="noopener noreferrer">Explore the full demo ↗</a>
-        <p class="pm-sector__demo-note">A Prunus Media website demo, not a commissioned client project.</p>
+        <p class="pm-sector__demo-note">{industry.demo.status === 'live' ? 'A live client website from our portfolio.' : industry.demo.status === 'owned' ? 'A live business website from our portfolio.' : industry.demo.status === 'archived' ? 'An earlier completed website, retained as archived work.' : 'A website concept, not a commissioned live client site.'}</p>
+        {industry.additionalDemos?.length ? <div class="pm-sector__other-demos" aria-label="More industry website examples">
+          {industry.additionalDemos.map(example => <a class="pm-sector__other-demo" href={example.url} target="_blank" rel="noopener noreferrer">
+            <span class="pm-sector__other-thumb">
+              <span class="pm-sector__other-fallback">{example.name}</span>
+              <img src={'https://s.wordpress.com/mshots/v1/' + encodeURIComponent(example.url) + '?w=680'} alt={'Preview of ' + example.name} loading="lazy" decoding="async" />
+            </span>
+            <span class="pm-sector__other-title"><strong>{example.name}</strong><small>{example.status === 'live' ? 'Live florist website' : 'Website concept'} · View website ↗</small></span>
+          </a>)}
+        </div> : null}
       </div> : null}
       { !industry.demo?.url ? <div class="pm-sector__hero-visual">
         {industry.image
@@ -313,4 +323,13 @@ const displayGroup = {
   .pm-sector__demo-viewport{height:340px}
 }
 @media(max-width:420px){.pm-sector__hero,.pm-sector--architectural .pm-sector__hero{padding:56px 18px 35px}}
+
+.pm-sector__other-demos{margin-top:16px;padding-top:14px;border-top:1px solid #d6e0d9;display:grid;gap:10px}
+.pm-sector__other-demo{display:flex;gap:12px;align-items:center;padding:8px;border:1px solid #dde4df;border-radius:5px;text-decoration:none!important;background:#fff;min-width:0}
+.pm-sector__other-thumb{position:relative;display:block;width:112px;height:74px;flex-shrink:0;overflow:hidden;background:var(--sector-bg)}
+.pm-sector__other-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center}
+.pm-sector__other-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;font:600 12px/1.3 "Space Grotesk",Arial,sans-serif;color:var(--sector-ink)}
+.pm-sector__other-title{min-width:0;display:flex;flex-direction:column;gap:4px}
+.pm-sector__other-title strong{font:600 15px/1.3 "Space Grotesk",Arial,sans-serif;color:#254b3b}
+.pm-sector__other-title small{font:500 12px/1.5 "Space Grotesk",Arial,sans-serif;color:#66776a}
 </style>
