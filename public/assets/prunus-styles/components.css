@@ -300,3 +300,87 @@ header .breakdance-dropdown-columns > .breakdance-dropdown-column {
   .pm-home-pricing__inner>a{min-height:44px}
   header .breakdance-dropdown-links > .prunus-pricing-dropdown-item {margin:8px 4px 12px!important}
 }
+
+
+/* Native FAQ state must also honour the hidden attribute. The original
+   stylesheet relies on .is-active; prunus-interactions keeps both in sync. */
+.bde-faq__answer[hidden] { display:none!important; }
+
+/* The original homepage service cards have fixed 750-790px mobile heights,
+   while their images are 590-700px tall. Their text/buttons overflow and the
+   existing pink CTAs become clipped. Let card content determine its height,
+   retain the approved colours and image treatments, and leave desktop alone. */
+@media(max-width:1023px) {
+  .bde-section-35-325 .bde-columns > .bde-column { min-width:0; }
+  .bde-section-35-325 .bde-image-box {
+    box-sizing:border-box;
+    width:100%!important;
+    max-width:100%;
+    height:auto!important;
+    min-height:0!important;
+    padding:clamp(20px,3vw,28px)!important;
+    gap:20px;
+    overflow:visible;
+  }
+  .bde-section-35-325 .bde-image-box .ee-imagebox-image {
+    width:100%;
+    height:clamp(210px,35vw,340px)!important;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .bde-section-35-325 .bde-image-box .ee-imagebox-image img {
+    width:100%;
+    height:100%!important;
+    object-fit:cover;
+    object-position:center;
+    display:block;
+  }
+  .bde-section-35-325 .bde-image-box .ee-imagebox-content {
+    height:auto!important;
+    min-height:0;
+    width:100%;
+  }
+  .bde-section-35-325 .bde-image-box .ee-imagebox-text {
+    max-width:100%;
+    font-size:clamp(18px,2.3vw,20px);
+    line-height:1.5;
+    overflow-wrap:break-word;
+  }
+  .bde-section-35-325 .bde-image-box .ee-imagebox-button {
+    margin-top:26px!important;
+    max-width:100%;
+    align-self:center;
+  }
+}
+@media(max-width:767px) {
+  .bde-section-35-325 .bde-image-box .ee-imagebox-image {
+    height:clamp(240px,68vw,350px)!important;
+  }
+  /* Six SEO strategy boxes: keep their gold-on-charcoal treatment and
+     slide entrance effects, but allow the headings and text to breathe. */
+  :is(.bde-div-35-557,.bde-div-35-560,.bde-div-35-563,
+      .bde-div-35-567,.bde-div-35-570,.bde-div-35-573) {
+    box-sizing:border-box;
+    min-width:0;
+    max-width:100%;
+    padding:22px 22px 24px!important;
+    gap:8px;
+  }
+  :is(.bde-div-35-557,.bde-div-35-560,.bde-div-35-563,
+      .bde-div-35-567,.bde-div-35-570,.bde-div-35-573) > .bde-heading {
+    width:100%;
+    max-width:100%;
+    margin:0!important;
+    font-size:clamp(25px,6.9vw,34px)!important;
+    line-height:1.16!important;
+    overflow-wrap:break-word;
+  }
+  :is(.bde-div-35-557,.bde-div-35-560,.bde-div-35-563,
+      .bde-div-35-567,.bde-div-35-570,.bde-div-35-573) > .bde-text {
+    width:100%;
+    max-width:100%;
+    font-size:clamp(17px,4.5vw,20px)!important;
+    line-height:1.42!important;
+    overflow-wrap:break-word;
+  }
+}
