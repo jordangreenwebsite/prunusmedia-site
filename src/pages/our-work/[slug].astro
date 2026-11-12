@@ -23,6 +23,6 @@ const { Content } = await render(entry);
   {entry.id==='residential-roofing-and-fascias'&&<Fragment set:html={roofingComparisonHtml({id:'prunus-roofing-project-details'})}/>}
   <article class="pm-editorial__article"><Content /></article>
   {entry.data.status === 'closed' && <p class="pm-editorial__empty">This business is currently closed. The project is retained as a historical design example.</p>}
-  {entry.data.website && <a class="pm-editorial__button" href={entry.data.website} target="_blank" rel="noopener noreferrer">Visit {entry.data.status === 'concept' ? 'concept preview' : entry.data.status === 'archived' || entry.data.status === 'closed' ? 'archived website' : 'website'} ↗</a>}
+  {entry.data.website && <a class="pm-editorial__button" href={entry.data.website} target="_blank" rel="noopener noreferrer">Visit {entry.data.status === 'concept' ? 'concept preview' : entry.data.status === 'archived' || entry.data.status === 'closed' ? 'archived website' : 'website'}</a>}
   <nav class="pm-editorial__nav" aria-label="More from Prunus"><a href="/our-work/">← All projects</a><a href="/contact/">Plan a project</a></nav>
 </EditorialLayout>

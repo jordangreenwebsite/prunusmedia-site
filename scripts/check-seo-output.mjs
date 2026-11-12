@@ -20,6 +20,14 @@ function visit(dir,parts=[]){
 visit(root);
 let failures=[];
 const descriptions=new Map();
+// Catch iOS emoji-style diagonal arrows, even when a future page injects them
+// through markup or as a numeric HTML entity. Ordinary thin text arrows remain.
+const emojiIconPattern = /(?:[\\u{1F300}-\\u{1FAFF}\\u2600-\\u26FF\\u2700-\\u27BF\\u2197\\u2196\\u2198\\u2199\\u2934\\u2935\\u2B05\\u2B06\\u2B07]\\uFE0F?|&#(?:x2197|8599);)/giu;
+for (const {name,source} of pages) {
+  if (emojiIconPattern.test(source)) failures.push(name+' contains an emoji-style icon');
+  emojiIconPattern.lastIndex=0;
+}
+
 let totalImages=0;
 for(const {name,source} of pages){
  const isPublic=!/^\/(?:page|author|qs|client-login)\//.test(name);
