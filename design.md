@@ -167,3 +167,12 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 ## Groundworks example — 12 November 2026
 - Groundworks industry page `/industries/groundworks/` must feature the hosted Gudgeons Groundworks website concept in a half-and-half hero: https://gudgeonsgroundworks.pages.dev/ . Its existing `/our-work/gudgeons-groundworks/` portfolio entry already links to the hosted example.
 - All new Astro industry hero demos must display a clickable website screenshot (or graceful labelled fallback), not an iframe that can be blocked by cross-origin frame restrictions. Keep an obvious direct link to the hosted demo and label concept vs client work accurately.
+
+
+## Sector-specific portfolio previews — 12 November 2026
+
+- The half-and-half hero on industry pages should show the best **actual Prunus Media website** for that sector wherever one is available, using a click-through image preview, not a blocked iframe. Visitors should be able to see the work immediately, without scrolling to a generic visual composition.
+- Examples with established portfolio links: Aesthetic Clinics → Ioana Aesthetics London (uncommissioned concept); Florists → Katie’s Flower Hut (concept) plus My Sweet Pea Flowers (live florist website, second clickable example); High-End Trades → TJ Bespoke Designs (concept); Roofing → Residential Roofing & Fascias (live); Car Detailing → PP Power Detailing (live); Window Cleaning and Pressure Washing → J Piper Cleaning Services (real live website); Painters & Decorators → Lee Green (concept); Cafés & Restaurants → Coffee at Odd Socks (concept); Groundworks and Construction Companies → Gudgeons Groundworks (concept).
+- Every example must be correctly labelled as a **live site, concept, archive, or owned/related website**. Never pretend an uncommissioned concept is a live paying client or infer results without analytics.
+- Preserve individual industry palette and full-bleed hero design. Where two sites are relevant, showcase the primary example in the large preview and the secondary example as a prominent clickable mini-preview within the same hero.
+- All three top shortcuts in the industry mega-menu, including Pricing, should be equally styled charcoal boxes with light text. No white Pricing box in the Our Work industry menu. Other menus may retain their existing distinct Pricing styling.
