@@ -28,7 +28,9 @@ export const industryPages = [
       "Accessible disclosures"
     ],
     "work": [],
-    "image": "/wp-content/uploads/2026/06/financial-services-scaled.jpg"
+    "image": "/wp-content/uploads/2026/06/financial-services-scaled.jpg",
+    "seoH1": "Financial Services Website Design for UK Firms",
+    "seoH2": "Financial services websites built around credibility and clear information"
   },
   {
     "slug": "dentists",
@@ -58,7 +60,9 @@ export const industryPages = [
       "Treatment FAQs"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Website Design for Dentists and Dental Practices",
+    "seoH2": "Dental practice websites that help patients find the right treatment"
   },
   {
     "slug": "law-firms",
@@ -88,7 +92,9 @@ export const industryPages = [
       "Careful regulatory disclosures"
     ],
     "work": [],
-    "image": "/wp-content/uploads/2026/06/lawyer-scaled.jpg"
+    "image": "/wp-content/uploads/2026/06/lawyer-scaled.jpg",
+    "seoH1": "Law Firm Website Design for Solicitors",
+    "seoH2": "Clear legal service pages that help prospective clients make enquiries"
   },
   {
     "slug": "training-providers",
@@ -124,7 +130,9 @@ export const industryPages = [
         "description": "Our own training-management platform, not a training-provider client site."
       }
     ],
-    "image": "/wp-content/uploads/2026/06/coaching-scaled.jpg"
+    "image": "/wp-content/uploads/2026/06/coaching-scaled.jpg",
+    "seoH1": "Training Provider Website Design and Course Booking",
+    "seoH2": "Training websites that make courses, dates and bookings easier to find"
   },
   {
     "slug": "estate-agents",
@@ -154,7 +162,9 @@ export const industryPages = [
       "CRM and portal feeds"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Estate Agent Website Design for Property Businesses",
+    "seoH2": "Property websites built for valuations, listings and local enquiries"
   },
   {
     "slug": "care-providers",
@@ -184,7 +194,9 @@ export const industryPages = [
       "Downloadable guides"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Website Design for Care Providers and Care Agencies",
+    "seoH2": "Care websites that explain services and build family confidence"
   },
   {
     "slug": "facilities-management",
@@ -214,7 +226,9 @@ export const industryPages = [
       "Multi-location contact routes"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Facilities Management Website Design",
+    "seoH2": "Show your facilities management services, sectors and capabilities"
   },
   {
     "slug": "hvac",
@@ -244,7 +258,9 @@ export const industryPages = [
       "Project galleries"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "HVAC Website Design for Heating and Ventilation Companies",
+    "seoH2": "Heating, ventilation and air conditioning websites built around your services"
   },
   {
     "slug": "security-alarm-installers",
@@ -274,7 +290,9 @@ export const industryPages = [
       "Accreditation details"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Security and Alarm Installer Website Design",
+    "seoH2": "Security company websites that explain installations, monitoring and enquiries"
   },
   {
     "slug": "high-end-trades",
@@ -316,7 +334,9 @@ export const industryPages = [
         "description": "A bespoke-design website concept, rather than a completed high-end trades client build."
       }
     ],
-    "image": "/wp-content/uploads/2026/06/high-end-trades-scaled.jpg"
+    "image": "/wp-content/uploads/2026/06/high-end-trades-scaled.jpg",
+    "seoH1": "Website Design for Bespoke and High-End Trades",
+    "seoH2": "Show your craftsmanship, premium projects and specialist services"
   },
   {
     "slug": "roofing",
@@ -358,7 +378,9 @@ export const industryPages = [
         "description": "A roofing rebuild with service and area pages and ongoing local SEO."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Website Design for Roofing Companies",
+    "seoH2": "Roofing websites built around repairs, replacements and local quote enquiries"
   },
   {
     "slug": "scaffolding",
@@ -388,7 +410,9 @@ export const industryPages = [
       "Documentation downloads"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Scaffolding Company Website Design",
+    "seoH2": "Scaffolding websites that explain access services and project capabilities"
   },
   {
     "slug": "fire-protection",
@@ -418,7 +442,9 @@ export const industryPages = [
       "Maintenance booking"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Fire Protection Company Website Design",
+    "seoH2": "Explain fire protection services, compliance and project suitability"
   },
   {
     "slug": "solar-installers",
@@ -448,7 +474,9 @@ export const industryPages = [
       "Aftercare requests"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Solar Panel Installer Website Design",
+    "seoH2": "Solar installation websites built around enquiries and customer questions"
   },
   {
     "slug": "drainage",
@@ -478,7 +506,9 @@ export const industryPages = [
       "Before-and-after evidence"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Drainage Company Website Design",
+    "seoH2": "Drainage websites that help customers find the right service quickly"
   },
   {
     "slug": "septic-tanks",
@@ -508,7 +538,9 @@ export const industryPages = [
       "Helpful guides"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Septic Tank and Wastewater Website Design",
+    "seoH2": "Explain septic tank installation, servicing and wastewater services"
   },
   {
     "slug": "skip-hire",
@@ -538,7 +570,9 @@ export const industryPages = [
       "Trade account forms"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Skip Hire Website Design and Online Enquiries",
+    "seoH2": "Skip hire websites that make sizes, prices and bookings easy to understand"
   },
   {
     "slug": "groundworks",
@@ -580,7 +614,9 @@ export const industryPages = [
         "description": "A groundworks design concept, not a commissioned live client website."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Website Design for Groundworks Contractors",
+    "seoH2": "Groundworks websites that show projects, plant and contractor capabilities"
   },
   {
     "slug": "waste-management",
@@ -610,7 +646,9 @@ export const industryPages = [
       "Waste stream guides"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Waste Management Company Website Design",
+    "seoH2": "Waste collection websites that explain services and accepted materials"
   },
   {
     "slug": "commercial-cleaning",
@@ -646,7 +684,9 @@ export const industryPages = [
         "description": "A cleaning-services website with substantial service and area content."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Commercial Cleaning Company Website Design",
+    "seoH2": "Cleaning websites designed around commercial contracts and enquiries"
   },
   {
     "slug": "pest-control",
@@ -676,7 +716,9 @@ export const industryPages = [
       "Preparation guides"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Pest Control Website Design for UK Businesses",
+    "seoH2": "Pest control websites organised around treatments and service areas"
   },
   {
     "slug": "industrial-services",
@@ -706,7 +748,9 @@ export const industryPages = [
       "Contact routing"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Industrial Services Company Website Design",
+    "seoH2": "Industrial websites that communicate technical capabilities clearly"
   },
   {
     "slug": "architects",
@@ -736,7 +780,9 @@ export const industryPages = [
       "Studio contact"
     ],
     "work": [],
-    "image": "/wp-content/uploads/2026/06/architect-scaled.jpg"
+    "image": "/wp-content/uploads/2026/06/architect-scaled.jpg",
+    "seoH1": "Architect Website Design for UK Practices",
+    "seoH2": "Architecture websites that showcase projects and attract relevant enquiries"
   },
   {
     "slug": "aesthetic-clinics",
@@ -776,8 +822,11 @@ export const industryPages = [
         "slug": "ioana-aesthetics-london",
         "label": "Website concept",
         "description": "A hosted aesthetics clinic website demo, created independently and not endorsed by the clinic."
-      }],
-    "image": null
+      }
+    ],
+    "image": null,
+    "seoH1": "Aesthetic Clinic Website Design",
+    "seoH2": "Aesthetic clinic websites that explain treatments and consultations responsibly"
   },
   {
     "slug": "veterinary-practices",
@@ -807,7 +856,9 @@ export const industryPages = [
       "Prescription policies"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Veterinary Practice Website Design",
+    "seoH2": "Vet websites that help pet owners find services and contact your practice"
   },
   {
     "slug": "florists",
@@ -822,7 +873,7 @@ export const industryPages = [
       {
         "name": "My Sweet Pea Flowers",
         "url": "https://www.mysweetpeaflowers.com/",
-      "screenshot": "/images/website-previews/my-sweet-pea-flowers.jpg",
+        "screenshot": "/images/website-previews/my-sweet-pea-flowers.jpg",
         "status": "live"
       }
     ],
@@ -862,7 +913,9 @@ export const industryPages = [
         "description": "A florist website concept created to show a delicate, local brand direction."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Florist Website Design for Flower Shops",
+    "seoH2": "Florist websites that showcase bouquets, weddings and local enquiries"
   },
   {
     "slug": "pet-care",
@@ -903,7 +956,9 @@ export const industryPages = [
         "description": "An early pet-care project designed around trust and local enquiries."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Pet Care Business Website Design",
+    "seoH2": "Pet care websites that explain services and help owners build trust"
   },
   {
     "slug": "car-detailing",
@@ -950,7 +1005,9 @@ export const industryPages = [
         "description": "A completed car-care website preserved in the portfolio."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Car Detailing and Valeting Website Design",
+    "seoH2": "Car detailing websites built around services, prices and local bookings"
   },
   {
     "slug": "window-cleaning",
@@ -997,7 +1054,9 @@ export const industryPages = [
         "description": "Our own window-cleaning quote calculator, not a cleaning company client site."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Window Cleaning Business Website Design",
+    "seoH2": "Window cleaning websites that make quotes and service areas clear"
   },
   {
     "slug": "painters-decorators",
@@ -1039,7 +1098,9 @@ export const industryPages = [
         "description": "A painter-and-decorator website concept for an initial visual direction."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Painter and Decorator Website Design",
+    "seoH2": "Painting and decorating websites that showcase your work and win enquiries"
   },
   {
     "slug": "pressure-washing",
@@ -1079,8 +1140,11 @@ export const industryPages = [
         "slug": "j-piper-cleaning-services",
         "label": "Related website",
         "description": "A real exterior cleaning business website showing pressure washing and related services."
-      }],
-    "image": null
+      }
+    ],
+    "image": null,
+    "seoH1": "Pressure Washing Website Design for Exterior Cleaners",
+    "seoH2": "Exterior cleaning websites that show results, services and coverage"
   },
   {
     "slug": "cafes-restaurants",
@@ -1122,7 +1186,9 @@ export const industryPages = [
         "description": "A playful café website concept, not a live hospitality client."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Café and Restaurant Website Design",
+    "seoH2": "Hospitality websites that show menus, opening times and how to visit"
   },
   {
     "slug": "surveyors",
@@ -1152,7 +1218,9 @@ export const industryPages = [
       "Professional credentials"
     ],
     "work": [],
-    "image": null
+    "image": null,
+    "seoH1": "Surveyor Website Design for UK Practices",
+    "seoH2": "Surveying websites that make specialist services and enquiries clear"
   },
   {
     "slug": "construction-companies",
@@ -1199,7 +1267,9 @@ export const industryPages = [
         "description": "A live roofing client website demonstrating local construction-service SEO."
       }
     ],
-    "image": null
+    "image": null,
+    "seoH1": "Construction Company Website Design",
+    "seoH2": "Construction websites that show projects, services and contractor experience"
   }
 ];
 export const industrySlugByName = {
