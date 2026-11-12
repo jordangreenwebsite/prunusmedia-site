@@ -12,6 +12,7 @@ export function getStaticPaths() {
 const { industry } = Astro.props;
 const { ink, bg, accent } = industry.colors;
 const pathname = '/industries/' + industry.slug + '/';
+const demoScreenshot = industry.demo?.url ? (industry.demo.screenshot || 'https://s.wordpress.com/mshots/v1/' + encodeURIComponent(industry.demo.url) + '?w=1200') : null;
 const pageTitle = 'Websites for ' + industry.label + ' | UK Website Design';
 const description = 'Website design and SEO for ' + industry.label.toLowerCase() + '. Thoughtful service pages, useful content, clear enquiries and industry-specific design by Prunus Media.';
 const styleVars = '--sector-ink:' + ink + ';--sector-bg:' + bg + ';--sector-accent:' + accent + ';';
@@ -39,8 +40,10 @@ const displayGroup = {
       {industry.demo?.url ? <div class="pm-sector__demo-preview" aria-label={industry.demo.name + ' website demo'}>
         <div class="pm-sector__demo-top"><span>OUR WORK / WEBSITE DEMO</span><strong>{industry.demo.name}</strong></div>
         <div class="pm-sector__demo-viewport">
-          <iframe src={industry.demo.url} title={industry.demo.name + ' website preview'} loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
-          <a href={industry.demo.url} target="_blank" rel="noopener noreferrer" aria-label={'Open ' + industry.demo.name + ' website demo in a new tab'}></a>
+          <a class="pm-sector__demo-screenshot" href={industry.demo.url} target="_blank" rel="noopener noreferrer" aria-label={'Open ' + industry.demo.name + ' website demo in a new tab'}>
+            <span class="pm-sector__demo-fallback" aria-hidden="true"><strong>{industry.demo.name}</strong><small>View the complete example website ↗</small></span>
+            <img src={demoScreenshot} alt={'Screenshot preview of ' + industry.demo.name + ' website'} loading="lazy" decoding="async" onerror="this.style.display='none'" />
+          </a>
         </div>
         <a class="pm-sector__demo-link" href={industry.demo.url} target="_blank" rel="noopener noreferrer">Explore the full demo ↗</a>
         <p class="pm-sector__demo-note">A Prunus Media website demo, not a commissioned client project.</p>
@@ -261,9 +264,13 @@ const displayGroup = {
 .pm-sector__demo-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:6px 6px 12px;font:600 12px/1.4 "Space Grotesk",Arial,sans-serif;color:#254b3b}
 .pm-sector__demo-top span{font-size:10px;letter-spacing:.08em}
 .pm-sector__demo-viewport{position:relative;width:100%;height:clamp(300px,30vw,420px);overflow:hidden;border:1px solid #d9e2db;border-radius:5px;background:#e8efea}
-.pm-sector__demo-viewport iframe{width:200%;height:900px;max-width:none;border:0;transform:scale(.5);transform-origin:top left;pointer-events:none}
-.pm-sector__demo-viewport>a{position:absolute;inset:0;z-index:1;display:block}
-.pm-sector__demo-viewport>a:focus-visible{outline:4px solid #b6aa6c;outline-offset:-4px}
+.pm-sector__demo-screenshot{position:absolute;inset:0;z-index:1;display:block;overflow:hidden}
+.pm-sector__demo-screenshot img{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%;object-fit:cover;object-position:top center;transition:transform .25s ease}
+.pm-sector__demo-screenshot:hover img{transform:scale(1.025)}
+.pm-sector__demo-screenshot:focus-visible{outline:4px solid #b6aa6c;outline-offset:-4px}
+.pm-sector__demo-fallback{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:28px;text-align:center;background:linear-gradient(135deg,var(--sector-bg),var(--sector-accent));color:var(--sector-ink)}
+.pm-sector__demo-fallback strong{font:500 clamp(2rem,4vw,3.3rem)/1.1 "Playfair Display",Georgia,serif}
+.pm-sector__demo-fallback small{font:600 14px/1.5 "Space Grotesk",Arial,sans-serif}
 .pm-sector__demo-link{display:inline-block;margin:13px 6px 1px!important;color:#254b3b!important;font:700 14px/1.4 "Space Grotesk",Arial,sans-serif;text-underline-offset:4px}
 .pm-sector__demo-note{font:400 12px/1.5 "Space Grotesk",Arial,sans-serif!important;color:#64776b;margin:8px 6px 4px}
 
