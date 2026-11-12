@@ -332,80 +332,93 @@ export function cleanPageHtml(originalHtml, filename) {
 
 
 
-  // Published demo examples appear in the hero alongside the sector sales copy.
-  // Use real URLs and truthful demo labels rather than invented portfolio imagery.
-  const heroDemos = {
+
+  // The original three industry pages are retained for their content and
+  // artwork, but their exported Breakdance hero column markup cannot be mixed
+  // safely with a new preview card. Replace that hero in one atomic operation.
+  // Keeping the original section class retains its industry background asset.
+  const heroExamples = {
     'industries/accountants/index.html': {
-      id: '565', name: 'Easy Cloud Accounting',
-      url: 'https://easycloudaccounting.pages.dev/', screenshot: '/images/website-previews/easy-cloud-accounting.jpg'
+      id:'565', slug:'accountants', label:'Easy Cloud Accounting',
+      url:'https://easycloudaccounting.pages.dev/',
+      image:'/images/website-previews/easy-cloud-accounting.jpg',
+      badge:'Website concept',
+      note:'A Prunus Media website concept, not a commissioned client website.',
+      tone:'#233947'
     },
     'industries/private-clinics/index.html': {
-      id: '576', name: 'Ioana Aesthetics London',
-      url: 'https://ioana-aesthetics-london.pages.dev/', screenshot: '/images/website-previews/ioana-aesthetics-london.jpg'
+      id:'576', slug:'private-clinics', label:'Ioana Aesthetics London',
+      url:'https://ioana-aesthetics-london.pages.dev/',
+      image:'/images/website-previews/ioana-aesthetics-london.jpg',
+      badge:'Website concept',
+      note:'A Prunus Media website concept, not a commissioned client website.',
+      tone:'#605969'
     },
     'industries/physiotherapists/index.html': {
-      id: '587', name: 'Charley Hayes SMR',
-      url: 'https://charleyhayessmr.pages.dev/', screenshot: '/images/website-previews/charley-hayes-smr.jpg',
-      archived: true
+      id:'587', slug:'physiotherapists', label:'Charley Hayes SMR',
+      url:'https://charleyhayessmr.pages.dev/',
+      image:'/images/website-previews/charley-hayes-smr.jpg',
+      badge:'Archived website',
+      note:'An earlier sports massage website build. It is not a verified physiotherapy clinic client.',
+      tone:'#2c6163'
     }
   };
-  const heroDemo = heroDemos[filename];
-  if (heroDemo) {
-    const { id, name, url, screenshot, archived } = heroDemo;
-    const safeName = name.replace(/&/g, '&amp;');
-    const screenshotUrl = screenshot;
-    const demoMarkup = '<div class="pm-sector-demo-hero" aria-label="' + safeName + ' website preview">' +
-      '<div class="pm-sector-demo-hero__top"><span>' + (archived ? 'OUR WORK / ARCHIVED WEBSITE' : 'OUR WORK / WEBSITE DEMO') + '</span><strong>' + safeName + '</strong></div>' +
-      '<a class="pm-sector-demo-hero__window" href="' + url +
-      '" target="_blank" rel="noopener noreferrer" aria-label="Open ' + safeName + ' website in a new tab">' +
-      '<img src="' + screenshotUrl + '" loading="lazy" decoding="async" alt="Screenshot of ' + safeName + ' website homepage" />' +
-      '<span class="pm-sector-demo-hero__image-fallback" aria-hidden="true">' + safeName + '<small>View the example website ↗</small></span></a>' +
-      '<a class="pm-sector-demo-hero__visit" href="' + url +
-      '" target="_blank" rel="noopener noreferrer">Explore the full website ↗</a>' +
-      '<p class="pm-sector-demo-hero__disclaimer">' + (archived ? 'A past website build, archived and no longer in commercial use. Not a verified physiotherapy clinic client.' : 'A Prunus Media demo website, not a commissioned client project.') + '</p></div>';
-    const heroStart = html.indexOf('<section class="bde-section-' + id + '-100 bde-section">');
-    const heroFinish = html.indexOf('</section>', heroStart);
-    if (heroStart < 0 || heroFinish < 0) throw new Error('Hero missing on ' + filename);
-    const hero = html.slice(heroStart, heroFinish + 10);
-    const trailing = '</div></div></div>\n</section>';
-    if (!hero.includes(trailing)) throw new Error('Unexpected hero layout on ' + filename);
-    const adjusted = hero.replace(trailing, '</div>' + demoMarkup + '</div></div>\n</section>');
-    html = html.slice(0, heroStart) + adjusted + html.slice(heroFinish + 10);
-    const demoCss = '<style id="pm-sector-demo-hero-styles">' +
-      '.bde-section-' + id + '-100{box-sizing:border-box!important;height:auto!important;min-height:0!important;overflow:visible!important;padding:155px 0 70px!important;margin:0!important}' +
-      '.bde-section-' + id + '-100 .section-container{display:block!important;box-sizing:border-box!important;max-width:1320px!important;width:calc(100% - 48px)!important;margin:0 auto!important;padding:0!important;height:auto!important;min-height:0!important}' +
-      '.bde-section-' + id + '-100 .bde-text-' + id + '-101{position:static!important;transform:none!important;max-width:100%!important;margin:0 auto 24px!important;text-align:center!important}' +
-      '.bde-section-' + id + '-100 .bde-columns-' + id + '-102{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:clamp(24px,3vw,52px)!important;align-items:center!important;justify-content:stretch!important;position:static!important;transform:none!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;width:100%!important;overflow:visible!important}' +
-      '.bde-section-' + id + '-100 .bde-column-' + id + '-103{display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;gap:22px!important;position:static!important;transform:none!important;width:100%!important;max-width:100%!important;min-width:0!important;height:auto!important;min-height:0!important;padding:0!important;margin:0!important;overflow:hidden!important}' +
-      '.bde-section-' + id + '-100 .bde-column-' + id + '-103>*{position:static!important;transform:none!important;max-width:100%!important;min-width:0!important;width:100%!important;height:auto!important;margin:0!important;box-sizing:border-box!important;overflow-wrap:break-word!important}' +
-      '.bde-section-' + id + '-100 .bde-column-' + id + '-103 .bde-div-' + id + '-107{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:wrap!important;gap:12px!important}' +
-      '.bde-section-' + id + '-100 .bde-column-' + id + '-103 .bde-div-' + id + '-107>*{width:auto!important;max-width:100%!important}' +
-      '.bde-section-' + id + '-100 .bde-heading-' + id + '-104{font-size:clamp(2rem,3.1vw,3.35rem)!important;line-height:1.14!important;letter-spacing:-.02em!important;overflow-wrap:normal!important;word-break:normal!important;white-space:normal!important}' +
-      '.bde-section-' + id + '-100 .bde-text-' + id + '-105{font-size:clamp(1.15rem,1.7vw,1.6rem)!important;line-height:1.45!important;white-space:normal!important;text-align:left!important}' +
-      '.bde-section-' + id + '-100 .bde-text-' + id + '-106{font-size:13px!important;line-height:1.45!important;white-space:normal!important;text-align:left!important}' +
-      '.pm-sector-demo-hero{position:relative!important;isolation:isolate!important;align-self:center!important;max-width:100%!important;min-width:0!important;overflow:hidden!important}' +
-      '@media(max-width:900px){.bde-section-' + id + '-100{padding-top:135px!important}.bde-section-' + id + '-100 .bde-columns-' + id + '-102{grid-template-columns:minmax(0,1fr)!important}.bde-section-' + id + '-100 .bde-column-' + id + '-103{overflow:visible!important}.pm-sector-demo-hero{max-width:680px!important;margin:12px auto 0!important;width:100%!important}}' +
-      '@media(max-width:520px){.bde-section-' + id + '-100{padding:120px 0 48px!important}.bde-section-' + id + '-100 .section-container{width:calc(100% - 32px)!important}.bde-section-' + id + '-100 .bde-heading-' + id + '-104{font-size:clamp(1.9rem,8vw,2.6rem)!important}.bde-section-' + id + '-100 .bde-text-' + id + '-105{font-size:1.15rem!important}}' +
-
-      '.bde-section-' + id + '-100 .bde-columns-' + id + '-102{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:clamp(22px,3vw,48px)!important;align-items:center!important;width:100%!important}' +
-      '.bde-section-' + id + '-100 .bde-column-' + id + '-103{width:100%!important;max-width:100%!important;min-width:0}' +
-      '.bde-section-' + id + '-100 .bde-heading-' + id + '-104{font-size:clamp(2rem,3.1vw,3.65rem)!important;line-height:1.13!important}' +
-      '.pm-sector-demo-hero{box-sizing:border-box;min-width:0;width:100%;padding:12px;border:1px solid #d7dfd9;border-radius:12px;background:#f7faf7;box-shadow:0 16px 46px rgba(26,51,42,.16);color:#253d35;text-align:left}' +
-      '.pm-sector-demo-hero *{box-sizing:border-box}' +
-      '.pm-sector-demo-hero__top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:7px 6px 13px;font:600 12px/1.4 "Space Grotesk",Arial,sans-serif}' +
-      '.pm-sector-demo-hero__top span{font-size:10px;letter-spacing:.1em;color:#547b68}' +
-      '.pm-sector-demo-hero__window{position:relative;width:100%;height:clamp(300px,31vw,450px);overflow:hidden;background:#e8efea;border:1px solid #d9e2db;border-radius:5px}' +
-      '.pm-sector-demo-hero__window img{display:block;position:relative;z-index:1;width:100%;height:100%;object-fit:cover;object-position:top center}' +
-      '.pm-sector-demo-hero__image-fallback{position:absolute;inset:0;display:flex;flex-direction:column;gap:15px;align-items:center;justify-content:center;padding:30px;text-align:center;background:linear-gradient(135deg,#eef1eb,#b4c8bc);font:500 35px/1.15 Georgia,serif;color:#254b3b}' +
-      '.pm-sector-demo-hero__image-fallback small{font:600 14px/1.5 Arial,sans-serif}' +
-      '.pm-sector-demo-hero__window:hover img{opacity:.92}' +
-      '.pm-sector-demo-hero__window:focus-visible{outline:4px solid #b6aa6c;outline-offset:2px}' +
-      '.pm-sector-demo-hero__visit{display:inline-block;margin:14px 6px 2px;color:#254b3b!important;font:700 14px/1.4 "Space Grotesk",Arial,sans-serif;text-decoration:underline;text-underline-offset:4px}' +
-      '.pm-sector-demo-hero__disclaimer{font:400 12px/1.5 "Space Grotesk",Arial,sans-serif;color:#64776b;margin:9px 6px 5px}' +
-      '@media(max-width:840px){.bde-section-' + id + '-100 .bde-columns-' + id + '-102{grid-template-columns:minmax(0,1fr)!important}.pm-sector-demo-hero{max-width:620px;margin:0 auto}.pm-sector-demo-hero__window{height:clamp(290px,65vw,430px)}}' +
-      '@media(max-width:520px){.bde-section-' + id + '-100 .section-container{width:min(100% - 26px,1240px)!important}.pm-sector-demo-hero{padding:9px}.pm-sector-demo-hero__window{height:300px}}' +
+  const example=heroExamples[filename];
+  if(example){
+    const {id,slug,label,url,image,badge,note,tone}=example;
+    const start=html.indexOf('<section class="bde-section-'+id+'-100 bde-section">');
+    const end=start>=0?html.indexOf('</section>',start):-1;
+    if(start<0||end<0) throw new Error('Industry hero missing on '+filename);
+    const originalHero=html.slice(start,end+10);
+    const h1=originalHero.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1]?.trim();
+    const text=originalHero.match(new RegExp('<div class="bde-text-'+id+'-105\\b[^"]*"[^>]*>([\\s\\S]*?)<\\/div>','i'))?.[1]?.trim();
+    const proof=originalHero.match(new RegExp('<div class="bde-text-'+id+'-106\\b[^"]*"[^>]*>([\\s\\S]*?)<\\/div>','i'))?.[1]?.trim();
+    if(!h1||!text||!proof)throw new Error('Industry hero content missing on '+filename);
+    const cleanHero='<section class="bde-section-'+id+'-100 bde-section pm-legacy-industry-hero pm-legacy-industry-hero--'+slug+'" style="--pm-hero-ink:'+tone+'">' +
+      '<div class="section-background-overlay bde-section-background-overlay" aria-hidden="true"></div>' +
+      '<div class="pm-legacy-industry-hero__inner">' +
+      '<div class="pm-legacy-industry-hero__copy">' +
+      '<p class="pm-legacy-industry-hero__eyebrow">Website design · SEO · Content</p>' +
+      '<h1>'+h1+'</h1>' +
+      '<p class="pm-legacy-industry-hero__intro">'+text+'</p>' +
+      '<p class="pm-legacy-industry-hero__proof">'+proof+'</p>' +
+      '<div class="pm-legacy-industry-hero__actions"><a class="pm-legacy-industry-hero__primary" href="/contact/">Talk about your website</a>' +
+      '<a class="pm-legacy-industry-hero__secondary" href="/our-work/">See our work</a></div>' +
+      '</div>' +
+      '<aside class="pm-legacy-industry-hero__example" aria-label="'+badge+': '+label+'">' +
+      '<div class="pm-legacy-industry-hero__example-head"><span>'+badge+'</span><strong>'+label+'</strong></div>' +
+      '<a class="pm-legacy-industry-hero__image-link" href="'+url+'" target="_blank" rel="noopener noreferrer" aria-label="View '+label+' website">' +
+      '<img src="'+image+'" alt="Screenshot of the '+label+' website" loading="eager" decoding="async"></a>' +
+      '<a class="pm-legacy-industry-hero__view" href="'+url+'" target="_blank" rel="noopener noreferrer">View the full website</a>' +
+      '<p class="pm-legacy-industry-hero__note">'+note+'</p>' +
+      '</aside>' +
+      '</div></section>';
+    html=html.slice(0,start)+cleanHero+html.slice(end+10);
+    const heroCss = '<style id="pm-legacy-industry-hero-styles">' +
+      '.pm-legacy-industry-hero{position:relative!important;isolation:isolate!important;box-sizing:border-box!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:hidden!important;padding:152px 0 76px!important;margin:0!important}' +
+      '.pm-legacy-industry-hero *{box-sizing:border-box}' +
+      '.pm-legacy-industry-hero>.section-background-overlay{position:absolute!important;inset:0!important;pointer-events:none!important;z-index:0!important}' +
+      '.pm-legacy-industry-hero__inner{position:relative!important;z-index:1!important;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;align-items:center!important;gap:clamp(28px,4vw,58px)!important;width:min(1320px,calc(100% - 64px))!important;margin:0 auto!important;padding:0!important;height:auto!important;min-height:0!important}' +
+      '.pm-legacy-industry-hero__copy{position:relative!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;min-width:0!important;max-width:100%!important;width:100%!important;margin:0!important;padding:0!important;gap:0!important;transform:none!important;overflow:visible!important}' +
+      '.pm-legacy-industry-hero__eyebrow{font:600 12px/1.4 "Space Grotesk",Arial,sans-serif!important;text-transform:uppercase;letter-spacing:.07em;color:var(--pm-hero-ink);margin:0 0 19px!important}' +
+      '.pm-legacy-industry-hero__copy h1{display:block!important;position:static!important;transform:none!important;font:400 clamp(2.05rem,3.3vw,3.6rem)/1.18 "Space Grotesk",Arial,sans-serif!important;letter-spacing:-.025em!important;text-align:center!important;color:#fff!important;background:var(--pm-hero-ink)!important;border-radius:5px!important;padding:24px clamp(15px,2vw,30px)!important;max-width:100%!important;width:100%!important;height:auto!important;margin:0 0 25px!important;word-break:normal!important;overflow-wrap:break-word!important;white-space:normal!important}' +
+      '.pm-legacy-industry-hero__intro{font:400 clamp(1.2rem,1.85vw,1.7rem)/1.5 "Playfair Display",Georgia,serif!important;text-align:center!important;color:#242b2b!important;margin:0 0 24px!important;max-width:100%!important;word-break:normal!important;overflow-wrap:break-word!important;white-space:normal!important}' +
+      '.pm-legacy-industry-hero__proof{font:500 13px/1.55 "Space Grotesk",Arial,sans-serif!important;text-align:center!important;color:#263d3b!important;margin:0 0 30px!important;padding:7px 10px!important;background:#fff9f0dd!important;border:1px solid #e0d3b3!important;max-width:100%!important}' +
+      '.pm-legacy-industry-hero__actions{display:flex!important;align-items:center!important;justify-content:center!important;flex-wrap:wrap!important;gap:12px!important;min-width:0!important;width:100%!important}' +
+      '.pm-legacy-industry-hero__actions a{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:0!important;max-width:100%!important;min-height:48px!important;padding:12px 19px!important;font:600 14px/1.3 "Space Grotesk",Arial,sans-serif!important;border-radius:5px!important;text-decoration:none!important;text-align:center!important;white-space:normal!important}' +
+      '.pm-legacy-industry-hero__primary{background:#f8dcdc!important;color:#262626!important}' +
+      '.pm-legacy-industry-hero__secondary{background:var(--pm-hero-ink)!important;color:#fff!important}' +
+      '.pm-legacy-industry-hero__example{position:relative!important;min-width:0!important;max-width:100%!important;width:100%!important;align-self:center!important;padding:13px!important;border:1px solid #d7dfd9!important;border-radius:12px!important;background:#f7faf7!important;color:#253d35!important;box-shadow:0 16px 46px #1a332a22!important;overflow:hidden!important;transform:none!important}' +
+      '.pm-legacy-industry-hero__example-head{display:flex!important;justify-content:space-between!important;align-items:center!important;flex-wrap:wrap!important;gap:8px!important;padding:8px 6px 14px!important;color:#254537!important;font:600 12px/1.4 "Space Grotesk",Arial,sans-serif!important}' +
+      '.pm-legacy-industry-hero__example-head span{font-size:10px!important;letter-spacing:.1em!important;text-transform:uppercase!important;color:#527d68!important}' +
+      '.pm-legacy-industry-hero__image-link{display:block!important;position:relative!important;width:100%!important;max-width:100%!important;aspect-ratio:1.46!important;overflow:hidden!important;border:1px solid #d9e2db!important;border-radius:5px!important;background:#e8efea!important}' +
+      '.pm-legacy-industry-hero__image-link img{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:top center!important}' +
+      '.pm-legacy-industry-hero__view{display:inline-block!important;margin:15px 6px 3px!important;color:#254b3b!important;font:700 14px/1.4 "Space Grotesk",Arial,sans-serif!important;text-underline-offset:4px!important;overflow-wrap:break-word!important}' +
+      '.pm-legacy-industry-hero__note{font:400 13px/1.5 "Space Grotesk",Arial,sans-serif!important;color:#607669!important;margin:9px 6px 5px!important}' +
+      '@media(max-width:900px){.pm-legacy-industry-hero{padding:146px 0 56px!important}.pm-legacy-industry-hero__inner{grid-template-columns:minmax(0,1fr)!important;width:min(680px,calc(100% - 42px))!important;gap:30px!important}.pm-legacy-industry-hero__example{margin:0 auto!important}.pm-legacy-industry-hero__copy h1{font-size:clamp(2rem,6vw,2.75rem)!important}}' +
+      '@media(max-width:560px){.pm-legacy-industry-hero{padding:180px 0 48px!important}.pm-legacy-industry-hero__inner{width:calc(100% - 30px)!important;gap:25px!important}.pm-legacy-industry-hero__copy h1{font-size:clamp(1.9rem,7.5vw,2.35rem)!important;padding:21px 15px!important}.pm-legacy-industry-hero__intro{font-size:1.17rem!important;line-height:1.5!important}.pm-legacy-industry-hero__actions{flex-direction:column!important;gap:10px!important}.pm-legacy-industry-hero__actions a{width:100%!important}.pm-legacy-industry-hero__image-link{aspect-ratio:1.35!important}.pm-legacy-industry-hero__example{padding:10px!important}.pm-legacy-industry-hero__note{font-size:12px!important}}' +
       '</style>';
-    html = html.replace('</head>', demoCss + '</head>');
+    html=html.replace('</head>',heroCss+'</head>');
   }
 
   // Replace the original exported footer on every existing route with a
