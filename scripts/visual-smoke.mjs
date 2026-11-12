@@ -537,13 +537,69 @@ try {
       if(result.docWidth>width+8)industryFindings.push('directory '+width+'px: horizontal page overflow '+result.docWidth);
       if(result.badLinks)industryFindings.push('directory '+width+'px: '+result.badLinks+' cards too narrow, tall or clipped');
       if(result.h1Top<80)industryFindings.push('directory '+width+'px: H1 under header');
-      await tab.screenshot({path:path.join(output,'industry-directory-'+width+'.png'),fullPage:false,animations:'disabled'});
+      await tab.screenshot({path:path.join(output,'industry-directory-'+width+'.png'),fullPage:true,animations:'disabled'});
     }catch(e){industryFindings.push('directory '+width+'px: '+String(e))}
     await ctx.close();
   }
   console.log('INDUSTRY LAYOUT SWEEP: '+industryRoutes.length+' pages x 2 viewports; '+industryFindings.length+' findings');
   writeFileSync(path.join(output,'industry-layout-sweep.json'),JSON.stringify({pages:industryRoutes.length,widths:[1440,390],findings:industryFindings},null,2)+'\n');
   if(industryFindings.length)failures.push(...industryFindings);
+
+
+  // Beyond the 37 sector pages, inspect ALL other public Astro/legacy routes
+  // at mobile and desktop widths. The previous industry-only test missed
+  // overflow on shared pages, so treat this as a permanent regression guard.
+  const allPublicRoutes=[];
+  const scanRendered=(folder,parts=[])=>{
+    for(const entry of readdirSync(folder,{withFileTypes:true})){
+      if(['wp-content','wp-includes','assets','_astro'].includes(entry.name))continue;
+      const next=path.join(folder,entry.name);
+      if(entry.isDirectory())scanRendered(next,[...parts,entry.name]);
+      else if(entry.isFile()&&entry.name==='index.html'){
+        const route='/' + (parts.length?parts.join('/')+'/':'');
+        if(!/^\/(?:page|author|qs|client-login)\//.test(route)&&!route.startsWith('/industries/')){
+          allPublicRoutes.push(route);
+        }
+      }
+    }
+  };
+  scanRendered(path.join(process.cwd(),'dist'));
+  const otherPageFindings=[];
+  for(const width of [390,1440]){
+    const ctx=await browser.newContext({viewport:{width,height:840},reducedMotion:'reduce'});
+    const tab=await ctx.newPage();
+    for(const route of allPublicRoutes){
+      try{
+        const response=await tab.goto(local+route,{waitUntil:'domcontentloaded',timeout:12000});
+        if(response?.status()!==200){
+          otherPageFindings.push(route+' '+width+'px: HTTP '+response?.status());continue;
+        }
+        const state=await tab.evaluate(()=>{
+          const viewport=window.innerWidth;
+          const h1=[...document.querySelectorAll('h1')].filter(el=>{
+            const r=el.getBoundingClientRect();
+            const cs=getComputedStyle(el);
+            return r.width>0&&r.height>0&&cs.display!=='none'&&cs.visibility!=='hidden';
+          });
+          const headingRects=h1.map(el=>{
+            const r=el.getBoundingClientRect();
+            return {left:r.left,right:r.right,width:r.width};
+          });
+          return {viewport,documentWidth:document.documentElement.scrollWidth,
+            visibleH1:h1.length,headingRects};
+        });
+        if(state.documentWidth>width+12)otherPageFindings.push(route+' '+width+'px: horizontal page overflow '+state.documentWidth);
+        if(state.headingRects.some(r=>r.left< -15 || r.right>width+15)){
+          otherPageFindings.push(route+' '+width+'px: main heading outside viewport');
+        }
+      }catch(error){otherPageFindings.push(route+' '+width+'px: '+String(error).slice(0,135))}
+    }
+    await ctx.close();
+  }
+  console.log('SITEWIDE RESPONSIVE SWEEP: '+allPublicRoutes.length+' additional routes x 2 widths; '+otherPageFindings.length+' findings');
+  writeFileSync(path.join(output,'sitewide-responsive-sweep.json'),
+    JSON.stringify({routes:allPublicRoutes.length,widths:[390,1440],findings:otherPageFindings},null,2)+'\n');
+  if(otherPageFindings.length)failures.push(...otherPageFindings);
 
   writeFileSync(path.join(output, 'visual-metrics.json'), JSON.stringify(visualMetrics,null,2) + '\n');
   writeFileSync(path.join(output, 'readme.txt'),
