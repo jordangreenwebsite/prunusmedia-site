@@ -1,0 +1,78 @@
+/* Prunus Media FAQ: a standalone native HTML accordion.
+   Intentional visual parity with the original pale-blush / gold FAQ cards. */
+.pm-faq {
+  width:100%;
+  max-width:100%;
+  color:#2e2e2e;
+  font-family:"Space Grotesk",Arial,sans-serif;
+}
+.pm-faq, .pm-faq * { box-sizing:border-box; }
+.pm-faq__item {
+  display:block;
+  margin:0;
+  border:2px solid #eccd82;
+  background:#f8dcdc;
+}
+.pm-faq__item + .pm-faq__item { margin-top:-2px; }
+.pm-faq__question {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  width:100%;
+  min-height:60px;
+  padding:16px;
+  margin:0;
+  background:transparent;
+  color:#2e2e2e;
+  border:0;
+  border-radius:0;
+  list-style:none;
+  cursor:pointer;
+  font-family:"Space Grotesk",Arial,sans-serif;
+  font-size:clamp(18px,2.1vw,23px);
+  font-weight:400;
+  line-height:1.4;
+  text-align:left;
+  -webkit-tap-highlight-color:transparent;
+}
+.pm-faq__question::-webkit-details-marker { display:none; }
+.pm-faq__question::marker { content:""; }
+.pm-faq__question:focus-visible {
+  outline:3px solid #2e2e2e;
+  outline-offset:-5px;
+}
+.pm-faq__title { flex:1 1 auto; min-width:0; overflow-wrap:break-word; }
+.pm-faq__icon {
+  flex:0 0 auto;
+  width:20px;
+  height:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .27s ease;
+}
+.pm-faq__icon svg { width:100%; height:100%; }
+.pm-faq__icon--up { display:none; }
+.pm-faq__item[open] .pm-faq__icon--down { display:none; }
+.pm-faq__item[open] .pm-faq__icon--up { display:flex; }
+.pm-faq__item[open] .pm-faq__question { padding-bottom:12px; }
+.pm-faq__answer { overflow:hidden; }
+.pm-faq__answer-inner {
+  padding:0 16px 20px;
+  font:400 clamp(16px,1.65vw,19px)/1.62 "Space Grotesk",Arial,sans-serif;
+  overflow-wrap:break-word;
+  color:#2e2e2e;
+}
+.pm-faq__answer-inner p { margin:0 0 12px; font:inherit; color:inherit; }
+.pm-faq__answer-inner p:last-child { margin-bottom:0; }
+.pm-faq__answer-inner a { color:#243b30; text-decoration:underline; text-underline-offset:3px; }
+.pm-faq__answer-inner a:hover { color:#131e19; }
+@media(max-width:767px) {
+  .pm-faq__question { padding:16px 15px; font-size:19px; gap:12px; }
+  .pm-faq__answer-inner { padding:0 15px 19px; font-size:16px; }
+  .pm-faq__icon { width:19px; height:19px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .pm-faq__icon { transition:none; }
+}

@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { footerMarkup } from './footer.mjs';
 import { improveLegacySeo } from './seo-enhancements.mjs';
+import { rebuildLegacyFaqs } from './faq.mjs';
 import { industrySlugByName, additionalIndustryPages, industryPages } from '../data/industry-pages.mjs';
 export function routeAssetName(filename) {
   if (filename === 'index.html') return 'home';
@@ -56,6 +57,9 @@ export function cleanPageHtml(originalHtml, filename) {
     html = html.replace(headerPattern, match => match.replace(
       /\\sbreakdance-menu-item--active|\\sbreakdance-dropdown-item--active/g, ''));
   }
+  // Replace the obsolete builder FAQ widgets with native, self-contained
+  // details and summaries. Retain all source questions and answers.
+  html = rebuildLegacyFaqs(html, filename);
   const styles = extractCssPaths(originalHtml);
 
   // The original exported DOM already records the exact per-section effect.
@@ -622,6 +626,7 @@ export function cleanPageHtml(originalHtml, filename) {
   // exported builder's runtime.
 
   const scripts = '<script defer src="/assets/prunus-scripts/prunus-interactions.js"></script>' +
+    '<script defer src="/assets/prunus-scripts/prunus-faq.js?v=native-faq-20261112"></script>' +
     '<script defer src="/assets/prunus-scripts/prunus-cursor.js"></script>';
   if (html.includes('</body>')) html = html.replace('</body>', scripts + '\n</body>');
   // In critical inline CSS the keyboard-only link is visually clipped by
@@ -647,6 +652,7 @@ export function cleanPageHtml(originalHtml, filename) {
   if (html.includes('</head>')) html = html.replace('</head>', skipLinkCriticalCss + '\n</head>');
   if (html.includes('</head>')) html = html.replace('</head>',
     '<link rel="stylesheet" href="/assets/prunus-styles/components.css?v=faq-mobile-cards-20261112">\n' +
+    '<link rel="stylesheet" href="/assets/prunus-styles/faq.css?v=native-faq-20261112">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/portfolio.css">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/footer.css">\n</head>');
 
