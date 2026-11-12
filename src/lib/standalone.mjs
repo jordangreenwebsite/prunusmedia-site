@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { footerMarkup } from './footer.mjs';
 import { improveLegacySeo } from './seo-enhancements.mjs';
-import { industrySlugByName, additionalIndustryPages } from '../data/industry-pages.mjs';
+import { industrySlugByName, additionalIndustryPages, industryPages } from '../data/industry-pages.mjs';
 export function routeAssetName(filename) {
   if (filename === 'index.html') return 'home';
   if (filename === '404.html') return 'not-found';
@@ -166,6 +166,62 @@ export function cleanPageHtml(originalHtml, filename) {
   const pricingMenuCount = (html.match(/class="breakdance-dropdown-item prunus-pricing-dropdown-item"/g)||[]).length;
   if (pricingMenuCount !== 4) throw new Error('Expected four pricing dropdown links, found '+pricingMenuCount+' on '+filename);
 
+
+
+  // All published industry pages belong in the shared Our Work menu.
+  // The index export is the source header for legacy and editorial routes,
+  // so this single transformation keeps the entire site consistent.
+  const industryGroups = [
+    { name: 'Professional & Financial', slug: 'professional', legacy: [
+      ['accountants', 'Accountants'], ['private-clinics', 'Private Clinics'],
+      ['physiotherapists', 'Physiotherapists']
+    ] },
+    { name: 'Property & Services', slug: 'property', legacy: [] },
+    { name: 'Trades & Contractors', slug: 'contractors', legacy: [] },
+    { name: 'Specialist Businesses', slug: 'overlooked', legacy: [] },
+    { name: 'More Industries', slug: 'additional', legacy: [] }
+  ];
+  const menuLink = (slug, label) => '<li><a href="/industries/' +
+    slug + '/">Websites for ' + label.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</a></li>';
+  const groupedIndustryLinks = industryGroups.map(group => {
+    const links = [
+      ...group.legacy.map(([slug, label]) => ({ slug, label })),
+      ...industryPages.filter(page => page.group === group.slug)
+    ];
+    if (!links.length) return '';
+    return '<li class="pm-industry-menu-group"><span class="pm-industry-menu-heading">' +
+      group.name + '</span><ul>' +
+      links.map(page => menuLink(page.slug, page.label)).join('') +
+      '</ul></li>';
+  }).join('');
+  const menuStart = '<li class="bde-menu-dropdown-27-153';
+  html = html.replace(headerPattern, header => {
+    if (!header.includes(menuStart)) throw new Error('Missing Our Work dropdown on ' + filename);
+    const groupPattern = /(<li class="bde-menu-dropdown-27-153\b[\s\S]*?<ul class="breakdance-dropdown-links">)[\s\S]*?(<\/ul>)/i;
+    if (!groupPattern.test(header)) throw new Error('Cannot find industry menu list on ' + filename);
+    return header.replace(groupPattern, (_, start, end) =>
+      start + pricingEntry + dropdownEntry('/our-work/', 'Our Work') +
+      dropdownEntry('/industries/', 'All Industries') + groupedIndustryLinks + end);
+  });
+  const menuIndustryCount = (html.match(/<a href="\/industries\/[a-z-]+\/">Websites for /g) || []).length;
+  if (menuIndustryCount !== 37) throw new Error('Expected 37 industry menu links; found ' + menuIndustryCount + ' on ' + filename);
+  const industryMenuCss = `<style id="pm-industry-menu-styles">
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-body{max-height:min(72vh,680px);overflow-y:auto;overscroll-behavior:contain}
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-floater{width:min(900px,calc(100vw - 36px));max-width:calc(100vw - 36px)}
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-column{width:100%;max-width:100%;flex-basis:100%}
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 24px!important;padding:12px!important;max-width:100%}
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-group{display:block!important;min-width:0;margin:0!important;padding:0!important}
+  .pm-industry-menu-heading{display:block;color:#e8c778;font:700 12px/1.45 "Space Grotesk",Arial,sans-serif;letter-spacing:.04em;margin:0 0 9px}
+  .pm-industry-menu-group ul{list-style:none;margin:0;padding:0}
+  .pm-industry-menu-group li{list-style:none;margin:0}
+  .pm-industry-menu-group a,.pm-industry-menu-quick a{display:block;padding:6px 4px!important;color:#f7f2ec!important;text-decoration:none;font:500 13px/1.4 "Space Grotesk",Arial,sans-serif;white-space:normal}
+  .pm-industry-menu-group a:hover,.pm-industry-menu-group a:focus-visible,.pm-industry-menu-quick a:hover,.pm-industry-menu-quick a:focus-visible{color:#e8c778!important;text-decoration:underline}
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-quick{grid-column:1/-1;display:flex!important;flex-wrap:wrap;gap:8px 22px;padding:0 0 13px!important;margin:0!important;border-bottom:1px solid #ffffff40}
+  .pm-industry-menu-quick a{font-weight:700}
+  @media(max-width:780px){.bde-menu-dropdown-27-153 .breakdance-dropdown-links{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px!important}}
+  @media(max-width:560px){.bde-menu-dropdown-27-153 .breakdance-dropdown-floater{width:100%;max-width:100%}.bde-menu-dropdown-27-153 .breakdance-dropdown-body{max-height:65vh}.bde-menu-dropdown-27-153 .breakdance-dropdown-links{display:block!important;padding:8px!important}.bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-group{margin:0 0 16px!important}.bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-quick{display:flex!important}.pm-industry-menu-group a{padding:9px 4px!important}}
+  </style>`;
+  html = html.replace('</head>', industryMenuCss + '</head>');
 
   // Replace the original exported footer on every existing route with a
   // semantic, consistent footer shared with Blog and Our Work. Never remove
