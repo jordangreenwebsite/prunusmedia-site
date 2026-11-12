@@ -184,3 +184,13 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Capture desktop screenshots at a consistent 1440px viewport using Chromium. Keep the visible site's original branding and imagery. Use the source screenshots as previews, each clickable to the corresponding website. Never imply the screenshot is a real client site when it is a concept.
 - Screenshots are regenerated intentionally using `scripts/capture-website-previews.mjs` when a website design changes. Future additions should add the website to the script's capture list and the industry's `demo.screenshot` (or `additionalDemos[].screenshot`) mapping before publishing.
 - The source of truth for portfolio classification is the project's actual status: `live` (commissioned live client), `owned` (related live business), `archived` (previous completed work) or `concept` (uncommissioned example). CTAs for live sites should say "View the website", not "Explore the demo".
+
+
+## SEO headings on industry landing pages — 12 November 2026
+
+- The **H1 must plainly describe the service being sold and the industry** in natural British English, ideally using the search intent such as "Roofing Company Website Design", "Accountant Website Design", or "Physiotherapy Website Design". A beautifully written slogan that never says "website design" is not a suitable industry landing-page H1.
+- Write a **unique, accurate page title and one visible H1** for each industry. The title and H1 do not have to match exactly, but their main subject and search intent must align.
+- H2 headings should describe what the section genuinely explains: relevant services, sector-specific pages, useful features, SEO considerations, live work and concept examples. Avoid repeated vague sections such as "Functionality with a purpose" and "What this could look like" on every industry page.
+- Keep benefits and distinctive brand copy in the introduction or supplementary visual treatments instead of losing the site's character. Never force keyword stuffing, claim guaranteed rankings, invent search volume or treat heading changes alone as proof of traffic growth.
+- Base future target keyword changes on verified Search Console queries, impressions, click-through rates, local search results and lead conversion data. Review indexing/canonical status and internal links as well as on-page copy.
+- Source of truth for the 34 Astro industry page headings is `src/data/industry-pages.mjs` via `seoH1` and `seoH2` plus the semantic `<h1>` and `<h2>` elements in `src/pages/industries/[slug].astro`. The three legacy industry routes `/industries/accountants/`, `/industries/private-clinics/` and `/industries/physiotherapists/` are updated in their original source HTML.
