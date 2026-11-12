@@ -43,6 +43,8 @@ try {
     { route: '/', label: 'homepage-mobile', width: 390, height: 844, mobile: true },
     { route: '/seo-agency-uk/free-seo-audit/', label: 'auditor-desktop', width: 1440, height: 900 },
     { route: '/contact/', label: 'contact-mobile', width: 390, height: 844, mobile: true },
+    { route: '/industries/', label: 'industries-directory-desktop', width: 1440, height: 900 },
+    { route: '/industries/', label: 'industries-directory-mobile', width: 390, height: 844, mobile: true },
     { route: '/industries/accountants/', label: 'accountants-desktop', width: 1440, height: 900 },
     { route: '/industries/private-clinics/', label: 'clinics-desktop', width: 1440, height: 900 },
     { route: '/blog/', label: 'blog-desktop', width: 1440, height: 900 },
@@ -460,16 +462,16 @@ try {
         await tab.evaluate(()=>window.scrollTo(0,0));
         const state=await tab.evaluate(({legacy,width})=>{
           const hero = legacy
-            ? document.querySelector('section[class*="bde-section-"][class*="-100"]')
+            ? document.querySelector('.pm-legacy-industry-hero')
             : document.querySelector('.pm-sector__hero');
           const columns=legacy
-            ? document.querySelector('[class*="bde-columns-"][class*="-102"]')
+            ? document.querySelector('.pm-legacy-industry-hero__inner')
             : hero;
           const left=legacy
-            ? document.querySelector('[class*="bde-column-"][class*="-103"]')
+            ? document.querySelector('.pm-legacy-industry-hero__copy')
             : document.querySelector('.pm-sector__hero-copy');
           const right=legacy
-            ? document.querySelector('.pm-sector-demo-hero')
+            ? document.querySelector('.pm-legacy-industry-hero__example')
             : document.querySelector('.pm-sector__demo-preview, .pm-sector__hero-visual');
           const heading=hero?.querySelector('h1');
           const rect=(el)=>{if(!el)return null;const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}};
@@ -502,6 +504,40 @@ try {
       }catch(error){industryFindings.push(slug+' '+width+'px: '+String(error).slice(0,130))}
     }
     await context.close();
+  }
+  // The /industries/ directory is now native Astro, so the original
+  // 25-card Breakdance export must not appear at any screen width.
+  for(const width of [1440,768,390,320]){
+    const ctx=await browser.newContext({viewport:{width,height:840},reducedMotion:'reduce'});
+    const tab=await ctx.newPage();
+    try{
+      const response=await tab.goto(local+'/industries/',{waitUntil:'domcontentloaded',timeout:15000});
+      if(response?.status()!==200)industryFindings.push('directory '+width+'px: HTTP '+response?.status());
+      const result=await tab.evaluate(()=>{
+        const host=document.querySelector('.pm-industry-directory');
+        const links=[...document.querySelectorAll('.pm-industry-directory__link')];
+        const rect=(el)=>el?.getBoundingClientRect();
+        const hero=rect(document.querySelector('.pm-industry-directory__hero'));
+        const h1=rect(document.querySelector('.pm-industry-directory__hero h1'));
+        const card=rect(links[0]);
+        const bad=links.filter(link=>{
+          const r=link.getBoundingClientRect();
+          return r.width<200 || r.height>120 || r.left < -3 || r.right > window.innerWidth + 3;
+        });
+        return {found:!!host,linkCount:links.length,headingCount:document.querySelectorAll('h1').length,
+          docWidth:document.documentElement.scrollWidth,viewport:window.innerWidth,
+          cardWidth:card?.width,heroTop:hero?.top,h1Top:h1?.top,badLinks:bad.length,
+          legacy:!!document.querySelector('.bde-section-522-100')};
+      });
+      if(!result.found||result.legacy)industryFindings.push('directory '+width+'px: legacy directory still visible');
+      if(result.linkCount!==37)industryFindings.push('directory '+width+'px: expected 37 links, got '+result.linkCount);
+      if(result.headingCount!==1)industryFindings.push('directory '+width+'px: H1 count '+result.headingCount);
+      if(result.docWidth>width+8)industryFindings.push('directory '+width+'px: horizontal page overflow '+result.docWidth);
+      if(result.badLinks)industryFindings.push('directory '+width+'px: '+result.badLinks+' cards too narrow, tall or clipped');
+      if(result.h1Top<80)industryFindings.push('directory '+width+'px: H1 under header');
+      await tab.screenshot({path:path.join(output,'industry-directory-'+width+'.png'),fullPage:false,animations:'disabled'});
+    }catch(e){industryFindings.push('directory '+width+'px: '+String(e))}
+    await ctx.close();
   }
   console.log('INDUSTRY LAYOUT SWEEP: '+industryRoutes.length+' pages x 2 viewports; '+industryFindings.length+' findings');
   writeFileSync(path.join(output,'industry-layout-sweep.json'),JSON.stringify({pages:industryRoutes.length,widths:[1440,390],findings:industryFindings},null,2)+'\n');
