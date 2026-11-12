@@ -176,3 +176,11 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Every example must be correctly labelled as a **live site, concept, archive, or owned/related website**. Never pretend an uncommissioned concept is a live paying client or infer results without analytics.
 - Preserve individual industry palette and full-bleed hero design. Where two sites are relevant, showcase the primary example in the large preview and the secondary example as a prominent clickable mini-preview within the same hero.
 - All three top shortcuts in the industry mega-menu, including Pricing, should be equally styled charcoal boxes with light text. No white Pricing box in the Our Work industry menu. Other menus may retain their existing distinct Pricing styling.
+
+
+## Stored website preview imagery — 12 November 2026
+
+- Industry hero website previews must use **actual browser screenshots captured from the real hosted websites** and stored as static JPEG assets under `public/images/website-previews/`. Do not embed the third-party WordPress `s.wordpress.com/mshots` preview service, cross-origin iframes, or any image that says "Generating Preview".
+- Capture desktop screenshots at a consistent 1440px viewport using Chromium. Keep the visible site's original branding and imagery. Use the source screenshots as previews, each clickable to the corresponding website. Never imply the screenshot is a real client site when it is a concept.
+- Screenshots are regenerated intentionally using `scripts/capture-website-previews.mjs` when a website design changes. Future additions should add the website to the script's capture list and the industry's `demo.screenshot` (or `additionalDemos[].screenshot`) mapping before publishing.
+- The source of truth for portfolio classification is the project's actual status: `live` (commissioned live client), `owned` (related live business), `archived` (previous completed work) or `concept` (uncommissioned example). CTAs for live sites should say "View the website", not "Explore the demo".
