@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { cleanPageHtml } from './standalone.mjs';
+import { organizationSchema, websiteSchema, organizationId, websiteId } from './business-schema.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const original = cleanPageHtml(readFileSync(path.join(root, 'index.html'), 'utf8'), 'index.html');
@@ -93,19 +94,8 @@ export function getEditorialShell({ title, description, pathname, type = 'WebPag
     opening = replaceTag(opening, /<meta name="twitter:image" content="[^"]*">/i,
       '<meta name="twitter:image" content="' + esc(new URL(image, canonical).href) + '">');
   }
-  const enquiryHours = {
-    '@type': 'OpeningHoursSpecification',
-    dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday'],
-    opens: '09:00',
-    closes: '17:00',
-    description: 'UK time (Europe/London)'
-  };
-  const serviceAreas = [
-    { '@type': 'Country', name: 'United Kingdom' },
-    { '@type': 'Place', name: 'Worldwide' }
-  ];
-  const orgId = 'https://prunusmedia.com/#organization';
-  const siteId = 'https://prunusmedia.com/#website';
+  const orgId = organizationId;
+  const siteId = websiteId;
   const pageSchema = {
     '@type': type,
     '@id': canonical + '#webpage',
@@ -117,28 +107,8 @@ export function getEditorialShell({ title, description, pathname, type = 'WebPag
   if (date) pageSchema.datePublished = date;
   if (image) pageSchema.image = new URL(image, canonical).href;
   const schema = { '@context': 'https://schema.org', '@graph': [
-    {
-      '@type': 'Organization',
-      '@id': orgId,
-      name: 'Prunus Media',
-      url: 'https://prunusmedia.com/',
-      logo: 'https://prunusmedia.com/wp-content/uploads/2024/08/Copy-of-PRUNUS-MEDIA-300x300.png',
-      sameAs: [
-        'https://www.facebook.com/people/Prunusmedia/61564233269657/',
-        'https://www.instagram.com/prunus.media/'
-      ],
-      areaServed: serviceAreas,
-      contactPoint: {
-        '@type': 'ContactPoint',
-        email: 'contactprunusmedia@gmail.com',
-        contactType: 'customer enquiries',
-        availableLanguage: 'en-GB',
-        areaServed: serviceAreas,
-        hoursAvailable: enquiryHours
-      }
-    },
-    { '@type': 'WebSite', '@id': siteId,
-      name: 'Prunus Media', url: 'https://prunusmedia.com/', publisher: { '@id': orgId } },
+    organizationSchema(),
+    websiteSchema(),
     pageSchema
   ] };
   opening = replaceTag(opening, /<script type="application\/ld\+json" class="rank-math-schema">[\s\S]*?<\/script>/i,

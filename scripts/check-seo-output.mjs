@@ -39,6 +39,62 @@ for(const {name,source} of pages){
    descriptions.set(description,name);
  }
 }
+// Every rendered page must carry real structured data. A homepage-only fix
+// would leave legacy service URLs with no Organization/ContactPoint schema.
+const weekdays=['Monday','Tuesday','Wednesday','Thursday','Friday'];
+function checkHours(specifications,route,label){
+  if(!Array.isArray(specifications)||specifications.length!==2){
+    failures.push(route+' '+label+' needs weekday and Saturday opening-hours specs');
+    return;
+  }
+  const weekday=specifications.find(spec=>Array.isArray(spec.dayOfWeek));
+  const saturday=specifications.find(spec=>spec.dayOfWeek==='Saturday');
+  if(!weekday||JSON.stringify(weekday.dayOfWeek)!==JSON.stringify(weekdays) ||
+     weekday.opens!=='06:00'||weekday.closes!=='15:00'){
+    failures.push(route+' '+label+' must say Monday-Friday 06:00-15:00 UK');
+  }
+  if(!saturday||saturday.opens!=='08:00'||saturday.closes!=='13:00'){
+    failures.push(route+' '+label+' must say Saturday 08:00-13:00 UK');
+  }
+  if(specifications.some(spec=>
+    spec.dayOfWeek==='Sunday'||(Array.isArray(spec.dayOfWeek)&&spec.dayOfWeek.includes('Sunday')))){
+    failures.push(route+' '+label+' incorrectly claims Sunday availability');
+  }
+  if(specifications.some(spec=>!spec.description?.includes('Europe/London'))){
+    failures.push(route+' '+label+' has no UK time-zone context');
+  }
+}
+for(const {name,source} of pages){
+  // The noindex client-login holding page is not a public search landing page.
+  if(name==='/404.html'||name==='/client-login/')continue;
+  const scripts=[...source.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  let nodes=[];
+  for(const match of scripts){
+    try{
+      const data=JSON.parse(match[1]);
+      nodes.push(...(Array.isArray(data['@graph'])?data['@graph']:[data]));
+    }catch{
+      failures.push(name+' has malformed JSON-LD');
+    }
+  }
+  const ofType=type=>nodes.filter(node=>node['@type']===type||
+    (Array.isArray(node['@type'])&&node['@type'].includes(type)));
+  const orgs=ofType('Organization');
+  if(orgs.length!==1){failures.push(name+' needs exactly one Organisation schema node, found '+orgs.length);continue;}
+  if(ofType('WebSite').length!==1)failures.push(name+' needs exactly one WebSite schema node');
+  if(ofType('WebPage').length!==1)failures.push(name+' needs exactly one WebPage schema node');
+  const org=orgs[0];
+  if(!org.contactPoint){
+    failures.push(name+' lacks a business enquiry ContactPoint');
+  }else{
+    if(!/closed Sunday/i.test(org.contactPoint.description||'')){
+      failures.push(name+' does not clearly indicate Sunday closure');
+    }
+    checkHours(org.contactPoint.hoursAvailable,name,'ContactPoint');
+  }
+  for(const service of ofType('Service'))checkHours(service.hoursAvailable,name,'Service');
+}
+
 const homepage=pages.find(p=>p.name==='//')?.source;
 if(!homepage)failures.push('home page not found');
 else{
@@ -61,8 +117,6 @@ else{
    failures.push('UK service area missing from Service schema');
    console.error('SCHEMA DEBUG '+JSON.stringify({services:scripts.flatMap(o=>o['@graph']||[]).filter(o=>o['@type']==='Service'),types:scripts.flatMap(o=>o['@graph']||[]).map(o=>o['@type'])}));
  }
- if(!org?.contactPoint?.hoursAvailable?.opens || !org?.contactPoint?.hoursAvailable?.closes)
-   failures.push('UK enquiry hours missing from organization contact schema');
  if(!Array.isArray(org?.areaServed) ||
     !org.areaServed.some(area=>area.name==='United Kingdom') ||
     !org.areaServed.some(area=>area.name==='Worldwide'))

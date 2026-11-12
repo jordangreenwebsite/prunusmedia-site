@@ -1,3 +1,7 @@
+import {
+  siteOrigin, officialProfiles, serviceAreas, ukEnquiryHours,
+  organizationSchema, websiteSchema, webpageSchema, contactPointSchema
+} from './business-schema.mjs';
 /**
  * Targeted SEO/accessibility repair for the original Breakdance HTML export.
  * Applies to prerendered Astro markup only; does not change archived source.
@@ -113,22 +117,6 @@ function optimizeImage(tag, offset, headerEnd, filename) {
   if (!/\bdecoding\s*=/.test(tag)) tag = tag.replace(/\/?>$/, m => ' decoding="async"' + m);
   return tag;
 }
-const officialProfiles=[
-  'https://www.facebook.com/people/Prunusmedia/61564233269657/',
-  'https://www.instagram.com/prunus.media/'
-];
-const siteOrigin = 'https://prunusmedia.com';
-const serviceAreas = [
-  { '@type': 'Country', name: 'United Kingdom' },
-  { '@type': 'Place', name: 'Worldwide' }
-];
-const ukOfficeHours = {
-  '@type': 'OpeningHoursSpecification',
-  dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-  opens: '09:00',
-  closes: '17:00',
-  description: 'UK time (Europe/London)'
-};
 const servicePages = new Map(Object.entries({
   'index.html': ['Website design and SEO', 'Website design and search engine optimisation'],
   'website-design/index.html': ['Website design', 'Website design'],
@@ -146,69 +134,94 @@ const servicePages = new Map(Object.entries({
 function improveSchema(html, filename) {
   const path = filename === 'index.html' ? '/' : '/' + filename.replace(/index\.html$/, '');
   const pageUrl = siteOrigin + path;
-  return html.replace(
+  const title = (html.match(/<title>([\s\S]*?)<\/title>/i)?.[1] || 'Prunus Media')
+    .replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  const description = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)/i)?.[1] || '';
+  const isType = (node, type) => node && (
+    node['@type'] === type || (Array.isArray(node['@type']) && node['@type'].includes(type))
+  );
+
+  // Keep source Rank Math page/image schema where present, but ensure the
+  // same real Organisation, WebSite, WebPage and contact hours on every route.
+  function completeGraph(existingNodes = []) {
+    const nodes = [...existingNodes];
+    let org = nodes.find(node => isType(node, 'Organization'));
+    if (!org) { org = organizationSchema(); nodes.unshift(org); }
+    org.name = 'Prunus Media';
+    org.url = siteOrigin + '/';
+    org.sameAs = officialProfiles;
+    org.areaServed = serviceAreas;
+    org.contactPoint = contactPointSchema();
+    if (org.logo && typeof org.logo === 'object') {
+      org.logo.url = siteOrigin + '/wp-content/uploads/2024/08/Copy-of-PRUNUS-MEDIA-300x300.png';
+      org.logo.contentUrl = org.logo.url;
+      org.logo.width = 300;
+      org.logo.height = 300;
+    } else if (!org.logo) {
+      org.logo = organizationSchema().logo;
+    }
+
+    let website = nodes.find(node => isType(node, 'WebSite'));
+    if (!website) { website = websiteSchema(); nodes.push(website); }
+    website.url = siteOrigin + '/';
+    delete website.potentialAction; // Retired WordPress search endpoint.
+
+    let webpage = nodes.find(node => isType(node, 'WebPage'));
+    if (!webpage) {
+      webpage = webpageSchema({ url: pageUrl, title, description });
+      nodes.push(webpage);
+    } else {
+      webpage.url = pageUrl;
+      delete webpage.dateModified; // The export date isn't an editorial update.
+    }
+    for (const node of nodes) {
+      if (isType(node, 'ImageObject') && typeof node.url === 'string' && node.url.startsWith('/')) {
+        node.url = siteOrigin + node.url;
+      }
+      // Some older exports already had Service nodes; do not leave
+      // conflicting 09:00-17:00 hours on those nodes.
+      if (isType(node, 'Service')) node.hoursAvailable = ukEnquiryHours();
+    }
+    const service = servicePages.get(filename);
+    if (service && !nodes.some(node => isType(node, 'Service') && node['@id'] === pageUrl + '#service')) {
+      nodes.push({
+        '@type': 'Service',
+        '@id': pageUrl + '#service',
+        name: service[0],
+        serviceType: service[1],
+        url: pageUrl,
+        provider: { '@id': org['@id'] || organizationSchema()['@id'] },
+        areaServed: serviceAreas,
+        hoursAvailable: ukEnquiryHours()
+      });
+    }
+    return { '@context': 'https://schema.org', '@graph': nodes };
+  }
+
+  const jsonSafe = graph => JSON.stringify(graph).replace(/</g, '\\u003c');
+  let replaced = false;
+  html = html.replace(
     /(<script\b[^>]*type=["']application\/ld\+json["'][^>]*class=["']rank-math-schema["'][^>]*>)([\s\S]*?)(<\/script>)/gi,
     (full, open, source, close) => {
       let graph;
-      try { graph = JSON.parse(source); } catch { return full; }
-      if (!Array.isArray(graph['@graph'])) return full;
-      const nodes = graph['@graph'];
-      const org = nodes.find(n => n['@type'] === 'Organization');
-      if (!org) return full;
-      org.url = siteOrigin + '/';
-      org.name = 'Prunus Media';
-      org.sameAs = officialProfiles;
-      org.areaServed = serviceAreas;
-      org.contactPoint = {
-        '@type': 'ContactPoint',
-        contactType: 'customer enquiries',
-        email: 'contactprunusmedia@gmail.com',
-        availableLanguage: ['en-GB'],
-        areaServed: serviceAreas,
-        hoursAvailable: ukOfficeHours
-      };
-      if (org.logo && typeof org.logo === 'object') {
-        org.logo.url = siteOrigin + '/wp-content/uploads/2024/08/Copy-of-PRUNUS-MEDIA-300x300.png';
-        org.logo.contentUrl = org.logo.url;
-        org.logo.width = 300;
-        org.logo.height = 300;
+      try { graph = JSON.parse(source); } catch {
+        throw new Error('Unparseable source JSON-LD in ' + filename);
       }
-      const website = nodes.find(n => n['@type'] === 'WebSite');
-      if (website) {
-        website.url = siteOrigin + '/';
-        // A legacy WordPress search endpoint no longer exists on this static site.
-        delete website.potentialAction;
+      if (!Array.isArray(graph['@graph'])) {
+        throw new Error('Expected source JSON-LD @graph in ' + filename);
       }
-      const webpage = nodes.find(n => n['@type'] === 'WebPage');
-      if (webpage) {
-        webpage.url = pageUrl;
-        // The export date is not an actual editorial update date.
-        delete webpage.dateModified;
-      }
-      for (const node of nodes) {
-        if (node['@type'] === 'ImageObject' && typeof node.url === 'string' && node.url.startsWith('/')) {
-          node.url = siteOrigin + node.url;
-        }
-      }
-      const service = servicePages.get(filename);
-      if (service) {
-        const existing = nodes.find(n => n['@type'] === 'Service' && n['@id'] === pageUrl + '#service');
-        if (!existing) nodes.push({
-          '@type': 'Service',
-          '@id': pageUrl + '#service',
-          name: service[0],
-          serviceType: service[1],
-          url: pageUrl,
-          provider: { '@id': '/#organization' },
-          areaServed: serviceAreas,
-          hoursAvailable: ukOfficeHours
-        });
-      }
-      // Keep page-specific validated schema; no made-up address, rating or
-      // LocalBusiness node for a remote-first international agency.
-      return open + JSON.stringify(graph).replace(/</g, '\\u003c') + close;
+      if (replaced) throw new Error('Duplicate Rank Math schema blocks in ' + filename);
+      replaced = true;
+      return open + jsonSafe(completeGraph(graph['@graph'])) + close;
     }
   );
+  if (!replaced) {
+    const script = '<script id="pm-sitewide-schema" type="application/ld+json">' +
+      jsonSafe(completeGraph()) + '</script>\n';
+    if (!html.includes('</head>')) throw new Error('Missing head for schema on ' + filename);
+    html = html.replace('</head>', script + '</head>');
+  }
+  return html;
 }
 export function improveLegacySeo(html,filename){
   if(filename==='index.html'){
