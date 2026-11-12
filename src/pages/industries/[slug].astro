@@ -1,0 +1,256 @@
+---
+import EditorialLayout from '../../layouts/EditorialLayout.astro';
+import { industryPages } from '../../data/industry-pages.mjs';
+
+export function getStaticPaths() {
+  return industryPages.map((industry) => ({
+    params: { slug: industry.slug },
+    props: { industry }
+  }));
+}
+
+const { industry } = Astro.props;
+const { ink, bg, accent } = industry.colors;
+const pathname = '/industries/' + industry.slug + '/';
+const pageTitle = 'Websites for ' + industry.label + ' | UK Website Design';
+const description = 'Website design and SEO for ' + industry.label.toLowerCase() + '. Thoughtful service pages, useful content, clear enquiries and industry-specific design by Prunus Media.';
+const styleVars = '--sector-ink:' + ink + ';--sector-bg:' + bg + ';--sector-accent:' + accent + ';';
+const displayGroup = {
+  professional: 'Professional and regulated businesses',
+  property: 'Property, care and commercial services',
+  contractors: 'Contractors and specialist trades',
+  overlooked: 'Specialist and practical industries',
+  additional: 'Websites designed around your industry'
+}[industry.group];
+---
+<EditorialLayout title={pageTitle} description={description} pathname={pathname}>
+  <div class={'pm-sector pm-sector--' + industry.layout} style={styleVars}>
+    <nav class="pm-sector__crumb" aria-label="Breadcrumb">
+      <a href="/">Prunus Media</a><span aria-hidden="true">/</span><a href="/industries/">Websites by Industry</a><span aria-hidden="true">/</span><span aria-current="page">{industry.label}</span>
+    </nav>
+
+    <section class="pm-sector__hero" aria-labelledby="pm-sector-title">
+      <div class="pm-sector__hero-copy">
+        <p class="pm-sector__eyebrow">{displayGroup}</p>
+        <h1 id="pm-sector-title">{industry.headline}</h1>
+        <p class="pm-sector__intro">{industry.intro}</p>
+        <div class="pm-sector__actions">
+          <a class="pm-sector__button" href={'/contact/?industry=' + encodeURIComponent(industry.slug)}>Talk about your website <span aria-hidden="true">→</span></a>
+          <a class="pm-sector__textlink" href="#website-plan">How we'd build it</a>
+        </div>
+        <p class="pm-sector__proof">Bespoke website design <span>•</span> Useful SEO-led content <span>•</span> Built for UK businesses</p>
+      </div>
+      <div class="pm-sector__hero-visual">
+        {industry.image
+          ? <img src={industry.image} alt={'Visual reference for ' + industry.label.toLowerCase() + ' website design'} loading="eager" decoding="async" />
+          : <div class="pm-sector__visual-editorial" aria-label={'Illustrative ' + industry.label.toLowerCase() + ' website composition'}>
+              <span class="pm-sector__vertical-label">PRUNUS / INDUSTRY DESIGN</span>
+              <span class="pm-sector__visual-line"></span>
+              <strong>{industry.label}</strong>
+              <span class="pm-sector__visual-caption">An approach that fits the work.</span>
+              <span class="pm-sector__visual-block"></span>
+            </div>
+        }
+        <span class="pm-sector__visual-tag">Design direction / {industry.label}</span>
+      </div>
+    </section>
+
+    <section class="pm-sector__intro-section" aria-labelledby="pm-sector-decision">
+      <p class="pm-sector__eyebrow">A website built around the decision</p>
+      <div>
+        <h2 id="pm-sector-decision">Start with what your customers need to know.</h2>
+        <p>{industry.decision}</p>
+      </div>
+    </section>
+
+    <section class="pm-sector__plan" id="website-plan" aria-labelledby="pm-sector-plan-title">
+      <div class="pm-sector__section-heading">
+        <p class="pm-sector__eyebrow">Structure before decoration</p>
+        <h2 id="pm-sector-plan-title">Pages worth building for {industry.label.toLowerCase()}.</h2>
+        <p>We would tailor the site map to your actual services and customer searches, rather than publishing pages for things the business does not offer.</p>
+      </div>
+      <div class="pm-sector__page-grid">
+        {industry.pages.map((page, index) =>
+          <div class="pm-sector__page" aria-label={'Suggested site section: ' + page}>
+            <span class="pm-sector__number">{String(index + 1).padStart(2,'0')}</span>
+            <h3>{page}</h3>
+            <span class="pm-sector__page-rule" aria-hidden="true"></span>
+          </div>
+        )}
+      </div>
+    </section>
+
+    <section class="pm-sector__strategy" aria-label="SEO and content planning">
+      <div class="pm-sector__strategy-block">
+        <p class="pm-sector__eyebrow">Search visibility</p>
+        <h2>SEO for {industry.label.toLowerCase()}.</h2>
+        <p>{industry.seo}</p>
+        <p>We plan useful service pages, internal links and clear page titles around the searches that matter to the business. Ongoing work should then be guided by real search and enquiry data.</p>
+        <a href="/seo-agency-uk/">See how our SEO works <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="pm-sector__strategy-block">
+        <p class="pm-sector__eyebrow">Practical features</p>
+        <h2>Functionality with a purpose.</h2>
+        <ul>
+          {industry.features.map((feature) => <li>{feature}</li>)}
+        </ul>
+        <p>We would only add integrations that are useful, supported by the business and appropriate for the customers using the website.</p>
+      </div>
+    </section>
+
+    <section class="pm-sector__examples" aria-labelledby="pm-sector-examples-title">
+      <div class="pm-sector__section-heading">
+        <p class="pm-sector__eyebrow">Visual direction and relevant work</p>
+        <h2 id="pm-sector-examples-title">What this could look like.</h2>
+        <p>Every industry deserves its own visual identity. This is an illustrative design direction, not a claim that we've built a website for every sector.</p>
+      </div>
+      <div class="pm-sector__sample" aria-label={'Illustrative design concept for ' + industry.label}>
+        <div class="pm-sector__sample-top"><span class="pm-sector__sample-dots" aria-hidden="true">● ● ●</span><span>Example layout / Concept only</span></div>
+        <div class="pm-sector__sample-body">
+          <div>
+            <span class="pm-sector__sample-eyebrow">{industry.label} / Example homepage</span>
+            <strong>{industry.headline}</strong>
+            <span class="pm-sector__sample-line"></span>
+            <small>{industry.pages.slice(0,3).join('  /  ')}</small>
+          </div>
+          <div class="pm-sector__sample-art"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+      {industry.work.length > 0
+        ? <div class="pm-sector__related-work">
+            <h3>Related websites and projects from our portfolio</h3>
+            <div class="pm-sector__work-grid">
+              {industry.work.map((project) =>
+                <article class="pm-sector__work-item">
+                  <span class="pm-sector__work-tag">{project.label}</span>
+                  <h4><a href={'/our-work/' + project.slug + '/'}>{project.slug.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')}</a></h4>
+                  <p>{project.description}</p>
+                  <a href={'/our-work/' + project.slug + '/'} class="pm-sector__work-link">View project details <span aria-hidden="true">→</span></a>
+                </article>
+              )}
+            </div>
+          </div>
+        : <p class="pm-sector__example-note">We don't currently have a completed client example labelled for this exact industry. We'd rather show a truthful design direction than present somebody else's website as our work. <a href="/our-work/">See the work we have published.</a></p>
+      }
+    </section>
+
+    <section class="pm-sector__faq" aria-labelledby="pm-sector-faq-title">
+      <p class="pm-sector__eyebrow">Questions worth asking</p>
+      <h2 id="pm-sector-faq-title">Planning your {industry.label.toLowerCase()} website.</h2>
+      <details>
+        <summary>Does every service need a separate page?</summary>
+        <p>No. Start with the services people genuinely search for and the information they need before enquiring. We only separate topics when each page will have a useful job to do. For this industry that might include {industry.pages.slice(0,2).join(' and ').toLowerCase()}.</p>
+      </details>
+      <details>
+        <summary>Will the website be designed around our own brand?</summary>
+        <p>Yes. The colours and layout here are an example of industry-specific direction, not a finished template. Your actual website would reflect your brand, photography, services and customers.</p>
+      </details>
+      <details>
+        <summary>Can you work on the site after launch?</summary>
+        <p>Yes. We can continue with website care, useful content and SEO improvements, with priorities guided by search visibility and real enquiries rather than made-up ranking promises.</p>
+      </details>
+    </section>
+
+    <aside class="pm-sector__cta" aria-label="Start a Prunus Media project">
+      <p class="pm-sector__eyebrow">A useful website starts with a conversation</p>
+      <h2>Build something that actually fits your business.</h2>
+      <p>Tell us what you do, what customers ask and where you want to grow. We'll talk through a sensible design and SEO structure.</p>
+      <div class="pm-sector__actions">
+        <a class="pm-sector__button" href={'/contact/?industry=' + encodeURIComponent(industry.slug)}>Start your project <span aria-hidden="true">→</span></a>
+        <a class="pm-sector__textlink" href="/industries/">Explore other industries</a>
+      </div>
+    </aside>
+  </div>
+</EditorialLayout>
+
+<style is:global>
+.pm-editorial:has(.pm-sector){padding:112px 18px 80px;background:#faf8f4}
+.pm-editorial:has(.pm-sector) .pm-editorial__wrap{max-width:1270px}
+.pm-sector{color:var(--sector-ink);font-family:"Alegreya Sans",Arial,sans-serif}
+.pm-sector *{box-sizing:border-box}
+.pm-sector h1,.pm-sector h2,.pm-sector h3,.pm-sector h4{color:var(--sector-ink);margin-top:0}
+.pm-sector h1{font-family:"Playfair Display",Georgia,serif;font-size:clamp(2.7rem,4.6vw,5rem);line-height:1.11;letter-spacing:-.028em;max-width:730px;margin:16px 0 22px}
+.pm-sector h2{font-family:"Playfair Display",Georgia,serif;font-size:clamp(1.8rem,3vw,2.8rem);line-height:1.16;letter-spacing:-.018em}
+.pm-sector h3{font:600 clamp(1.12rem,1.7vw,1.4rem)/1.25 "Space Grotesk",Arial,sans-serif}
+.pm-sector a{text-underline-offset:4px;color:var(--sector-ink)}
+.pm-sector__crumb{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:0 0 22px;font:500 12px/1.5 "Space Grotesk",Arial,sans-serif;letter-spacing:.02em}
+.pm-sector__crumb a{opacity:.72}
+.pm-sector__eyebrow{font:600 11px/1.5 "Space Grotesk",Arial,sans-serif!important;letter-spacing:.17em;text-transform:uppercase;color:var(--sector-ink);opacity:.78;margin:0}
+.pm-sector__hero{display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:center;background:var(--sector-bg);border-radius:5px;padding:clamp(30px,5vw,70px);overflow:hidden;min-height:520px}
+.pm-sector__intro{font:400 clamp(1.15rem,1.7vw,1.45rem)/1.55 "Alegreya Sans",Arial,sans-serif!important;max-width:570px;margin-bottom:25px}
+.pm-sector__actions{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:26px 0}
+.pm-sector__button{background:var(--sector-ink);color:#fff!important;border-radius:3px;padding:15px 22px;text-decoration:none;font:600 13px/1.4 "Space Grotesk",Arial,sans-serif;transition:transform .2s ease,opacity .2s ease}
+.pm-sector__button:hover{transform:translateY(-2px);opacity:.87}
+.pm-sector__textlink{font:600 13px/1.5 "Space Grotesk",Arial,sans-serif}
+.pm-sector__proof{font:500 12px/1.6 "Space Grotesk",Arial,sans-serif!important;opacity:.7;margin-top:30px}
+.pm-sector__proof span{padding:0 6px}
+.pm-sector__hero-visual{position:relative;align-self:stretch;min-height:340px;display:grid}
+.pm-sector__hero-visual img{width:100%;height:100%;min-height:340px;object-fit:cover;display:block;filter:saturate(.83)}
+.pm-sector__visual-tag{position:absolute;bottom:16px;left:16px;background:var(--sector-bg);font:500 11px/1.4 "Space Grotesk",Arial,sans-serif;padding:9px 12px;max-width:calc(100% - 32px)}
+.pm-sector__visual-editorial{position:relative;background:var(--sector-ink);color:var(--sector-bg);padding:34px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:18px;min-height:340px}
+.pm-sector__visual-editorial strong{position:relative;z-index:2;display:block;font:500 clamp(2.1rem,4vw,4.1rem)/1.08 "Playfair Display",Georgia,serif;letter-spacing:-.03em;max-width:370px}
+.pm-sector__vertical-label{position:absolute;left:22px;top:20px;font:500 10px/1.4 "Space Grotesk",Arial,sans-serif;letter-spacing:.18em;opacity:.72}
+.pm-sector__visual-line{width:50px;height:2px;background:var(--sector-accent)}
+.pm-sector__visual-caption{position:relative;z-index:2;font:400 18px/1.4 "Alegreya Sans",Arial,sans-serif}
+.pm-sector__visual-block{position:absolute;right:-40px;bottom:-80px;width:240px;height:270px;border:40px solid var(--sector-accent);opacity:.45;transform:rotate(-20deg)}
+.pm-sector__intro-section{display:grid;grid-template-columns:.65fr 1.35fr;gap:60px;padding:80px 4%;align-items:start}
+.pm-sector__intro-section p:not(.pm-sector__eyebrow),.pm-sector__section-heading p:not(.pm-sector__eyebrow){font-size:19px;line-height:1.65;max-width:790px}
+.pm-sector__plan{background:#fff;padding:62px clamp(22px,5vw,70px);border:1px solid #00000010}
+.pm-sector__section-heading{max-width:760px;margin-bottom:36px}
+.pm-sector__section-heading h2{margin:12px 0}
+.pm-sector__page-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.pm-sector__page{background:var(--sector-bg);min-height:145px;padding:21px;display:flex;flex-direction:column;justify-content:space-between}
+.pm-sector__number{font:600 12px/1 "Space Grotesk",Arial,sans-serif;opacity:.58}
+.pm-sector__page h3{margin:18px 0 0}
+.pm-sector__page-rule{width:38px;height:3px;background:var(--sector-accent);margin-top:14px}
+.pm-sector__strategy{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:65px 0;background:var(--sector-ink);color:var(--sector-bg)}
+.pm-sector__strategy-block{padding:clamp(28px,4vw,62px)}
+.pm-sector__strategy-block+div{border-left:1px solid #ffffff38}
+.pm-sector__strategy h2,.pm-sector__strategy h3,.pm-sector__strategy .pm-sector__eyebrow{color:var(--sector-bg)}
+.pm-sector__strategy p,.pm-sector__strategy li{color:var(--sector-bg);font-size:18px;line-height:1.6}
+.pm-sector__strategy a{color:var(--sector-bg);font:600 14px/1.5 "Space Grotesk",Arial,sans-serif}
+.pm-sector__strategy ul{padding-left:22px}
+.pm-sector__strategy li{padding:4px 0}
+.pm-sector__examples{padding:30px 3% 75px}
+.pm-sector__sample{max-width:900px;border:1px solid #0000001c;box-shadow:0 18px 50px #1a1a1a12;background:#fff}
+.pm-sector__sample-top{display:flex;align-items:center;justify-content:space-between;background:#f5f5f2;border-bottom:1px solid #00000016;padding:12px 17px;font:500 11px/1.4 "Space Grotesk",Arial,sans-serif;color:#555}
+.pm-sector__sample-dots{letter-spacing:4px;color:#9a9a94}
+.pm-sector__sample-body{display:grid;grid-template-columns:1fr .65fr;min-height:290px;background:var(--sector-bg)}
+.pm-sector__sample-body>div:first-child{padding:clamp(24px,4vw,47px);display:flex;flex-direction:column;justify-content:center;gap:16px}
+.pm-sector__sample-eyebrow{font:600 10px/1.3 "Space Grotesk",Arial,sans-serif;text-transform:uppercase;letter-spacing:.13em}
+.pm-sector__sample-body strong{font:500 clamp(1.65rem,3vw,2.9rem)/1.1 "Playfair Display",Georgia,serif;letter-spacing:-.03em;max-width:500px}
+.pm-sector__sample-body small{font:500 11px/1.4 "Space Grotesk",Arial,sans-serif}
+.pm-sector__sample-line{height:3px;width:55px;background:var(--sector-accent)}
+.pm-sector__sample-art{background:var(--sector-ink);padding:28px;display:flex;flex-direction:column;gap:14px;justify-content:center}
+.pm-sector__sample-art span{display:block;height:40px;background:var(--sector-accent);opacity:.8}
+.pm-sector__sample-art span:nth-child(2){width:68%;height:80px;opacity:.5}
+.pm-sector__sample-art span:nth-child(3){width:85%;height:14px;opacity:.35}
+.pm-sector__related-work{margin-top:34px}
+.pm-sector__related-work h3{margin-bottom:20px}
+.pm-sector__work-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.pm-sector__work-item{padding:24px;background:#fff;border:1px solid #00000018}
+.pm-sector__work-item h4{font:600 20px/1.3 "Space Grotesk",Arial,sans-serif;margin:13px 0 7px}
+.pm-sector__work-item p{font-size:16px;line-height:1.5}
+.pm-sector__work-tag{font:600 11px "Space Grotesk",Arial,sans-serif;text-transform:uppercase;letter-spacing:.07em;color:var(--sector-ink);background:var(--sector-bg);padding:7px 10px}
+.pm-sector__work-link{font:600 13px/1.4 "Space Grotesk",Arial,sans-serif}
+.pm-sector__example-note{font:400 16px/1.6 "Alegreya Sans",Arial,sans-serif;background:var(--sector-bg);padding:20px;margin-top:28px;max-width:900px}
+.pm-sector__faq{max-width:920px;margin:0 auto 80px}
+.pm-sector__faq h2{margin:10px 0 30px}
+.pm-sector__faq details{border-top:1px solid #00000028;padding:20px 0}
+.pm-sector__faq details:last-child{border-bottom:1px solid #00000028}
+.pm-sector__faq summary{font:600 17px/1.4 "Space Grotesk",Arial,sans-serif;cursor:pointer;padding-right:20px}
+.pm-sector__faq details p{font:400 18px/1.55 "Alegreya Sans",Arial,sans-serif;max-width:720px;margin:15px 0 0}
+.pm-sector__cta{background:var(--sector-bg);padding:clamp(30px,5vw,75px);border-top:7px solid var(--sector-accent)}
+.pm-sector__cta h2{max-width:690px;margin:15px 0}
+.pm-sector__cta>p:not(.pm-sector__eyebrow){font:400 19px/1.5 "Alegreya Sans",Arial,sans-serif;max-width:680px}
+.pm-sector--bold h1,.pm-sector--bold .pm-sector__sample-body strong{font-family:"Space Grotesk",Arial,sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:-.055em}
+.pm-sector--architectural .pm-sector__hero{grid-template-columns:.9fr 1.1fr}
+.pm-sector--architectural .pm-sector__hero-visual img{filter:saturate(.62)}
+.pm-sector--clinical .pm-sector__hero,.pm-sector--clinical .pm-sector__page,.pm-sector--clinical .pm-sector__sample{border-radius:14px}
+.pm-sector--technical .pm-sector__hero,.pm-sector--technical .pm-sector__page{border-radius:0}
+.pm-sector--warm .pm-sector__hero{border-radius:24px 5px 24px 5px}
+@media(max-width:920px){.pm-sector__hero{gap:22px;padding:38px;grid-template-columns:1fr 1fr}.pm-sector__intro-section{gap:25px}.pm-sector__page-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.pm-editorial:has(.pm-sector){padding:90px 12px 50px}.pm-sector__hero,.pm-sector--architectural .pm-sector__hero{grid-template-columns:1fr;padding:28px;min-height:auto}.pm-sector__hero-visual,.pm-sector__hero-visual img{min-height:230px;max-height:290px}.pm-sector h1{font-size:clamp(2.3rem,10vw,3.6rem)}.pm-sector__intro-section{grid-template-columns:1fr;padding:52px 10px;gap:5px}.pm-sector__plan{padding:35px 20px}.pm-sector__page-grid{grid-template-columns:1fr 1fr;gap:8px}.pm-sector__page{min-height:135px;padding:13px}.pm-sector__strategy{grid-template-columns:1fr;margin:38px 0}.pm-sector__strategy-block+div{border:0;border-top:1px solid #ffffff38}.pm-sector__strategy-block{padding:30px}.pm-sector__sample-body{grid-template-columns:1fr}.pm-sector__sample-art{min-height:120px}.pm-sector__work-grid{grid-template-columns:1fr}.pm-sector__faq{margin-bottom:50px}}
+@media(max-width:420px){.pm-sector__hero{padding:22px}.pm-sector__page-grid{grid-template-columns:1fr}.pm-sector__proof span{padding:0 2px}.pm-sector__crumb{font-size:11px}.pm-sector__visual-editorial{padding:24px}.pm-sector__sample-top{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.pm-sector__button{transition:none}}
+</style>
