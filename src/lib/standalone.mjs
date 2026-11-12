@@ -115,6 +115,15 @@ export function cleanPageHtml(originalHtml, filename) {
   html = html.replaceAll('/website-design/packages/', '/pricing/');
   html = html.replace(/(<span class="breakdance-dropdown-link__text">)\s*Packages(?=\s*<\/span>)/gi,'$1Pricing');
 
+  // Sitewide presentation rule: no visible breadcrumb trails.
+  // Keep normal navigation, links, search metadata and headings unchanged.
+  const noBreadcrumbCss = '<style id="pm-no-breadcrumbs">' +
+    'nav[aria-label="Breadcrumb"],nav[aria-label="Breadcrumbs"],' +
+    '.rank-math-breadcrumb,.breadcrumbs,.breadcrumb,.breadcrumb-trail,' +
+    '.woocommerce-breadcrumb,.pm-sector__crumb{display:none!important}' +
+    '</style>';
+  html = html.replace('</head>', noBreadcrumbCss + '</head>');
+
   // The live Astro site does not need WordPress's exported editor metadata,
   // emoji/plugin styles, or its obsolete XML-RPC/RSD discovery links.
   html = html.replace(/<style\b[^>]*id=["'](?:wp-img-auto-sizes-contain-inline-css|wp-emoji-styles-inline-css|wp-block-library-inline-css|classic-theme-styles-inline-css)["'][^>]*>[\s\S]*?<\/style>/gi, '');
@@ -328,20 +337,27 @@ export function cleanPageHtml(originalHtml, filename) {
     'industries/private-clinics/index.html': {
       id: '576', name: 'Ioana Aesthetics London',
       url: 'https://ioana-aesthetics-london.pages.dev/'
+    },
+    'industries/physiotherapists/index.html': {
+      id: '587', name: 'Charley Hayes SMR',
+      url: 'https://charleyhayessmr.pages.dev/',
+      archived: true
     }
   };
   const heroDemo = heroDemos[filename];
   if (heroDemo) {
-    const { id, name, url } = heroDemo;
+    const { id, name, url, archived } = heroDemo;
     const safeName = name.replace(/&/g, '&amp;');
-    const demoMarkup = '<div class="pm-sector-demo-hero" aria-label="' + safeName + ' website demo">' +
-      '<div class="pm-sector-demo-hero__top"><span>OUR WORK / WEBSITE DEMO</span><strong>' + safeName + '</strong></div>' +
-      '<div class="pm-sector-demo-hero__window"><iframe title="' + safeName + ' website preview" src="' + url +
-      '" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>' +
-      '<a href="' + url + '" target="_blank" rel="noopener noreferrer" aria-label="Open ' + safeName + ' demo website"></a></div>' +
+    const screenshotUrl = 'https://s.wordpress.com/mshots/v1/' + encodeURIComponent(url) + '?w=1200';
+    const demoMarkup = '<div class="pm-sector-demo-hero" aria-label="' + safeName + ' website preview">' +
+      '<div class="pm-sector-demo-hero__top"><span>' + (archived ? 'OUR WORK / ARCHIVED WEBSITE' : 'OUR WORK / WEBSITE DEMO') + '</span><strong>' + safeName + '</strong></div>' +
+      '<a class="pm-sector-demo-hero__window" href="' + url +
+      '" target="_blank" rel="noopener noreferrer" aria-label="Open ' + safeName + ' website in a new tab">' +
+      '<img src="' + screenshotUrl + '" loading="lazy" decoding="async" alt="Screenshot of ' + safeName + ' website homepage" />' +
+      '<span class="pm-sector-demo-hero__image-fallback" aria-hidden="true">' + safeName + '<small>View the example website ↗</small></span></a>' +
       '<a class="pm-sector-demo-hero__visit" href="' + url +
-      '" target="_blank" rel="noopener noreferrer">Explore the full demo ↗</a>' +
-      '<p class="pm-sector-demo-hero__disclaimer">A Prunus Media demo website, not a commissioned client project.</p></div>';
+      '" target="_blank" rel="noopener noreferrer">Explore the full website ↗</a>' +
+      '<p class="pm-sector-demo-hero__disclaimer">' + (archived ? 'A past website build, archived and no longer in commercial use. Not a verified physiotherapy clinic client.' : 'A Prunus Media demo website, not a commissioned client project.') + '</p></div>';
     const heroStart = html.indexOf('<section class="bde-section-' + id + '-100 bde-section">');
     const heroFinish = html.indexOf('</section>', heroStart);
     if (heroStart < 0 || heroFinish < 0) throw new Error('Hero missing on ' + filename);
@@ -360,9 +376,11 @@ export function cleanPageHtml(originalHtml, filename) {
       '.pm-sector-demo-hero__top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:7px 6px 13px;font:600 12px/1.4 "Space Grotesk",Arial,sans-serif}' +
       '.pm-sector-demo-hero__top span{font-size:10px;letter-spacing:.1em;color:#547b68}' +
       '.pm-sector-demo-hero__window{position:relative;width:100%;height:clamp(300px,31vw,450px);overflow:hidden;background:#e8efea;border:1px solid #d9e2db;border-radius:5px}' +
-      '.pm-sector-demo-hero__window iframe{width:200%;height:900px;max-width:none;border:0;transform:scale(.5);transform-origin:top left;pointer-events:none}' +
-      '.pm-sector-demo-hero__window>a{position:absolute;inset:0;display:block;z-index:1}' +
-      '.pm-sector-demo-hero__window>a:focus-visible{outline:4px solid #b6aa6c;outline-offset:-4px}' +
+      '.pm-sector-demo-hero__window img{display:block;position:relative;z-index:1;width:100%;height:100%;object-fit:cover;object-position:top center}' +
+      '.pm-sector-demo-hero__image-fallback{position:absolute;inset:0;display:flex;flex-direction:column;gap:15px;align-items:center;justify-content:center;padding:30px;text-align:center;background:linear-gradient(135deg,#eef1eb,#b4c8bc);font:500 35px/1.15 Georgia,serif;color:#254b3b}' +
+      '.pm-sector-demo-hero__image-fallback small{font:600 14px/1.5 Arial,sans-serif}' +
+      '.pm-sector-demo-hero__window:hover img{opacity:.92}' +
+      '.pm-sector-demo-hero__window:focus-visible{outline:4px solid #b6aa6c;outline-offset:2px}' +
       '.pm-sector-demo-hero__visit{display:inline-block;margin:14px 6px 2px;color:#254b3b!important;font:700 14px/1.4 "Space Grotesk",Arial,sans-serif;text-decoration:underline;text-underline-offset:4px}' +
       '.pm-sector-demo-hero__disclaimer{font:400 12px/1.5 "Space Grotesk",Arial,sans-serif;color:#64776b;margin:9px 6px 5px}' +
       '@media(max-width:840px){.bde-section-' + id + '-100 .bde-columns-' + id + '-102{grid-template-columns:minmax(0,1fr)!important}.pm-sector-demo-hero{max-width:620px;margin:0 auto}.pm-sector-demo-hero__window{height:clamp(290px,65vw,430px)}}' +

@@ -148,3 +148,18 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 ## Full-width industry hero alignment — 12 November 2026
 - New Astro industry pages must use a **full-bleed first hero** spanning the viewport width, not a rounded/inset card inside a narrow editorial wrapper. Use a two-column desktop composition and stacked mobile layout, matching the impact of the original accountant/clinic/physiotherapist industry designs.
 - Keep their individual sector palettes, typography and actual images or verified demo previews. Reserve the constrained max-width layout for sections below the hero. Prevent horizontal overflow at mobile widths.
+
+
+## No breadcrumbs anywhere — confirmed 12 November 2026
+
+- **Never show breadcrumb navigation** on Prunus Media pages, desktop or mobile. No "Home / Industry / ..." trail at the top of the page, including Astro industry, portfolio, service, blog, legacy-export or future pages.
+- The ordinary header navigation and useful in-content links are still allowed. Breadcrumb removal must not alter canonical URLs, H1s, sitemap, or other metadata.
+- New industry pages should start with their distinctive full-width hero immediately beneath the shared header. Do not reintroduce breadcrumbs in components or future migrations.
+- In the legacy export adapter, prevent visible breadcrumb markup via shared styling; in native Astro, omit it entirely from page templates.
+
+## Real demo previews rather than embedded pages — confirmed 12 November 2026
+
+- Never use a live cross-origin iframe for industry hero previews. External websites may refuse embedding and show a grey broken page. Instead display an authentic site screenshot in a clickable, labelled hero card with a prominent direct link to the real hosted website.
+- Preserve truthful project labels: Easy Cloud Accounting and Ioana Aesthetics London are demo/concept sites; Charley Hayes SMR is an archived historical website build, not a verified physiotherapy clinic client.
+- Source demo mapping: accountants → https://easycloudaccounting.pages.dev/ ; private clinics → https://ioana-aesthetics-london.pages.dev/ ; physiotherapists → https://charleyhayessmr.pages.dev/ . When a screenshot source fails, retain a useful graceful fallback and direct link instead of an error icon or empty grey box.
+- Residential Roofing & Fascias current live website is https://residential-roofing.co.uk/ . Do not link its Our Work card to the old pages.dev deployment.

@@ -4,7 +4,7 @@ summary: "A new roofing website professionally rebuilt to retain its familiar lo
 addedAt: "2026-11-09"
 category: "Roofing & home improvement"
 status: "live"
-website: "https://residential-roofing-fascias.pages.dev/"
+website: "https://residential-roofing.co.uk/"
 services: ["17-page website rebuild","15 additional service and area pages","Technical SEO","Clear mobile navigation","Ongoing local SEO"]
 priority: 2
 featured: true

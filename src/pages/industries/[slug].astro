@@ -25,10 +25,6 @@ const displayGroup = {
 ---
 <EditorialLayout title={pageTitle} description={description} pathname={pathname}>
   <div class={'pm-sector pm-sector--' + industry.layout} style={styleVars}>
-    <nav class="pm-sector__crumb" aria-label="Breadcrumb">
-      <a href="/">Prunus Media</a><span aria-hidden="true">/</span><a href="/industries/">Websites by Industry</a><span aria-hidden="true">/</span><span aria-current="page">{industry.label}</span>
-    </nav>
-
     <section class="pm-sector__hero" aria-labelledby="pm-sector-title">
       <div class="pm-sector__hero-copy">
         <p class="pm-sector__eyebrow">{displayGroup}</p>
@@ -182,8 +178,6 @@ const displayGroup = {
 .pm-sector h2{font-family:"Playfair Display",Georgia,serif;font-size:clamp(1.8rem,3vw,2.8rem);line-height:1.16;letter-spacing:-.018em}
 .pm-sector h3{font:600 clamp(1.12rem,1.7vw,1.4rem)/1.25 "Space Grotesk",Arial,sans-serif}
 .pm-sector a{text-underline-offset:4px;color:var(--sector-ink)}
-.pm-sector__crumb{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:0 0 22px;font:500 12px/1.5 "Space Grotesk",Arial,sans-serif;letter-spacing:.02em}
-.pm-sector__crumb a{opacity:.72}
 .pm-sector__eyebrow{font:600 11px/1.5 "Space Grotesk",Arial,sans-serif!important;letter-spacing:.17em;text-transform:uppercase;color:var(--sector-ink);opacity:.78;margin:0}
 .pm-sector__hero{display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:center;background:var(--sector-bg);border-radius:5px;padding:clamp(30px,5vw,70px);overflow:hidden;min-height:520px}
 .pm-sector__intro{font:400 clamp(1.15rem,1.7vw,1.45rem)/1.55 "Alegreya Sans",Arial,sans-serif!important;max-width:570px;margin-bottom:25px}
@@ -260,7 +254,7 @@ const displayGroup = {
 .pm-sector--warm .pm-sector__hero{border-radius:24px 5px 24px 5px}
 @media(max-width:920px){.pm-sector__hero{gap:22px;padding:38px;grid-template-columns:1fr 1fr}.pm-sector__intro-section{gap:25px}.pm-sector__page-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.pm-editorial:has(.pm-sector){padding:90px 12px 50px}.pm-sector__hero,.pm-sector--architectural .pm-sector__hero{grid-template-columns:1fr;padding:28px;min-height:auto}.pm-sector__hero-visual,.pm-sector__hero-visual img{min-height:230px;max-height:290px}.pm-sector h1{font-size:clamp(2.3rem,10vw,3.6rem)}.pm-sector__intro-section{grid-template-columns:1fr;padding:52px 10px;gap:5px}.pm-sector__plan{padding:35px 20px}.pm-sector__page-grid{grid-template-columns:1fr 1fr;gap:8px}.pm-sector__page{min-height:135px;padding:13px}.pm-sector__strategy{grid-template-columns:1fr;margin:38px 0}.pm-sector__strategy-block+div{border:0;border-top:1px solid #ffffff38}.pm-sector__strategy-block{padding:30px}.pm-sector__sample-body{grid-template-columns:1fr}.pm-sector__sample-art{min-height:120px}.pm-sector__work-grid{grid-template-columns:1fr}.pm-sector__faq{margin-bottom:50px}}
-@media(max-width:420px){.pm-sector__hero{padding:22px}.pm-sector__page-grid{grid-template-columns:1fr}.pm-sector__proof span{padding:0 2px}.pm-sector__crumb{font-size:11px}.pm-sector__visual-editorial{padding:24px}.pm-sector__sample-top{font-size:10px}}
+@media(max-width:420px){.pm-sector__hero{padding:22px}.pm-sector__page-grid{grid-template-columns:1fr}.pm-sector__proof span{padding:0 2px}.pm-sector__visual-editorial{padding:24px}.pm-sector__sample-top{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.pm-sector__button{transition:none}}
 
 .pm-sector__demo-preview{box-sizing:border-box;min-width:0;width:100%;padding:12px;border:1px solid #d7dfd9;border-radius:10px;background:#f7faf7;box-shadow:0 16px 40px #142e2520}
@@ -276,7 +270,6 @@ const displayGroup = {
 /* Full-bleed editorial hero: match established industry pages rather than an inset card. */
 .pm-editorial:has(.pm-sector){padding:96px 0 80px!important;overflow-x:clip}
 .pm-editorial:has(.pm-sector) .pm-editorial__wrap{max-width:1270px;width:calc(100% - 48px)}
-.pm-sector__crumb{padding:16px 0 20px}
 .pm-sector__hero,.pm-sector--architectural .pm-sector__hero{
   position:relative;left:50%;margin-left:-50vw;width:100vw;
   border-radius:0!important;
