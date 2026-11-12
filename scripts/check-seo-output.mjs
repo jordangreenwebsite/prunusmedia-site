@@ -65,7 +65,8 @@ function checkHours(specifications,route,label){
   }
 }
 for(const {name,source} of pages){
-  if(name==='/404.html')continue;
+  // The noindex client-login holding page is not a public search landing page.
+  if(name==='/404.html'||name==='/client-login/')continue;
   const scripts=[...source.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   let nodes=[];
   for(const match of scripts){
