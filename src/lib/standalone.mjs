@@ -348,7 +348,7 @@ export function cleanPageHtml(originalHtml, filename) {
     const hero = html.slice(heroStart, heroFinish + 10);
     const trailing = '</div></div></div>\n</section>';
     if (!hero.includes(trailing)) throw new Error('Unexpected hero layout on ' + filename);
-    const adjusted = hero.replace(trailing, '</div></div>' + demoMarkup + '</div>\n</section>');
+    const adjusted = hero.replace(trailing, '</div>' + demoMarkup + '</div></div>\n</section>');
     html = html.slice(0, heroStart) + adjusted + html.slice(heroFinish + 10);
     const demoCss = '<style id="pm-sector-demo-hero-styles">' +
       '.bde-section-' + id + '-100 .section-container{max-width:1240px!important;width:min(100% - 32px,1240px)!important}' +
