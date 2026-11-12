@@ -131,18 +131,22 @@
       });
     });
 
-    // FAQ accordion: original accessible buttons and panels, no plugin.
+    // The retained Breakdance stylesheet reveals answers only when the item
+    // has "is-active". Keep that class, aria-expanded, hidden and the custom
+    // icon state in sync so FAQs work by touch, mouse and keyboard sitewide.
     document.querySelectorAll('.bde-faq__question').forEach((button) => {
       const controls = button.getAttribute('aria-controls');
       const panel = controls ? document.getElementById(controls) : null;
-      if (panel) {
-        panel.hidden = button.getAttribute('aria-expanded') !== 'true';
-      }
+      const item = button.closest('.bde-faq__item');
+      const setExpanded = (expanded) => {
+        button.setAttribute('aria-expanded', String(expanded));
+        item?.classList.toggle('is-active', expanded);
+        item?.classList.toggle('bde-faq__item--active', expanded);
+        if (panel) panel.hidden = !expanded;
+      };
+      setExpanded(button.getAttribute('aria-expanded') === 'true');
       button.addEventListener('click', () => {
-        const next = button.getAttribute('aria-expanded') !== 'true';
-        button.setAttribute('aria-expanded', String(next));
-        button.closest('.bde-faq__item')?.classList.toggle('bde-faq__item--active', next);
-        if (panel) panel.hidden = !next;
+        setExpanded(button.getAttribute('aria-expanded') !== 'true');
       });
     });
 

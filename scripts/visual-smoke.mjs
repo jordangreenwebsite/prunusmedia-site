@@ -154,6 +154,54 @@ try {
           failures.push(test.label+': homepage pricing invitation missing');
         }
       }
+      // Homepage FAQs must reveal actual answer content, not merely flip
+      // their icons. Check open and close on desktop and touch-sized screens.
+      if(test.route==='/'){
+        const question=page.locator('.bde-faq__question').first();
+        if(await question.count()!==1){
+          failures.push(test.label+': homepage FAQ missing');
+        }else{
+          const panelId=await question.getAttribute('aria-controls');
+          const answer=page.locator('[id="'+panelId+'"]');
+          await question.click();
+          const expanded=await question.getAttribute('aria-expanded');
+          const active=await question.locator('xpath=ancestor::*[contains(@class,"bde-faq__item")][1]').evaluate(el=>el.classList.contains('is-active'));
+          if(expanded!=='true'||!active||!await answer.isVisible()){
+            failures.push(test.label+': FAQ arrow toggles but answer does not open');
+          }
+          await question.click();
+          if(await question.getAttribute('aria-expanded')!=='false'||await answer.isVisible()){
+            failures.push(test.label+': FAQ answer does not close');
+          }
+        }
+      }
+      if(test.route==='/'&&test.mobile){
+        const cards=page.locator('.bde-section-35-325 .bde-image-box');
+        if(await cards.count()!==4)failures.push(test.label+': expected four homepage service cards');
+        else{
+          const metrics=await cards.evaluateAll(elements=>elements.map(card=>{
+            const button=card.querySelector('.ee-imagebox-button');
+            if(!button)return {button:false};
+            const outer=card.getBoundingClientRect(),cta=button.getBoundingClientRect();
+            return {button:true,inside:cta.top>=outer.top+8&&cta.bottom<=outer.bottom-8,
+              height:outer.height,visible:getComputedStyle(button).display!=='none'};
+          }));
+          if(metrics.some(item=>!item.button||!item.inside||!item.visible)){
+            failures.push(test.label+': service card pink CTA missing or clipped: '+JSON.stringify(metrics));
+          }
+        }
+        const strategy=await page.locator(
+          '.bde-div-35-557,.bde-div-35-560,.bde-div-35-563,.bde-div-35-567,.bde-div-35-570,.bde-div-35-573'
+        ).evaluateAll(elements=>elements.map(card=>{
+          const box=card.getBoundingClientRect(),h=card.querySelector('.bde-heading')?.getBoundingClientRect(),
+            p=card.querySelector('.bde-text')?.getBoundingClientRect();
+          return {ok:!!h&&!!p&&h.left>=box.left+10&&h.right<=box.right-10&&
+            p.left>=box.left+10&&p.right<=box.right-10};
+        }));
+        if(strategy.length!==6||strategy.some(x=>!x.ok)){
+          failures.push(test.label+': SEO strategy cards lack safe horizontal padding');
+        }
+      }
       if(test.route==='/pricing/'){
         if(await page.locator('.pm-pricing__build').count()!==3) failures.push(test.label+': expected three website build cards');
         if(await page.locator('.pm-pricing__seo-card').count()!==1) failures.push(test.label+': expected one SEO price card');
@@ -573,6 +621,22 @@ try {
         const response=await tab.goto(local+route,{waitUntil:'domcontentloaded',timeout:12000});
         if(response?.status()!==200){
           otherPageFindings.push(route+' '+width+'px: HTTP '+response?.status());continue;
+        }
+        // Sitewide mobile regression check for retained legacy FAQs.
+        if(width===390){
+          const question=tab.locator('.bde-faq__question').first();
+          if(await question.count()){
+            const panelId=await question.getAttribute('aria-controls');
+            const answer=tab.locator('[id="'+panelId+'"]');
+            await question.click({timeout:3500});
+            if(await question.getAttribute('aria-expanded')!=='true'||!await answer.isVisible()){
+              otherPageFindings.push(route+': FAQ does not open on mobile');
+            }
+            await question.click({timeout:3500});
+            if(await question.getAttribute('aria-expanded')!=='false'||await answer.isVisible()){
+              otherPageFindings.push(route+': FAQ does not close on mobile');
+            }
+          }
         }
         const state=await tab.evaluate(()=>{
           const viewport=window.innerWidth;

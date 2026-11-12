@@ -646,7 +646,7 @@ export function cleanPageHtml(originalHtml, filename) {
     '</style>';
   if (html.includes('</head>')) html = html.replace('</head>', skipLinkCriticalCss + '\n</head>');
   if (html.includes('</head>')) html = html.replace('</head>',
-    '<link rel="stylesheet" href="/assets/prunus-styles/components.css?v=skip-link-critical-20261109">\n' +
+    '<link rel="stylesheet" href="/assets/prunus-styles/components.css?v=faq-mobile-cards-20261112">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/portfolio.css">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/footer.css">\n</head>');
 
