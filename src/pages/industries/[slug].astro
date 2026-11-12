@@ -40,7 +40,16 @@ const displayGroup = {
         </div>
         <p class="pm-sector__proof">Bespoke website design <span>•</span> Useful SEO-led content <span>•</span> Built for UK businesses</p>
       </div>
-      <div class="pm-sector__hero-visual">
+      {industry.demo?.url ? <div class="pm-sector__demo-preview" aria-label={industry.demo.name + ' website demo'}>
+        <div class="pm-sector__demo-top"><span>OUR WORK / WEBSITE DEMO</span><strong>{industry.demo.name}</strong></div>
+        <div class="pm-sector__demo-viewport">
+          <iframe src={industry.demo.url} title={industry.demo.name + ' website preview'} loading="lazy" tabindex="-1" aria-hidden="true"></iframe>
+          <a href={industry.demo.url} target="_blank" rel="noopener noreferrer" aria-label={'Open ' + industry.demo.name + ' website demo in a new tab'}></a>
+        </div>
+        <a class="pm-sector__demo-link" href={industry.demo.url} target="_blank" rel="noopener noreferrer">Explore the full demo ↗</a>
+        <p class="pm-sector__demo-note">A Prunus Media website demo, not a commissioned client project.</p>
+      </div> : null}
+      { !industry.demo?.url ? <div class="pm-sector__hero-visual">
         {industry.image
           ? <img src={industry.image} alt={'Visual reference for ' + industry.label.toLowerCase() + ' website design'} loading="eager" decoding="async" />
           : <div class="pm-sector__visual-editorial" aria-label={'Illustrative ' + industry.label.toLowerCase() + ' website composition'}>
@@ -52,7 +61,7 @@ const displayGroup = {
             </div>
         }
         <span class="pm-sector__visual-tag">Design direction / {industry.label}</span>
-      </div>
+      </div> : null}
     </section>
 
     <section class="pm-sector__intro-section" aria-labelledby="pm-sector-decision">
@@ -253,4 +262,55 @@ const displayGroup = {
 @media(max-width:700px){.pm-editorial:has(.pm-sector){padding:90px 12px 50px}.pm-sector__hero,.pm-sector--architectural .pm-sector__hero{grid-template-columns:1fr;padding:28px;min-height:auto}.pm-sector__hero-visual,.pm-sector__hero-visual img{min-height:230px;max-height:290px}.pm-sector h1{font-size:clamp(2.3rem,10vw,3.6rem)}.pm-sector__intro-section{grid-template-columns:1fr;padding:52px 10px;gap:5px}.pm-sector__plan{padding:35px 20px}.pm-sector__page-grid{grid-template-columns:1fr 1fr;gap:8px}.pm-sector__page{min-height:135px;padding:13px}.pm-sector__strategy{grid-template-columns:1fr;margin:38px 0}.pm-sector__strategy-block+div{border:0;border-top:1px solid #ffffff38}.pm-sector__strategy-block{padding:30px}.pm-sector__sample-body{grid-template-columns:1fr}.pm-sector__sample-art{min-height:120px}.pm-sector__work-grid{grid-template-columns:1fr}.pm-sector__faq{margin-bottom:50px}}
 @media(max-width:420px){.pm-sector__hero{padding:22px}.pm-sector__page-grid{grid-template-columns:1fr}.pm-sector__proof span{padding:0 2px}.pm-sector__crumb{font-size:11px}.pm-sector__visual-editorial{padding:24px}.pm-sector__sample-top{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.pm-sector__button{transition:none}}
+
+.pm-sector__demo-preview{box-sizing:border-box;min-width:0;width:100%;padding:12px;border:1px solid #d7dfd9;border-radius:10px;background:#f7faf7;box-shadow:0 16px 40px #142e2520}
+.pm-sector__demo-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:6px 6px 12px;font:600 12px/1.4 "Space Grotesk",Arial,sans-serif;color:#254b3b}
+.pm-sector__demo-top span{font-size:10px;letter-spacing:.08em}
+.pm-sector__demo-viewport{position:relative;width:100%;height:clamp(300px,30vw,420px);overflow:hidden;border:1px solid #d9e2db;border-radius:5px;background:#e8efea}
+.pm-sector__demo-viewport iframe{width:200%;height:900px;max-width:none;border:0;transform:scale(.5);transform-origin:top left;pointer-events:none}
+.pm-sector__demo-viewport>a{position:absolute;inset:0;z-index:1;display:block}
+.pm-sector__demo-viewport>a:focus-visible{outline:4px solid #b6aa6c;outline-offset:-4px}
+.pm-sector__demo-link{display:inline-block;margin:13px 6px 1px!important;color:#254b3b!important;font:700 14px/1.4 "Space Grotesk",Arial,sans-serif;text-underline-offset:4px}
+.pm-sector__demo-note{font:400 12px/1.5 "Space Grotesk",Arial,sans-serif!important;color:#64776b;margin:8px 6px 4px}
+
+/* Full-bleed editorial hero: match established industry pages rather than an inset card. */
+.pm-editorial:has(.pm-sector){padding:96px 0 80px!important;overflow-x:clip}
+.pm-editorial:has(.pm-sector) .pm-editorial__wrap{max-width:1270px;width:calc(100% - 48px)}
+.pm-sector__crumb{padding:16px 0 20px}
+.pm-sector__hero,.pm-sector--architectural .pm-sector__hero{
+  position:relative;left:50%;margin-left:-50vw;width:100vw;
+  border-radius:0!important;
+  grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr);
+  gap:clamp(28px,4vw,82px);
+  min-height:clamp(600px,calc(100svh - 104px),860px);
+  padding:clamp(70px,8vw,145px) max(30px,calc((100vw - 1280px)/2 + 30px));
+}
+.pm-sector__hero-copy{min-width:0;max-width:660px}
+.pm-sector__hero h1{max-width:670px;font-size:clamp(2.75rem,4.4vw,5.4rem)}
+.pm-sector__hero-visual{min-height:460px;max-height:650px;overflow:hidden}
+.pm-sector__hero-visual img{min-height:460px;object-fit:cover}
+.pm-sector__visual-editorial{min-height:460px}
+.pm-sector__demo-preview{align-self:center}
+@media(max-width:900px){
+  .pm-sector__hero,.pm-sector--architectural .pm-sector__hero{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    min-height:620px;gap:24px;padding:90px 30px 70px
+  }
+  .pm-sector__hero h1{font-size:clamp(2.4rem,5vw,3.8rem)}
+  .pm-sector__hero-visual,.pm-sector__hero-visual img,.pm-sector__visual-editorial{min-height:360px}
+}
+@media(max-width:700px){
+  .pm-editorial:has(.pm-sector){padding:83px 0 50px!important}
+  .pm-editorial:has(.pm-sector) .pm-editorial__wrap{width:calc(100% - 28px)}
+  .pm-sector__hero,.pm-sector--architectural .pm-sector__hero{
+    width:100vw;left:50%;margin-left:-50vw;grid-template-columns:1fr;
+    min-height:0;gap:30px;padding:70px 22px 42px
+  }
+  .pm-sector__hero h1{font-size:clamp(2.5rem,9.8vw,4.4rem)}
+  .pm-sector__hero-visual,.pm-sector__hero-visual img,.pm-sector__visual-editorial{
+    min-height:290px;max-height:430px
+  }
+  .pm-sector__demo-viewport{height:340px}
+}
+@media(max-width:420px){.pm-sector__hero,.pm-sector--architectural .pm-sector__hero{padding:56px 18px 35px}}
 </style>

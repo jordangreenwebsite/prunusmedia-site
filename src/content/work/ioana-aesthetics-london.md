@@ -4,6 +4,7 @@ summary: "An independently created 33-page aesthetics clinic design concept with
 addedAt: "2026-11-12"
 category: "Private clinics & aesthetics"
 status: "concept"
+website: "https://ioana-aesthetics-london.pages.dev/"
 services: ["33-page website concept","Responsive clinic design","Treatment information pages","Local area structure","SEO-ready architecture"]
 priority: 8
 draft: false
