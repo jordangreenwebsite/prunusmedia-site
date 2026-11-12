@@ -5,7 +5,8 @@
  */
 const assets={
   before:'https://uktradewebsites.co.uk/case-studies/roofing/before.jpg',
-  after:'https://uktradewebsites.co.uk/case-studies/roofing/after.jpg',
+  after:'/images/website-previews/residential-roofing-full.jpg',
+  afterMobile:'/images/website-previews/residential-roofing-mobile-full.jpg',
   menu:'https://uktradewebsites.co.uk/case-studies/roofing/after-menu.png',
 };
 
@@ -77,7 +78,7 @@ return css+`
    <figure class="pm-roofing-story__window">
     <figcaption><span class="pm-roofing-story__phase pm-roofing-story__phase--after">After</span> New Astro website</figcaption>
     <div class="pm-roofing-story__scroll" role="region" tabindex="0" aria-label="Scroll through the rebuilt roofing website screenshot">
-     <img src="${assets.after}" loading="lazy" decoding="async" alt="Full-page screenshot of the redesigned Residential Roofing and Fascias website">
+     <picture><source media="(max-width: 740px)" srcset="${assets.afterMobile}"><img src="${assets.after}" loading="lazy" decoding="async" alt="Final full-page screenshot of the Residential Roofing and Fascias website"></picture>
     </div>
    </figure>
   </div>

@@ -5,6 +5,8 @@ addedAt: "2026-11-09"
 category: "Roofing & home improvement"
 status: "live"
 website: "https://residential-roofing.co.uk/"
+image: "/images/website-previews/residential-roofing.jpg"
+imageAlt: "Final live Residential Roofing and Fascias website homepage showing the completed rebuild"
 services: ["17-page website rebuild","15 additional service and area pages","Technical SEO","Clear mobile navigation","Ongoing local SEO"]
 priority: 2
 featured: true

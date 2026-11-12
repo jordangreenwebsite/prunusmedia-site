@@ -46,4 +46,22 @@ writeFileSync(path.join(dist, 'sitemap_index.xml'),
   '  <sitemap><loc>https://prunusmedia.com/page-sitemap.xml</loc></sitemap>\n</sitemapindex>\n');
 writeFileSync(path.join(dist, 'robots.txt'),
   'User-agent: *\nDisallow: /wp-admin/\n\nSitemap: https://prunusmedia.com/sitemap_index.xml\n');
-console.log('Preserved exported assets and generated sitemap for ' + urls.length + ' public routes.');
+// Visual policy: never publish decorative emoji characters, including older
+// exported WordPress content and audit-check icons. No heading or link text is
+// removed, and functional navigation arrows outside the emoji blocks remain.
+const decorativeEmoji = /[\u{1F300}-\u{1FAFF}\u2600-\u26FF\u2700-\u27BF]\uFE0F?/gu;
+let strippedEmoji = 0;
+function cleanRenderedTypography(folder) {
+  for (const item of readdirSync(folder, { withFileTypes: true })) {
+    if (['wp-content', 'wp-includes'].includes(item.name)) continue;
+    const p = path.join(folder, item.name);
+    if (item.isDirectory()) cleanRenderedTypography(p);
+    else if (item.isFile() && /\.(?:html|css)$/.test(item.name)) {
+      const original = readFileSync(p, 'utf8');
+      const cleaned = original.replace(decorativeEmoji, () => { strippedEmoji++; return ''; });
+      if (cleaned !== original) writeFileSync(p, cleaned);
+    }
+  }
+}
+cleanRenderedTypography(dist);
+console.log('Preserved exported assets and generated sitemap for ' + urls.length + ' public routes; removed ' + strippedEmoji + ' decorative symbols.');
