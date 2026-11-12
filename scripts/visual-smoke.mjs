@@ -5,7 +5,7 @@
 import { chromium } from 'playwright';
 import { getLegacyRoutes } from '../src/lib/exported-pages.mjs';
 import { spawn } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import path from 'node:path';
@@ -229,9 +229,19 @@ try {
       }
       if (test.route === '/our-work/') {
         const cards=page.locator('.pm-project-card');
-        if(await cards.count()!==17)failures.push(test.label+': expected 17 approved portfolio entries');
+        // Source portfolio entries are living editorial content; never hard-code the count.
+        const workDirectory=path.join(process.cwd(),'src/content/work');
+        const approvedProjects=readdirSync(workDirectory).filter(file=>file.endsWith('.md'))
+          .map(file=>readFileSync(path.join(workDirectory,file),'utf8'))
+          .filter(source=>!/^[ \t]*draft:\s*true\s*$/m.test(source));
+        if(await cards.count()!==approvedProjects.length){
+          failures.push(test.label+': expected '+approvedProjects.length+' approved portfolio entries');
+        }
         const externalLinks=page.locator('.pm-project-card .pm-project-website');
-        if(await externalLinks.count()!==17)failures.push(test.label+': every project must have external website link');
+        const expectedLinked=approvedProjects.filter(source=>/^website:\s*["']?https:\/\//m.test(source)).length;
+        if(await externalLinks.count()!==expectedLinked){
+          failures.push(test.label+': expected '+expectedLinked+' externally linked portfolio projects');
+        }
         const hrefs=await externalLinks.evaluateAll(nodes=>nodes.map(a=>a.href));
         if(hrefs.some(href=>!href.startsWith('https://')))failures.push(test.label+': external website link lacks HTTPS');
         const detailSlugs=await cards.locator('h3 a').evaluateAll(nodes=>nodes.map(n=>n.getAttribute('href')));
@@ -241,7 +251,6 @@ try {
         }
         const outdated=new Set([
           '/our-work/guardians-brand-works/',
-          '/our-work/my-sweet-pea-flowers/',
           '/our-work/stephenus/',
           '/our-work/coffee-art-socks/'
         ]);

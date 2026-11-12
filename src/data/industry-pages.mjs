@@ -279,6 +279,11 @@ export const industryPages = [
   {
     "slug": "high-end-trades",
     "label": "High-End Trades",
+    "demo": {
+      "name": "TJ Bespoke Designs",
+      "url": "https://tjbespokedesignswebsite.pages.dev/",
+      "status": "concept"
+    },
     "group": "contractors",
     "layout": "architectural",
     "colors": {
@@ -315,6 +320,11 @@ export const industryPages = [
   {
     "slug": "roofing",
     "label": "Roofing",
+    "demo": {
+      "name": "Residential Roofing & Fascias",
+      "url": "https://residential-roofing.co.uk/",
+      "status": "live"
+    },
     "group": "contractors",
     "layout": "bold",
     "colors": {
@@ -728,6 +738,11 @@ export const industryPages = [
   {
     "slug": "aesthetic-clinics",
     "label": "Aesthetic Clinics",
+    "demo": {
+      "name": "Ioana Aesthetics London",
+      "url": "https://ioana-aesthetics-london.pages.dev/",
+      "status": "concept"
+    },
     "group": "additional",
     "layout": "clinical",
     "colors": {
@@ -752,7 +767,12 @@ export const industryPages = [
       "Clinic location",
       "Patient resources"
     ],
-    "work": [],
+    "work": [
+      {
+        "slug": "ioana-aesthetics-london",
+        "label": "Website concept",
+        "description": "A hosted aesthetics clinic website demo, created independently and not endorsed by the clinic."
+      }],
     "image": null
   },
   {
@@ -788,6 +808,18 @@ export const industryPages = [
   {
     "slug": "florists",
     "label": "Florists",
+    "demo": {
+      "name": "Katie’s Flower Hut",
+      "url": "https://katies-flower-hut.pages.dev/",
+      "status": "concept"
+    },
+    "additionalDemos": [
+      {
+        "name": "My Sweet Pea Flowers",
+        "url": "https://www.mysweetpeaflowers.com/",
+        "status": "live"
+      }
+    ],
     "group": "additional",
     "layout": "warm",
     "colors": {
@@ -813,6 +845,11 @@ export const industryPages = [
       "Workshop booking"
     ],
     "work": [
+      {
+        "slug": "my-sweet-pea-flowers",
+        "label": "Live florist website",
+        "description": "A flower farm website for seasonal bouquets, weddings and florist supply."
+      },
       {
         "slug": "katies-flower-hut",
         "label": "Website concept",
@@ -865,6 +902,11 @@ export const industryPages = [
   {
     "slug": "car-detailing",
     "label": "Car Detailing & Valeting",
+    "demo": {
+      "name": "PP Power Detailing",
+      "url": "https://pppowerdetailing.com/",
+      "status": "live"
+    },
     "group": "additional",
     "layout": "bold",
     "colors": {
@@ -906,6 +948,11 @@ export const industryPages = [
   {
     "slug": "window-cleaning",
     "label": "Window Cleaning Businesses",
+    "demo": {
+      "name": "J Piper Cleaning Services",
+      "url": "https://jpipercleaning.com/",
+      "status": "owned"
+    },
     "group": "additional",
     "layout": "technical",
     "colors": {
@@ -932,6 +979,11 @@ export const industryPages = [
     ],
     "work": [
       {
+        "slug": "j-piper-cleaning-services",
+        "label": "Related website",
+        "description": "A real exterior cleaning business website including window cleaning and other property services."
+      },
+      {
         "slug": "window-cleaning-calculator",
         "label": "Related in-house tool",
         "description": "Our own window-cleaning quote calculator, not a cleaning company client site."
@@ -942,6 +994,11 @@ export const industryPages = [
   {
     "slug": "painters-decorators",
     "label": "Painters & Decorators",
+    "demo": {
+      "name": "Lee Green Painting & Decorating",
+      "url": "https://leegreen.pages.dev/",
+      "status": "concept"
+    },
     "group": "additional",
     "layout": "warm",
     "colors": {
@@ -978,6 +1035,11 @@ export const industryPages = [
   {
     "slug": "pressure-washing",
     "label": "Pressure Washing & Exterior Cleaning",
+    "demo": {
+      "name": "J Piper Cleaning Services",
+      "url": "https://jpipercleaning.com/",
+      "status": "owned"
+    },
     "group": "additional",
     "layout": "bold",
     "colors": {
@@ -1002,12 +1064,22 @@ export const industryPages = [
       "Service area map",
       "Booking enquiries"
     ],
-    "work": [],
+    "work": [
+      {
+        "slug": "j-piper-cleaning-services",
+        "label": "Related website",
+        "description": "A real exterior cleaning business website showing pressure washing and related services."
+      }],
     "image": null
   },
   {
     "slug": "cafes-restaurants",
     "label": "Cafés & Restaurants",
+    "demo": {
+      "name": "Coffee at Odd Socks",
+      "url": "https://coffeeatoddsocks.pages.dev/",
+      "status": "concept"
+    },
     "group": "additional",
     "layout": "warm",
     "colors": {
@@ -1074,6 +1146,11 @@ export const industryPages = [
   {
     "slug": "construction-companies",
     "label": "Construction Companies",
+    "demo": {
+      "name": "Gudgeons Groundworks",
+      "url": "https://gudgeonsgroundworks.pages.dev/",
+      "status": "concept"
+    },
     "group": "additional",
     "layout": "architectural",
     "colors": {

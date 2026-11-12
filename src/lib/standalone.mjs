@@ -233,7 +233,7 @@ export function cleanPageHtml(originalHtml, filename) {
     box-shadow:none!important;text-align:center!important;
   }
   .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li.prunus-pricing-dropdown-item>a.breakdance-dropdown-link{
-    background:#fff!important;color:#252525!important;border-color:#fff!important;
+    background:#404040!important;color:#f7ead2!important;border-color:#646464!important;
   }
   .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3) .breakdance-dropdown-link__label{
     width:auto!important;display:inline-block!important;margin:0!important;padding:0!important;
