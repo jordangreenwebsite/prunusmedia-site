@@ -531,6 +531,11 @@ export const industryPages = [
   {
     "slug": "groundworks",
     "label": "Groundworks",
+    "demo": {
+      "name": "Gudgeons Groundworks",
+      "url": "https://gudgeonsgroundworks.pages.dev/",
+      "status": "concept"
+    },
     "group": "overlooked",
     "layout": "technical",
     "colors": {
