@@ -197,14 +197,14 @@ export function cleanPageHtml(originalHtml, filename) {
   const menuStart = '<li class="bde-menu-dropdown-27-153';
   html = html.replace(headerPattern, header => {
     if (!header.includes(menuStart)) throw new Error('Missing Our Work dropdown on ' + filename);
-    const groupPattern = /(<li class="bde-menu-dropdown-27-153\\b[\\s\\S]*?<ul class="breakdance-dropdown-links">)[\\s\\S]*?(<\\/ul>)/i;
+    const groupPattern = /(<li class="bde-menu-dropdown-27-153\b[\s\S]*?<ul class="breakdance-dropdown-links">)[\s\S]*?(<\/ul>)/i;
     if (!groupPattern.test(header)) throw new Error('Cannot find industry menu list on ' + filename);
     return header.replace(groupPattern, (_, start, end) =>
       start.replace('<ul class="breakdance-dropdown-links">', '<ul class="breakdance-dropdown-links pm-industry-menu-links">') +
       '<li class="pm-industry-menu-quick"><a href="/pricing/">Pricing</a><a href="/our-work/">Our Work</a><a href="/industries/">All Industries</a></li>' +
       groupedIndustryLinks + end);
   });
-  const menuIndustryCount = (html.match(/<a href="\\/industries\\/[a-z-]+\\/">Websites for /g) || []).length;
+  const menuIndustryCount = (html.match(/<a href="\/industries\/[a-z-]+\/">Websites for /g) || []).length;
   if (menuIndustryCount !== 37) throw new Error('Expected 37 industry menu links; found ' + menuIndustryCount + ' on ' + filename);
   const industryMenuCss = `<style id="pm-industry-menu-styles">
   .bde-menu-dropdown-27-153 .breakdance-dropdown-body{max-height:min(72vh,680px);overflow-y:auto;overscroll-behavior:contain}
