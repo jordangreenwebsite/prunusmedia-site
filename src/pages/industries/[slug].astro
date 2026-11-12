@@ -272,4 +272,45 @@ const displayGroup = {
 .pm-sector__demo-viewport>a:focus-visible{outline:4px solid #b6aa6c;outline-offset:-4px}
 .pm-sector__demo-link{display:inline-block;margin:13px 6px 1px!important;color:#254b3b!important;font:700 14px/1.4 "Space Grotesk",Arial,sans-serif;text-underline-offset:4px}
 .pm-sector__demo-note{font:400 12px/1.5 "Space Grotesk",Arial,sans-serif!important;color:#64776b;margin:8px 6px 4px}
+
+/* Full-bleed editorial hero: match established industry pages rather than an inset card. */
+.pm-editorial:has(.pm-sector){padding:96px 0 80px!important;overflow-x:clip}
+.pm-editorial:has(.pm-sector) .pm-editorial__wrap{max-width:1270px;width:calc(100% - 48px)}
+.pm-sector__crumb{padding:16px 0 20px}
+.pm-sector__hero,.pm-sector--architectural .pm-sector__hero{
+  position:relative;left:50%;margin-left:-50vw;width:100vw;
+  border-radius:0!important;
+  grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr);
+  gap:clamp(28px,4vw,82px);
+  min-height:clamp(600px,calc(100svh - 104px),860px);
+  padding:clamp(70px,8vw,145px) max(30px,calc((100vw - 1280px)/2 + 30px));
+}
+.pm-sector__hero-copy{min-width:0;max-width:660px}
+.pm-sector__hero h1{max-width:670px;font-size:clamp(2.75rem,4.4vw,5.4rem)}
+.pm-sector__hero-visual{min-height:460px;max-height:650px;overflow:hidden}
+.pm-sector__hero-visual img{min-height:460px;object-fit:cover}
+.pm-sector__visual-editorial{min-height:460px}
+.pm-sector__demo-preview{align-self:center}
+@media(max-width:900px){
+  .pm-sector__hero,.pm-sector--architectural .pm-sector__hero{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    min-height:620px;gap:24px;padding:90px 30px 70px
+  }
+  .pm-sector__hero h1{font-size:clamp(2.4rem,5vw,3.8rem)}
+  .pm-sector__hero-visual,.pm-sector__hero-visual img,.pm-sector__visual-editorial{min-height:360px}
+}
+@media(max-width:700px){
+  .pm-editorial:has(.pm-sector){padding:83px 0 50px!important}
+  .pm-editorial:has(.pm-sector) .pm-editorial__wrap{width:calc(100% - 28px)}
+  .pm-sector__hero,.pm-sector--architectural .pm-sector__hero{
+    width:100vw;left:50%;margin-left:-50vw;grid-template-columns:1fr;
+    min-height:0;gap:30px;padding:70px 22px 42px
+  }
+  .pm-sector__hero h1{font-size:clamp(2.5rem,9.8vw,4.4rem)}
+  .pm-sector__hero-visual,.pm-sector__hero-visual img,.pm-sector__visual-editorial{
+    min-height:290px;max-height:430px
+  }
+  .pm-sector__demo-viewport{height:340px}
+}
+@media(max-width:420px){.pm-sector__hero,.pm-sector--architectural .pm-sector__hero{padding:56px 18px 35px}}
 </style>
