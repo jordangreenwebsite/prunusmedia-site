@@ -282,7 +282,7 @@ export const industryPages = [
     "demo": {
       "name": "TJ Bespoke Designs",
       "url": "https://tjbespokedesignswebsite.pages.dev/",
-      "screenshot": "/images/website-previews/tj-bespoke-designs.jpg"
+      "screenshot": "/images/website-previews/tj-bespoke-designs.jpg",
       "status": "concept"
     },
     "group": "contractors",
@@ -324,7 +324,7 @@ export const industryPages = [
     "demo": {
       "name": "Residential Roofing & Fascias",
       "url": "https://residential-roofing.co.uk/",
-      "screenshot": "/images/website-previews/residential-roofing.jpg"
+      "screenshot": "/images/website-previews/residential-roofing.jpg",
       "status": "live"
     },
     "group": "contractors",
@@ -546,7 +546,7 @@ export const industryPages = [
     "demo": {
       "name": "Gudgeons Groundworks",
       "url": "https://gudgeonsgroundworks.pages.dev/",
-      "screenshot": "/images/website-previews/gudgeons-groundworks.jpg"
+      "screenshot": "/images/website-previews/gudgeons-groundworks.jpg",
       "status": "concept"
     },
     "group": "overlooked",
@@ -744,7 +744,7 @@ export const industryPages = [
     "demo": {
       "name": "Ioana Aesthetics London",
       "url": "https://ioana-aesthetics-london.pages.dev/",
-      "screenshot": "/images/website-previews/ioana-aesthetics-london.jpg"
+      "screenshot": "/images/website-previews/ioana-aesthetics-london.jpg",
       "status": "concept"
     },
     "group": "additional",
@@ -815,14 +815,14 @@ export const industryPages = [
     "demo": {
       "name": "Katie’s Flower Hut",
       "url": "https://katies-flower-hut.pages.dev/",
-      "screenshot": "/images/website-previews/katies-flower-hut.jpg"
+      "screenshot": "/images/website-previews/katies-flower-hut.jpg",
       "status": "concept"
     },
     "additionalDemos": [
       {
         "name": "My Sweet Pea Flowers",
         "url": "https://www.mysweetpeaflowers.com/",
-      "screenshot": "/images/website-previews/my-sweet-pea-flowers.jpg"
+      "screenshot": "/images/website-previews/my-sweet-pea-flowers.jpg",
         "status": "live"
       }
     ],
@@ -911,7 +911,7 @@ export const industryPages = [
     "demo": {
       "name": "PP Power Detailing",
       "url": "https://pppowerdetailing.com/",
-      "screenshot": "/images/website-previews/pp-power-detailing.jpg"
+      "screenshot": "/images/website-previews/pp-power-detailing.jpg",
       "status": "live"
     },
     "group": "additional",
@@ -958,7 +958,7 @@ export const industryPages = [
     "demo": {
       "name": "J Piper Cleaning Services",
       "url": "https://jpipercleaning.com/",
-      "screenshot": "/images/website-previews/j-piper-cleaning.jpg"
+      "screenshot": "/images/website-previews/j-piper-cleaning.jpg",
       "status": "owned"
     },
     "group": "additional",
@@ -1005,7 +1005,7 @@ export const industryPages = [
     "demo": {
       "name": "Lee Green Painting & Decorating",
       "url": "https://leegreen.pages.dev/",
-      "screenshot": "/images/website-previews/lee-green.jpg"
+      "screenshot": "/images/website-previews/lee-green.jpg",
       "status": "concept"
     },
     "group": "additional",
@@ -1047,7 +1047,7 @@ export const industryPages = [
     "demo": {
       "name": "J Piper Cleaning Services",
       "url": "https://jpipercleaning.com/",
-      "screenshot": "/images/website-previews/j-piper-cleaning.jpg"
+      "screenshot": "/images/website-previews/j-piper-cleaning.jpg",
       "status": "owned"
     },
     "group": "additional",
@@ -1088,7 +1088,7 @@ export const industryPages = [
     "demo": {
       "name": "Coffee at Odd Socks",
       "url": "https://coffeeatoddsocks.pages.dev/",
-      "screenshot": "/images/website-previews/coffee-at-odd-socks.jpg"
+      "screenshot": "/images/website-previews/coffee-at-odd-socks.jpg",
       "status": "concept"
     },
     "group": "additional",
@@ -1160,7 +1160,7 @@ export const industryPages = [
     "demo": {
       "name": "Gudgeons Groundworks",
       "url": "https://gudgeonsgroundworks.pages.dev/",
-      "screenshot": "/images/website-previews/gudgeons-groundworks.jpg"
+      "screenshot": "/images/website-previews/gudgeons-groundworks.jpg",
       "status": "concept"
     },
     "group": "additional",
