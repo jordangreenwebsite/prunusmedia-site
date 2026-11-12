@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { footerMarkup } from './footer.mjs';
 import { improveLegacySeo } from './seo-enhancements.mjs';
+import { industrySlugByName, additionalIndustryPages } from '../data/industry-pages.mjs';
 export function routeAssetName(filename) {
   if (filename === 'index.html') return 'home';
   if (filename === '404.html') return 'not-found';
@@ -251,6 +252,112 @@ export function cleanPageHtml(originalHtml, filename) {
 
   // Search semantics, non-fabricated structured data, and image accessibility.
   html = improveLegacySeo(html, filename);
+
+
+  // Industry expansion: preserve approved layouts while repairing the original
+  // 25 industry cards, which were exported as inert <button> elements.
+  // Every destination is an actual static route; URLs stay under /industries/.
+  if (filename === 'industries/index.html') {
+    const byName = new Map(Object.entries(industrySlugByName)
+      .map(([name,slug]) => [name.toLowerCase(), slug]));
+    let linked = 0;
+    html = html.replace(/<button\s+type="button"\s+class="button-atom button-atom--(primary|secondary) bde-button__button">([\s\S]*?<span class="button-atom__text">\s*Websites for\s*([^<]*?)<\/span>[\s\S]*?)<\/button>/gi,
+      (whole, variant, inner, rawName) => {
+        const name = rawName.replace(/&amp;/gi,'&').replace(/\s*→\s*$/, '').trim();
+        const slug = byName.get(name.toLowerCase());
+        if (!slug) throw new Error('Industry hub needs a real page for ' + name);
+        linked++;
+        return '<a href="/industries/' + slug + '/" class="button-atom button-atom--' +
+          variant + ' bde-button__button" aria-label="Websites for ' + name.replace(/&/g,'&amp;') + '">' +
+          inner + '</a>';
+      });
+    if (linked !== 25) throw new Error('Expected 25 working industry hub links, created ' + linked);
+
+    const esc = (text) => String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const cards = additionalIndustryPages.map(item =>
+      '<a class="pm-more-industries__card" href="/industries/' + item.slug + '/" ' +
+      'style="--extra-ink:' + item.colors.ink + ';--extra-bg:' + item.colors.bg + ';">' +
+      '<span class="pm-more-industries__swatch" aria-hidden="true"></span>' +
+      '<strong>' + esc(item.label) + '</strong><span>Explore website design <span aria-hidden="true">→</span></span>' +
+      '</a>').join('');
+    const extra = '<section class="pm-more-industries" aria-labelledby="pm-more-industries-title">' +
+      '<div class="pm-more-industries__wrap"><p class="pm-more-industries__eyebrow">More industries, same attention to detail</p>' +
+      '<h2 id="pm-more-industries-title">More businesses we can build for.</h2>' +
+      '<p>From architectural practices to car detailing, each sector has its own design direction and a useful website plan. We only label work as client work when it really is.</p>' +
+      '<div class="pm-more-industries__grid">' + cards + '</div></div></section>';
+    const css = '<style id="pm-industry-expansion-style">' +
+      '.pm-more-industries{background:#faf4ee;color:#2e2e2e;padding:72px 20px;font-family:Arial,sans-serif}' +
+      '.pm-more-industries__wrap{max-width:1160px;margin:auto}.pm-more-industries h2{font-family:Georgia,serif;font-size:clamp(30px,4vw,48px);margin:8px 0 12px}' +
+      '.pm-more-industries p{font-size:17px;line-height:1.6;max-width:720px}' +
+      '.pm-more-industries__eyebrow{font-size:11px!important;letter-spacing:.17em;text-transform:uppercase;font-weight:700}' +
+      '.pm-more-industries__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:33px}' +
+      '.pm-more-industries__card{background:var(--extra-bg);color:var(--extra-ink);padding:23px;text-decoration:none;display:flex;flex-direction:column;gap:12px;min-height:145px;transition:transform .18s ease}' +
+      '.pm-more-industries__card:hover{transform:translateY(-3px)}.pm-more-industries__card strong{font-size:20px}' +
+      '.pm-more-industries__card>span:last-child{font-size:12px;font-weight:700}.pm-more-industries__swatch{width:45px;height:5px;background:var(--extra-ink)}' +
+      '@media(max-width:800px){.pm-more-industries__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}' +
+      '@media(max-width:520px){.pm-more-industries__grid{grid-template-columns:1fr}.pm-more-industries{padding:42px 15px}}' +
+      '</style>';
+    html = html.replace('</head>', css + '</head>');
+    html = html.replace('<footer class="pm-site-footer"', extra + '<footer class="pm-site-footer"');
+  }
+
+  // The homepage already advertises eight industries, but its titles were
+  // plain text. Make them discoverable links without moving or restyling cards.
+  if (filename === 'index.html') {
+    const byName = new Map(Object.entries(industrySlugByName)
+      .map(([name,slug]) => [name.toLowerCase(), slug]));
+    let linked = 0;
+    html = html.replace(/<h3 class="ee-imagebox-title bde-h3">([^<]+)<\/h3>/gi, (match,title) => {
+      const slug = byName.get(title.trim().toLowerCase());
+      if (!slug) return match;
+      linked++;
+      return '<h3 class="ee-imagebox-title bde-h3"><a class="pm-home-industry-link" href="/industries/' +
+        slug + '/">' + title + '</a></h3>';
+    });
+    if (linked !== 8) throw new Error('Expected eight homepage industry links, found ' + linked);
+    html = html.replace('</head>', '<style id="pm-home-industry-links-style">' +
+      '.pm-home-industry-link{color:inherit!important;text-decoration:none!important}' +
+      '.pm-home-industry-link:hover,.pm-home-industry-link:focus-visible{text-decoration:underline!important;text-underline-offset:4px}' +
+      '</style></head>');
+  }
+
+  // Publish precise portfolio associations on the three legacy industry pages.
+  // Charley Hayes is wellness design, NOT a verified physiotherapy/clinic client.
+  const legacyIndustryExamples = {
+    'industries/accountants/index.html': [
+      'A tailored accountancy example is not yet in our published portfolio. In the meantime, explore our verified work rather than an invented client.',
+      '/our-work/', 'Explore our portfolio'
+    ],
+    'industries/physiotherapists/index.html': [
+      'Related wellness website design: Charley Hayes SMR. This is archived design work, not a claim that the business was a physiotherapy clinic.',
+      '/our-work/charley-hayes-smr/', 'View Charley Hayes project'
+    ],
+    'industries/private-clinics/index.html': [
+      'Related practitioner-led wellness design: Charley Hayes SMR. This is archived work, not a completed private-clinic client case study.',
+      '/our-work/charley-hayes-smr/', 'View related work'
+    ]
+  };
+  if (legacyIndustryExamples[filename]) {
+    const [copy,url,label] = legacyIndustryExamples[filename];
+    const note = '<section class="pm-legacy-industry-example" aria-label="Relevant example work">' +
+      '<div><p>EXAMPLE WEBSITES / PORTFOLIO</p><h2>Explore a related project.</h2>' +
+      '<p>' + copy + '</p><a href="' + url + '">' + label + ' <span aria-hidden="true">→</span></a></div></section>';
+    const css = '<style id="pm-legacy-industry-example-css">' +
+      '.pm-legacy-industry-example{background:#faf4ee;color:#2e2e2e;padding:62px 20px}' +
+      '.pm-legacy-industry-example>div{max-width:1040px;margin:auto}' +
+      '.pm-legacy-industry-example h2{font:500 clamp(28px,4vw,44px)/1.2 Georgia,serif;margin:15px 0}' +
+      '.pm-legacy-industry-example p{font:400 18px/1.6 Arial,sans-serif;max-width:730px}' +
+      '.pm-legacy-industry-example p:first-child{font-size:11px;letter-spacing:.15em;font-weight:700}' +
+      '.pm-legacy-industry-example a{color:#264a40;font-weight:700;text-underline-offset:4px}' +
+      '</style>';
+    html=html.replace('</head>',css+'</head>');
+    html=html.replace('<footer class="pm-site-footer"',note+'<footer class="pm-site-footer"');
+  }
+
+  // Clearer navigation label; all existing URLs, menu structure and styles stay.
+  html = html.replace(headerPattern, header => header.replace(
+    /(<span class="breakdance-dropdown-link__text">\s*)Industries(\s*<\/span>)/gi,
+    '$1Websites by Industry$2'));
 
   // The header logo should never be deferred behind other lazy images.
   html = html.replace(/(<header\b[\s\S]*?<img\b[^>]*class="breakdance-image-object"[^>]*?)loading="lazy"/i,
