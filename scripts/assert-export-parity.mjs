@@ -25,7 +25,7 @@ for (const route of routes) {
   ).replace(
     /<style id="pm-roofing-story-css">[\s\S]*?<\/style>\s*<section class="pm-roofing-story[\s\S]*?<\/section>/,
     ''
-  );
+  ).replace(/[\u{1F300}-\u{1FAFF}\u2600-\u26FF\u2700-\u27BF]\uFE0F?/gu, '');
   if (normalize(standaloneHtml) !== normalize(newHtml)) {
     const older = normalize(standaloneHtml), newer = normalize(newHtml);
     let diff = 0;
