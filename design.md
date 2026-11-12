@@ -144,3 +144,7 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Initial confirmed mappings: `/industries/accountants/` → `https://easycloudaccounting.pages.dev/`; `/industries/private-clinics/` → `https://ioana-aesthetics-london.pages.dev/`.
 - Future pages based on `src/pages/industries/[slug].astro` can supply `industry.demo = { name, url }` in the industry data. For legacy exported industry pages, extend the shared hero-demo config in `src/lib/standalone.mjs`.
 - Pricing and two shortcut links in the Our Work mega-menu must align as three consistent compact actions. Pricing remains visually differentiated but must not be a giant standalone white block.
+
+## Full-width industry hero alignment — 12 November 2026
+- New Astro industry pages must use a **full-bleed first hero** spanning the viewport width, not a rounded/inset card inside a narrow editorial wrapper. Use a two-column desktop composition and stacked mobile layout, matching the impact of the original accountant/clinic/physiotherapist industry designs.
+- Keep their individual sector palettes, typography and actual images or verified demo previews. Reserve the constrained max-width layout for sections below the hero. Prevent horizontal overflow at mobile widths.
