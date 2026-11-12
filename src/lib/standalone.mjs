@@ -115,6 +115,15 @@ export function cleanPageHtml(originalHtml, filename) {
   html = html.replaceAll('/website-design/packages/', '/pricing/');
   html = html.replace(/(<span class="breakdance-dropdown-link__text">)\s*Packages(?=\s*<\/span>)/gi,'$1Pricing');
 
+  // Sitewide presentation rule: no visible breadcrumb trails.
+  // Keep normal navigation, links, search metadata and headings unchanged.
+  const noBreadcrumbCss = '<style id="pm-no-breadcrumbs">' +
+    'nav[aria-label="Breadcrumb"],nav[aria-label="Breadcrumbs"],' +
+    '.rank-math-breadcrumb,.breadcrumbs,.breadcrumb,.breadcrumb-trail,' +
+    '.woocommerce-breadcrumb,.pm-sector__crumb{display:none!important}' +
+    '</style>';
+  html = html.replace('</head>', noBreadcrumbCss + '</head>');
+
   // The live Astro site does not need WordPress's exported editor metadata,
   // emoji/plugin styles, or its obsolete XML-RPC/RSD discovery links.
   html = html.replace(/<style\b[^>]*id=["'](?:wp-img-auto-sizes-contain-inline-css|wp-emoji-styles-inline-css|wp-block-library-inline-css|classic-theme-styles-inline-css)["'][^>]*>[\s\S]*?<\/style>/gi, '');
