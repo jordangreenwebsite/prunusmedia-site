@@ -206,20 +206,95 @@ export function cleanPageHtml(originalHtml, filename) {
   const menuIndustryCount = (html.match(/<a href="\/industries\/[a-z-]+\/">Websites for /g) || []).length;
   if (menuIndustryCount !== 37) throw new Error('Expected 37 industry menu links; found ' + menuIndustryCount + ' on ' + filename);
   const industryMenuCss = `<style id="pm-industry-menu-styles">
-  .bde-menu-dropdown-27-153 .breakdance-dropdown-body{max-height:min(72vh,680px);overflow-y:auto;overscroll-behavior:contain}
-  .bde-menu-dropdown-27-153 .breakdance-dropdown-floater{width:min(900px,calc(100vw - 36px));max-width:calc(100vw - 36px)}
-  .bde-menu-dropdown-27-153 .breakdance-dropdown-column{width:100%;max-width:100%;flex-basis:100%}
-  .bde-menu-dropdown-27-153 .breakdance-dropdown-links{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 24px!important;padding:12px!important;max-width:100%}
-  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-group{display:block!important;min-width:0;margin:0!important;padding:0!important}
-  .pm-industry-menu-heading{display:block;color:#e8c778;font:700 12px/1.45 "Space Grotesk",Arial,sans-serif;letter-spacing:.04em;margin:0 0 9px}
+  /* Keep the wide industry menu inside the viewport rather than expanding right
+     from the Our Work trigger. Make all groups accessible by scrolling. */
+  .bde-menu-dropdown-27-153{position:relative}
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-floater{
+    left:auto!important;right:0!important;transform:none!important;
+    width:min(820px,calc(100vw - 40px))!important;
+    min-width:0!important;max-width:calc(100vw - 40px)!important;
+    box-sizing:border-box
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-body{
+    width:100%!important;min-width:0!important;box-sizing:border-box;
+    max-height:min(72vh,640px);overflow:auto!important;
+    overscroll-behavior:contain
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-section,
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-columns,
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-column{
+    width:100%!important;min-width:0!important;max-width:100%!important;
+    box-sizing:border-box
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links{
+    display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:18px 18px!important;margin:0!important;padding:16px!important;
+    width:100%!important;max-width:100%!important;box-sizing:border-box
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3){
+    grid-row:1!important;min-width:0!important;margin:0!important;
+    padding:0!important;list-style:none
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(1){grid-column:1}
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(2){grid-column:2}
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(3){grid-column:3}
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3) a{
+    display:block!important;min-width:0!important;width:100%!important;
+    background:#414141!important;border:1px solid #626262!important;
+    border-radius:5px!important;padding:10px 12px!important;
+    color:#f8e8c3!important;font:600 13px/1.35 "Space Grotesk",Arial,sans-serif!important;
+    text-decoration:none!important;text-align:center;box-sizing:border-box
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3) a:hover,
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3) a:focus-visible{
+    background:#555!important;outline:2px solid #e8c778;outline-offset:1px
+  }
+  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-group{
+    display:block!important;min-width:0!important;max-width:100%;
+    padding:0!important;margin:0!important;list-style:none
+  }
+  .pm-industry-menu-heading{display:block;color:#e8c778;
+    font:700 12px/1.45 "Space Grotesk",Arial,sans-serif;
+    letter-spacing:.035em;margin:0 0 8px}
   .pm-industry-menu-group ul{list-style:none;margin:0;padding:0}
   .pm-industry-menu-group li{list-style:none;margin:0}
-  .pm-industry-menu-group a,.pm-industry-menu-quick a{display:block;padding:6px 4px!important;color:#f7f2ec!important;text-decoration:none;font:500 13px/1.4 "Space Grotesk",Arial,sans-serif;white-space:normal}
-  .pm-industry-menu-group a:hover,.pm-industry-menu-group a:focus-visible,.pm-industry-menu-quick a:hover,.pm-industry-menu-quick a:focus-visible{color:#e8c778!important;text-decoration:underline}
-  .bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-quick{grid-column:1/-1;display:flex!important;flex-wrap:wrap;gap:8px 22px;padding:0 0 13px!important;margin:0!important;border-bottom:1px solid #ffffff40}
-  .pm-industry-menu-quick a{font-weight:700}
-  @media(max-width:780px){.bde-menu-dropdown-27-153 .breakdance-dropdown-links{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px!important}}
-  @media(max-width:560px){.bde-menu-dropdown-27-153 .breakdance-dropdown-floater{width:100%;max-width:100%}.bde-menu-dropdown-27-153 .breakdance-dropdown-body{max-height:65vh}.bde-menu-dropdown-27-153 .breakdance-dropdown-links{display:block!important;padding:8px!important}.bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-group{margin:0 0 16px!important}.bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-quick{display:flex!important}.pm-industry-menu-group a{padding:9px 4px!important}}
+  .pm-industry-menu-group a{
+    display:block;padding:6px 2px!important;color:#f7f2ec!important;
+    text-decoration:none;font:500 12.5px/1.4 "Space Grotesk",Arial,sans-serif;
+    white-space:normal!important;overflow-wrap:anywhere
+  }
+  .pm-industry-menu-group a:hover,.pm-industry-menu-group a:focus-visible{
+    color:#e8c778!important;text-decoration:underline
+  }
+  @media(max-width:780px){
+    .bde-menu-dropdown-27-153 .breakdance-dropdown-floater{
+      right:0!important;width:min(600px,calc(100vw - 24px))!important;
+      max-width:calc(100vw - 24px)!important
+    }
+    .bde-menu-dropdown-27-153 .breakdance-dropdown-links{
+      grid-template-columns:repeat(2,minmax(0,1fr));gap:16px!important
+    }
+    .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3){
+      grid-row:auto!important;grid-column:auto!important
+    }
+  }
+  @media(max-width:560px){
+    .bde-menu-dropdown-27-153 .breakdance-dropdown-floater{
+      left:0!important;right:auto!important;width:calc(100vw - 24px)!important;
+      max-width:calc(100vw - 24px)!important
+    }
+    .bde-menu-dropdown-27-153 .breakdance-dropdown-body{max-height:65dvh}
+    .bde-menu-dropdown-27-153 .breakdance-dropdown-links{
+      display:block!important;padding:12px!important
+    }
+    .bde-menu-dropdown-27-153 .breakdance-dropdown-links>li:nth-child(-n+3){
+      display:block!important;margin-bottom:8px!important
+    }
+    .bde-menu-dropdown-27-153 .breakdance-dropdown-links>.pm-industry-menu-group{
+      margin:20px 0!important
+    }
+    .pm-industry-menu-group a{padding:10px 3px!important;font-size:14px}
+  }
   </style>`;
   html = html.replace('</head>', industryMenuCss + '</head>');
 
