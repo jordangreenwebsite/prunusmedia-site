@@ -366,7 +366,9 @@ try {
     viewport:{width:1280,height:780},reducedMotion:'no-preference'
   });
   const motionPage = await motion.newPage();
-  for (const route of ['/', '/industries/', '/website-design/']) {
+  // /industries/ is a native Astro page, not a Breakdance-export with legacy
+  // entrance markers. Verify migrated reveal effects only on retained exports.
+  for (const route of ['/', '/website-design/']) {
     await motionPage.goto(local + route, {waitUntil:'domcontentloaded', timeout:16000});
     const reveals = motionPage.locator('[data-prunus-reveal]');
     const count = await reveals.count();
