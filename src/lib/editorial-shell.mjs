@@ -19,6 +19,7 @@ const suffix = original.slice(footerStart);
 
 const editorialCss = String.raw`
 <style id="pm-editorial-styles">
+.pm-editorial nav[aria-label="Breadcrumb"],.pm-editorial nav[aria-label="Breadcrumbs"],.pm-editorial .breadcrumbs,.pm-editorial .breadcrumb,.pm-editorial .pm-sector__crumb{display:none!important}
 .pm-editorial{background:#FAF4EE;color:#2E2E2E;min-height:65vh;padding:160px 20px 100px}
 .pm-editorial *{box-sizing:border-box}
 .pm-editorial__wrap{width:min(100%,1120px);margin:0 auto}
