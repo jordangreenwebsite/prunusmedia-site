@@ -298,53 +298,41 @@ export function cleanPageHtml(originalHtml, filename) {
   </style>`;
   html = html.replace('</head>', industryMenuCss + '</head>');
 
-  // Show the newly built accountant demo on the existing Accountant landing page.
-  // It is a design demo, not a claim of client ownership.
+
+  // Completed sector demos appear alongside the headline, never buried near the footer.
   if (filename === 'industries/accountants/index.html') {
-    const accountancyDemo = `<section class="pm-accountancy-demo" aria-labelledby="pm-accountancy-demo-title">
-      <div class="pm-accountancy-demo__inner">
-        <div class="pm-accountancy-demo__copy">
-          <p class="pm-accountancy-demo__eyebrow">Accountancy website design / Demo project</p>
-          <h2 id="pm-accountancy-demo-title">See an accountancy website in action.</h2>
-          <p>Easy Cloud Accounting is a website demo showing how clear services, considered typography and straightforward enquiries can work together for an accountancy firm.</p>
-          <p class="pm-accountancy-demo__note">An illustrative website concept, not a commissioned client website.</p>
-          <a class="pm-accountancy-demo__button" href="https://easycloudaccounting.pages.dev/" target="_blank" rel="noopener noreferrer">Explore the Easy Cloud Accounting demo <span aria-hidden="true">↗</span></a>
-        </div>
-        <a class="pm-accountancy-demo__preview" href="https://easycloudaccounting.pages.dev/" target="_blank" rel="noopener noreferrer" aria-label="Open Easy Cloud Accounting website demo in a new tab">
-          <span class="pm-accountancy-demo__browser"><span aria-hidden="true">● ● ●</span><span>easycloudaccounting.pages.dev</span></span>
-          <span class="pm-accountancy-demo__previewbody">
-            <span class="pm-accountancy-demo__monogram">EC</span>
-            <span class="pm-accountancy-demo__preview-eyebrow">Website concept</span>
-            <strong>Easy Cloud<br>Accounting</strong>
-            <span class="pm-accountancy-demo__preview-line"></span>
-            <span class="pm-accountancy-demo__preview-footer">View the complete example website ↗</span>
-          </span>
-        </a>
-      </div>
-    </section>`;
-    const accountancyDemoStyles = `<style id="pm-accountancy-demo-styles">
-      .pm-accountancy-demo{padding:70px 22px;background:#f2f4f0;color:#233b37}
-      .pm-accountancy-demo *{box-sizing:border-box}
-      .pm-accountancy-demo__inner{width:min(1100px,100%);margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
-      .pm-accountancy-demo__eyebrow,.pm-accountancy-demo__preview-eyebrow{font:600 12px/1.5 "Space Grotesk",Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#527166}
-      .pm-accountancy-demo h2{font:500 clamp(29px,3.5vw,48px)/1.1 "Playfair Display",Georgia,serif;color:#243e38;margin:16px 0}
-      .pm-accountancy-demo__copy p:not(.pm-accountancy-demo__eyebrow){font:400 18px/1.6 "Alegreya Sans",Arial,sans-serif;max-width:520px}
-      .pm-accountancy-demo__note{font-size:15px!important;color:#587067}
-      .pm-accountancy-demo__button{display:inline-block;margin-top:18px;padding:13px 20px;background:#243e38;color:#fff!important;text-decoration:none;border-radius:4px;font:600 14px/1.4 "Space Grotesk",Arial,sans-serif}
-      .pm-accountancy-demo__button:hover{background:#42645a}
-      .pm-accountancy-demo__preview{display:block;max-width:500px;width:100%;margin:0 auto;text-decoration:none!important;box-shadow:0 18px 42px #142e2526;border-radius:8px;overflow:hidden;background:#fff}
-      .pm-accountancy-demo__browser{display:flex;gap:14px;align-items:center;padding:12px 16px;background:#e9ede8;color:#66736b;font:500 12px/1.2 Arial,sans-serif}
-      .pm-accountancy-demo__browser span:first-child{color:#9fa9a0;white-space:nowrap}
-      .pm-accountancy-demo__previewbody{display:flex;flex-direction:column;align-items:flex-start;min-height:335px;padding:36px 44px;background:linear-gradient(145deg,#f7f8f4,#e5ede7)}
-      .pm-accountancy-demo__monogram{font:600 21px/1 Georgia,serif;color:#335b51;border:1px solid #89a99c;padding:13px;letter-spacing:-.08em;margin-bottom:30px}
-      .pm-accountancy-demo__previewbody strong{font:500 clamp(28px,3vw,45px)/1.12 Georgia,serif;color:#243e38;margin:8px 0 26px}
-      .pm-accountancy-demo__preview-line{height:1px;width:100%;background:#a9bdb3}
-      .pm-accountancy-demo__preview-footer{margin-top:18px;font:600 13px/1.4 "Space Grotesk",Arial,sans-serif;color:#335b51}
-      @media(max-width:750px){.pm-accountancy-demo{padding:45px 17px}.pm-accountancy-demo__inner{grid-template-columns:1fr;gap:28px}.pm-accountancy-demo__previewbody{min-height:300px}}
-    </style>`;
-    html = html.replace('</head>', accountancyDemoStyles + '</head>');
-    if (!html.includes('</body>')) throw new Error('Accountants document missing body');
-    html = html.replace(/<section class="bde-section-26-100\\b/i, accountancyDemo + '<section class="bde-section-26-100');
+    const demoUrl = 'https://easycloudaccounting.pages.dev/';
+    const demoHero = '<div class="pm-sector-demo-hero" aria-label="Easy Cloud Accounting website demo">' +
+      '<div class="pm-sector-demo-hero__top"><span>OUR WORK · WEBSITE DEMO</span><strong>Easy Cloud Accounting</strong></div>' +
+      '<div class="pm-sector-demo-hero__window"><iframe title="Easy Cloud Accounting website preview" src="' + demoUrl +
+      '" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>' +
+      '<a href="' + demoUrl + '" target="_blank" rel="noopener noreferrer" aria-label="Open Easy Cloud Accounting demo in a new tab"></a></div>' +
+      '<a class="pm-sector-demo-hero__visit" href="' + demoUrl +
+      '" target="_blank" rel="noopener noreferrer">Explore the complete demo ↗</a>' +
+      '<p class="pm-sector-demo-hero__disclaimer">A website demo built by Prunus Media, not a commissioned client project.</p>' +
+      '</div>';
+    const heroEnd = /(<\/div>)<\/div><\/div>\s*<\/section>(?=<section class="bde-section-565-110)/;
+    if (!heroEnd.test(html)) throw new Error('Accountants hero structure changed');
+    html = html.replace(heroEnd, '$1' + demoHero + '</div></div></section>');
+    const demoCss = '<style id="pm-sector-demo-hero-styles">' +
+      '.bde-section-565-100 .section-container{max-width:1240px!important;width:min(100% - 32px,1240px)!important}' +
+      '.bde-section-565-100 .bde-columns-565-102{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:clamp(25px,4vw,55px)!important;align-items:center!important;width:100%!important}' +
+      '.bde-section-565-100 .bde-column-565-103{width:100%!important;max-width:100%!important;min-width:0}' +
+      '.bde-section-565-100 .bde-heading-565-104{font-size:clamp(2rem,3.1vw,3.65rem)!important;line-height:1.13!important}' +
+      '.pm-sector-demo-hero{box-sizing:border-box;min-width:0;width:100%;padding:12px;border:1px solid #d7dfd9;border-radius:12px;background:#f7faf7;box-shadow:0 16px 46px rgba(26,51,42,.16);color:#253d35;text-align:left}' +
+      '.pm-sector-demo-hero *{box-sizing:border-box}' +
+      '.pm-sector-demo-hero__top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;padding:7px 6px 13px;font:600 12px/1.4 "Space Grotesk",Arial,sans-serif}' +
+      '.pm-sector-demo-hero__top span{font-size:10px;letter-spacing:.1em;color:#547b68}' +
+      '.pm-sector-demo-hero__window{position:relative;width:100%;height:clamp(300px,31vw,450px);overflow:hidden;background:#e8efea;border:1px solid #d9e2db;border-radius:5px}' +
+      '.pm-sector-demo-hero__window iframe{width:200%;height:900px;max-width:none;border:0;transform:scale(.5);transform-origin:top left;pointer-events:none}' +
+      '.pm-sector-demo-hero__window>a{position:absolute;inset:0;display:block;z-index:1}' +
+      '.pm-sector-demo-hero__window>a:focus-visible{outline:4px solid #b6aa6c;outline-offset:-4px}' +
+      '.pm-sector-demo-hero__visit{display:inline-block;margin:14px 6px 2px;color:#254b3b!important;font:700 14px/1.4 "Space Grotesk",Arial,sans-serif;text-decoration:underline;text-underline-offset:4px}' +
+      '.pm-sector-demo-hero__disclaimer{font:400 12px/1.5 "Space Grotesk",Arial,sans-serif;color:#64776b;margin:9px 6px 5px}' +
+      '@media(max-width:840px){.bde-section-565-100 .bde-columns-565-102{grid-template-columns:minmax(0,1fr)!important}.pm-sector-demo-hero{max-width:620px;margin:0 auto}.pm-sector-demo-hero__window{height:clamp(290px,65vw,430px)}}' +
+      '@media(max-width:520px){.bde-section-565-100 .section-container{width:min(100% - 26px,1240px)!important}.pm-sector-demo-hero{padding:9px}.pm-sector-demo-hero__window{height:300px}}' +
+      '</style>';
+    html = html.replace('</head>', demoCss + '</head>');
   }
 
   // Replace the original exported footer on every existing route with a
