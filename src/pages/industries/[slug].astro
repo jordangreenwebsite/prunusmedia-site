@@ -42,11 +42,11 @@ const displayGroup = {
         <div class="pm-sector__demo-top"><span>{demoType[industry.demo.status] || 'WEBSITE EXAMPLE'}</span><strong>{industry.demo.name}</strong></div>
         <div class="pm-sector__demo-viewport">
           <a class="pm-sector__demo-screenshot" href={industry.demo.url} target="_blank" rel="noopener noreferrer" aria-label={'Open ' + industry.demo.name + ' website demo in a new tab'}>
-            <span class="pm-sector__demo-fallback" aria-hidden="true"><strong>{industry.demo.name}</strong><small>View the complete example website ↗</small></span>
+            <span class="pm-sector__demo-fallback" aria-hidden="true"><strong>{industry.demo.name}</strong><small>View the complete example website</small></span>
             {demoScreenshot && <img src={demoScreenshot} alt={'Screenshot preview of ' + industry.demo.name + ' website'} loading="lazy" decoding="async" />}
           </a>
         </div>
-        <a class="pm-sector__demo-link" href={industry.demo.url} target="_blank" rel="noopener noreferrer">View the website ↗</a>
+        <a class="pm-sector__demo-link" href={industry.demo.url} target="_blank" rel="noopener noreferrer">View the website</a>
         <p class="pm-sector__demo-note">{industry.demo.status === 'live' ? 'A live client website from our portfolio.' : industry.demo.status === 'owned' ? 'A live business website from our portfolio.' : industry.demo.status === 'archived' ? 'An earlier completed website, retained as archived work.' : 'A website concept, not a commissioned live client site.'}</p>
         {industry.additionalDemos?.length ? <div class="pm-sector__other-demos" aria-label="More industry website examples">
           {industry.additionalDemos.map(example => <a class="pm-sector__other-demo" href={example.url} target="_blank" rel="noopener noreferrer">
@@ -54,7 +54,7 @@ const displayGroup = {
               <span class="pm-sector__other-fallback">{example.name}</span>
               {example.screenshot && <img src={example.screenshot} alt={'Preview of ' + example.name} loading="lazy" decoding="async" />}
             </span>
-            <span class="pm-sector__other-title"><strong>{example.name}</strong><small>{example.status === 'live' ? 'Live florist website' : 'Website concept'} · View website ↗</small></span>
+            <span class="pm-sector__other-title"><strong>{example.name}</strong><small>{example.status === 'live' ? 'Live florist website' : 'Website concept'} · View website</small></span>
           </a>)}
         </div> : null}
       </div> : null}

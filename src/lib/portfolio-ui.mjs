@@ -35,7 +35,7 @@ export function projectCard(project) {
     '<p>'+escapeHtml(d.summary)+'</p>'+
     '<div class="pm-project-actions">'+
     '<a class="pm-project-view" href="/our-work/'+slug+'/">Project details <span aria-hidden="true">→</span></a>'+
-    (d.website ? '<a class="pm-project-website" href="'+escapeHtml(d.website)+'" target="_blank" rel="noopener noreferrer">Visit website <span aria-hidden="true">↗</span></a>' : '')+
+    (d.website ? '<a class="pm-project-website" href="'+escapeHtml(d.website)+'" target="_blank" rel="noopener noreferrer">Visit website</a>' : '')+
     '</div>'+
     '</div></article>';
 }

@@ -47,9 +47,9 @@ writeFileSync(path.join(dist, 'sitemap_index.xml'),
 writeFileSync(path.join(dist, 'robots.txt'),
   'User-agent: *\nDisallow: /wp-admin/\n\nSitemap: https://prunusmedia.com/sitemap_index.xml\n');
 // Visual policy: never publish decorative emoji characters, including older
-// exported WordPress content and audit-check icons. No heading or link text is
-// removed, and functional navigation arrows outside the emoji blocks remain.
-const decorativeEmoji = /[\u{1F300}-\u{1FAFF}\u2600-\u26FF\u2700-\u27BF]\uFE0F?/gu;
+// exported WordPress content, diagonal external-link arrows (which become
+// blue emoji icons on iOS), and audit-check icons. Link text remains intact.
+const decorativeEmoji = /(?:[\u{1F300}-\u{1FAFF}\u2600-\u26FF\u2700-\u27BF\u2197\u2196\u2198\u2199\u2934\u2935\u2B05\u2B06\u2B07]\uFE0F?|&#(?:x2197|8599);)/giu;
 let strippedEmoji = 0;
 function cleanRenderedTypography(folder) {
   for (const item of readdirSync(folder, { withFileTypes: true })) {

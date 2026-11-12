@@ -11,7 +11,7 @@ export const footerMarkup = String.raw`
       </div>
       <div class="pm-footer-actions">
         <a class="pm-footer-primary" href="/contact/">Let's talk about your project <span aria-hidden="true">→</span></a>
-        <a class="pm-footer-secondary" href="/seo-agency-uk/free-seo-audit/">Try our free SEO audit <span aria-hidden="true">↗</span></a>
+        <a class="pm-footer-secondary" href="/seo-agency-uk/free-seo-audit/">Try our free SEO audit</a>
       </div>
     </div>
     <div class="pm-footer-grid">
@@ -23,8 +23,8 @@ export const footerMarkup = String.raw`
         <p>Websites and SEO built for businesses that want to be <strong>found, trusted and chosen.</strong></p>
         <p class="pm-footer-geography">Based in Newent, Gloucestershire. We visit clients in person by appointment and work with businesses across the UK online.</p>
         <div class="pm-footer-social">
-          <a href="https://www.facebook.com/people/Prunusmedia/61564233269657/" target="_blank" rel="noopener noreferrer" aria-label="Prunus Media on Facebook">Facebook <span aria-hidden="true">↗</span></a>
-          <a href="https://www.instagram.com/prunus.media/" target="_blank" rel="noopener noreferrer" aria-label="Prunus Media on Instagram">Instagram <span aria-hidden="true">↗</span></a>
+          <a href="https://www.facebook.com/people/Prunusmedia/61564233269657/" target="_blank" rel="noopener noreferrer" aria-label="Prunus Media on Facebook">Facebook</a>
+          <a href="https://www.instagram.com/prunus.media/" target="_blank" rel="noopener noreferrer" aria-label="Prunus Media on Instagram">Instagram</a>
         </div>
       </div>
       <nav class="pm-footer-links" aria-label="Website design services">
@@ -54,7 +54,7 @@ export const footerMarkup = String.raw`
     </div>
     <div class="pm-footer-contact">
       <span>Have a project in mind? We'd love to hear about it. <small>Enquiries: Monday–Friday, 9am–5pm UK time.</small></span>
-      <a href="mailto:contactprunusmedia@gmail.com">contactprunusmedia@gmail.com <span aria-hidden="true">↗</span></a>
+      <a href="mailto:contactprunusmedia@gmail.com">contactprunusmedia@gmail.com</a>
     </div>
     <div class="pm-footer-bottom">
       <span>© 2026 Prunus Media. Made with purpose.</span>
