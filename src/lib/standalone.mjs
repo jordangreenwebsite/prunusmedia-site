@@ -344,7 +344,7 @@ export function cleanPageHtml(originalHtml, filename) {
     </style>`;
     html = html.replace('</head>', accountancyDemoStyles + '</head>');
     if (!html.includes('</body>')) throw new Error('Accountants document missing body');
-    html = html.replace('</body>', accountancyDemo + '</body>');
+    html = html.replace(/<section class="bde-section-26-100\\b/i, accountancyDemo + '<section class="bde-section-26-100');
   }
 
   // Replace the original exported footer on every existing route with a
