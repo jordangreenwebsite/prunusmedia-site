@@ -119,3 +119,17 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Reaffirmed prices: one-off builds from £995 / £1,795 / £2,995, standalone hosting £99/month, SEO £195/month with hosting while active, social from £99/month, Meta/Google Ads management from £50/month (ad spend separate), website support £50/hour.
 - Historical builder pricing embedded in the excluded website-design/packages HTML source is not published and must never be linked or reintroduced.
 - Verify representative pages and every dropdown on mobile and desktop; check actual logo visibility, not just the presence of image markup.
+
+
+## Industry landing pages: approved expansion, 12 November 2026
+
+- Canonical directory remains \`/industries/\`. The existing indexed \`/industries/accountants/\`, \`/industries/physiotherapists/\` and \`/industries/private-clinics/\` are unchanged, with no new redirects or URL migration. In navigation use the clearer label **Websites by Industry**.
+- The legacy directory promoted 25 sectors, but its 25 calls to action were inert buttons. The sector links must be real accessible \`<a href>\` elements. Homepage industry image-box headings must link to their actual sector pages.
+- There are 34 new Astro sector routes in \`src/pages/industries/[slug].astro\`, driven by \`src/data/industry-pages.mjs\`: all 22 formerly unlinked sectors plus 12 adjacent sectors with existing portfolio opportunities. The original three remain on their preserved exported design.
+- Preserve the established sections: industry-specific hero and palette, buyer decision, site structure, SEO, functionality, example/portfolio, FAQ and enquiry CTA. Page copy must be written for that sector, not mass-spun location copy or generic promises.
+- **Distinct palettes matter**: each sector has its own ink/background/accent design tokens; layout styles also vary by sector (quiet, clinical, warm, technical, architectural, bold). Avoid one purple gradient or a universal decorative template.
+- Portfolio examples are linked only to actual entries in \`src/content/work/\`. Labels are material: \`Live client website\`, \`Website concept\`, \`Archived client work\`, \`Related software\`, and \`Related in-house tool\` are not interchangeable. Never represent Charley Hayes SMR as a verified physiotherapy or private-clinic client, Prunus Certificates as an independent training-provider client, or Window Cleaning Calculator as a window-cleaning business website.
+- For a niche without an actual example, show an explicitly labelled in-page illustrative **concept**, plus a truthful note that a finished sector-specific example is not yet in the portfolio. Do not pass off site inspiration, a hypothetical logo, screenshots or third-party stock work as a client.
+- Prefer high-quality, fully separate website examples later where commercially useful. The current illustrative page panels are **not** complete sample websites, and should never be described as such.
+- Maintain all existing header, footer, audit Worker, contact form, mobile navigation and homepage animations. New sector links should work on desktop, keyboard and touch. Continue to validate build, canonical, sitemap and outgoing portfolio links before merging.
+- Avoid adding categories solely for keywords. Retain pages only where meaningful differentiated content and a genuine service proposition can be maintained. Review performance using Search Console, conversions and SERP evidence once indexed.
