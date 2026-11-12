@@ -4,6 +4,7 @@
  */
 import { chromium } from 'playwright';
 import { getLegacyRoutes } from '../src/lib/exported-pages.mjs';
+import { industryPages } from '../src/data/industry-pages.mjs';
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import pixelmatch from 'pixelmatch';
@@ -439,6 +440,72 @@ try {
     JSON.stringify({ inspected: visited, errors: routeErrors }, null, 2) + '\n');
   console.log('ALL-ROUTE BROWSER SWEEP ' + visited + ' legacy pages, ' + routeErrors.length + ' errors');
   if (routeErrors.length) failures.push(...routeErrors);
+
+
+  // All 37 industry pages: check hero boundaries on both desktop and mobile.
+  // The three older Breakdance routes need a separate selector from Astro routes.
+  const industryRoutes = [
+    ...['accountants','private-clinics','physiotherapists'].map(slug=>({slug,legacy:true})),
+    ...industryPages.map(({slug})=>({slug,legacy:false}))
+  ];
+  const industryFindings=[];
+  for(const width of [1440,390]){
+    const context = await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});
+    const tab = await context.newPage();
+    for(const {slug,legacy} of industryRoutes){
+      const route='/industries/'+slug+'/';
+      try{
+        const response=await tab.goto(local+route,{waitUntil:'domcontentloaded',timeout:13000});
+        if(response?.status()!==200){industryFindings.push(route+' HTTP '+response?.status());continue}
+        await tab.evaluate(()=>window.scrollTo(0,0));
+        const state=await tab.evaluate(({legacy,width})=>{
+          const hero = legacy
+            ? document.querySelector('section[class*="bde-section-"][class*="-100"]')
+            : document.querySelector('.pm-sector__hero');
+          const columns=legacy
+            ? document.querySelector('[class*="bde-columns-"][class*="-102"]')
+            : hero;
+          const left=legacy
+            ? document.querySelector('[class*="bde-column-"][class*="-103"]')
+            : document.querySelector('.pm-sector__hero-copy');
+          const right=legacy
+            ? document.querySelector('.pm-sector-demo-hero')
+            : document.querySelector('.pm-sector__demo-preview, .pm-sector__hero-visual');
+          const heading=hero?.querySelector('h1');
+          const rect=(el)=>{if(!el)return null;const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}};
+          return {hero:rect(hero),columns:rect(columns),left:rect(left),right:rect(right),
+            h1:rect(heading),headingCount:document.querySelectorAll('h1').length,
+            documentWidth:document.documentElement.scrollWidth,viewport:width,
+            textOverflow:left?Array.from(left.querySelectorAll('h1,p,.bde-text'))
+             .filter(el=>{const r=el.getBoundingClientRect(), p=left.getBoundingClientRect();return r.width>0&&(r.left<p.left-4||r.right>p.right+4)})
+             .map(el=>el.tagName+'.'+el.className).slice(0,4):[]};
+        },{legacy,width});
+        const issue=[];
+        if(!state.hero||!state.left||!state.right||!state.h1)issue.push('missing hero layout');
+        else{
+          if(state.headingCount!==1)issue.push('H1 count '+state.headingCount);
+          if(state.documentWidth>width+8)issue.push('horizontal viewport overflow '+state.documentWidth+'px');
+          if(state.left.x< -4||state.left.right>width+5)issue.push('copy outside viewport');
+          if(state.right.x< -4||state.right.right>width+5)issue.push('preview outside viewport');
+          if(state.textOverflow.length)issue.push('text overflow '+state.textOverflow.join(','));
+          if(width>=900){
+            if(state.left.right>state.right.x+9)issue.push('copy overlaps preview by '+Math.round(state.left.right-state.right.x)+'px');
+            if(state.h1.y<85)issue.push('heading obscured by sticky header');
+          }else{
+            if(state.left.bottom>state.right.y+10)issue.push('mobile columns overlap');
+          }
+        }
+        if(issue.length)industryFindings.push(slug+' '+width+'px: '+issue.join(' / '));
+        if(legacy && ['accountants','private-clinics','physiotherapists'].includes(slug)){
+          await tab.screenshot({path:path.join(output,'industry-'+slug+'-'+width+'.png'),fullPage:false,animations:'disabled',timeout:6000});
+        }
+      }catch(error){industryFindings.push(slug+' '+width+'px: '+String(error).slice(0,130))}
+    }
+    await context.close();
+  }
+  console.log('INDUSTRY LAYOUT SWEEP: '+industryRoutes.length+' pages x 2 viewports; '+industryFindings.length+' findings');
+  writeFileSync(path.join(output,'industry-layout-sweep.json'),JSON.stringify({pages:industryRoutes.length,widths:[1440,390],findings:industryFindings},null,2)+'\n');
+  if(industryFindings.length)failures.push(...industryFindings);
 
   writeFileSync(path.join(output, 'visual-metrics.json'), JSON.stringify(visualMetrics,null,2) + '\n');
   writeFileSync(path.join(output, 'readme.txt'),
