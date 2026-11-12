@@ -1,0 +1,169 @@
+---
+import EditorialLayout from '../../layouts/EditorialLayout.astro';
+import { industryPages } from '../../data/industry-pages.mjs';
+
+const groups = [
+  {
+    key: 'professional',
+    heading: 'Professional & Financial',
+    summary: 'Credible, straightforward websites for businesses where expertise and trust matter.',
+    original: [
+      { slug: 'accountants', label: 'Accountants' },
+      { slug: 'private-clinics', label: 'Private Clinics' },
+      { slug: 'physiotherapists', label: 'Physiotherapists' }
+    ]
+  },
+  {
+    key: 'property',
+    heading: 'Property, Care & Commercial Services',
+    summary: 'Help customers understand your services, coverage and the next step.',
+    original: []
+  },
+  {
+    key: 'contractors',
+    heading: 'Trades & Contractors',
+    summary: 'Show the quality of your work, your capability and where you operate.',
+    original: []
+  },
+  {
+    key: 'overlooked',
+    heading: 'Specialist Businesses',
+    summary: 'Clear explanations and useful enquiry journeys for practical, niche services.',
+    original: []
+  },
+  {
+    key: 'additional',
+    heading: 'More Industries',
+    summary: 'From creative businesses to local services, every website starts with its customers.',
+    original: []
+  }
+];
+const industries = groups.map(group => ({
+  ...group,
+  pages: [...group.original, ...industryPages.filter(page => page.group === group.key)]
+}));
+const count = industries.reduce((sum,group) => sum + group.pages.length, 0);
+if (count !== 37) throw new Error('Industry directory should contain 37 routes; found ' + count);
+---
+<EditorialLayout
+  title="Website Design by Industry"
+  description="Explore 37 industry-specific website design services from Prunus Media. Websites for accountants, roofers, florists, clinics, local trades and more."
+  pathname="/industries/"
+>
+  <div class="pm-industry-directory">
+    <section class="pm-industry-directory__hero" aria-labelledby="industry-directory-title">
+      <div class="pm-industry-directory__intro">
+        <p class="pm-industry-directory__eyebrow">Prunus Media / Websites by Industry</p>
+        <h1 id="industry-directory-title">Website design built around <em>your industry.</em></h1>
+        <p class="pm-industry-directory__lead">An accountant, a roofing contractor and a florist need very different websites. We design around the work you do, what customers search for and what helps them get in touch.</p>
+        <div class="pm-industry-directory__actions">
+          <a class="pm-industry-directory__cta" href="/contact/">Talk about your website</a>
+          <a class="pm-industry-directory__quiet-link" href="#browse-industries">Browse industries</a>
+        </div>
+      </div>
+      <aside class="pm-industry-directory__feature" aria-label="Explore website examples">
+        <p class="pm-industry-directory__feature-eyebrow">Find the right fit</p>
+        <h2>Real examples. Different businesses.</h2>
+        <p>Each industry page explains what a useful website could include. Where we've built an example, you can explore the actual website.</p>
+        <div class="pm-industry-directory__feature-links">
+          <a href="/industries/accountants/"><span>Accountancy websites</span><span aria-hidden="true">→</span></a>
+          <a href="/industries/roofing/"><span>Roofing websites</span><span aria-hidden="true">→</span></a>
+          <a href="/industries/florists/"><span>Florist websites</span><span aria-hidden="true">→</span></a>
+        </div>
+      </aside>
+    </section>
+
+    <div id="browse-industries" class="pm-industry-directory__browse">
+      <div class="pm-industry-directory__browse-intro">
+        <p class="pm-industry-directory__eyebrow">Explore the industries we serve</p>
+        <h2>Find your business</h2>
+        <p>Choose an industry to see relevant website features, SEO considerations and work examples.</p>
+      </div>
+      {industries.map((group) => (
+        <section class="pm-industry-directory__group" aria-labelledby={'group-' + group.key}>
+          <header class="pm-industry-directory__group-top">
+            <div>
+              <h3 id={'group-' + group.key}>{group.heading}</h3>
+              <p>{group.summary}</p>
+            </div>
+          </header>
+          <div class="pm-industry-directory__links">
+            {group.pages.map(page => (
+              <a class="pm-industry-directory__link" href={'/industries/' + page.slug + '/'}>
+                <span>Websites for {page.label}</span>
+                <span aria-hidden="true">→</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <aside class="pm-industry-directory__end">
+      <div>
+        <h2>Don't see your industry?</h2>
+        <p>We build bespoke websites, so this is a starting point, not a limit on who we work with.</p>
+      </div>
+      <a href="/contact/">Discuss your website</a>
+    </aside>
+  </div>
+</EditorialLayout>
+
+<style is:global>
+  .pm-editorial:has(.pm-industry-directory){padding:118px 20px 82px!important;background:#faf4ee}
+  .pm-editorial:has(.pm-industry-directory) .pm-editorial__wrap{width:min(100%,1260px);max-width:1260px}
+  .pm-industry-directory,.pm-industry-directory *{box-sizing:border-box}
+  .pm-industry-directory{color:#2e3932;font-family:"Alegreya Sans",Arial,sans-serif}
+  .pm-industry-directory__hero{display:grid;grid-template-columns:minmax(0,1.16fr) minmax(0,.84fr);gap:clamp(28px,5vw,78px);align-items:center;padding:clamp(24px,5vw,70px) clamp(23px,5vw,70px);background:linear-gradient(115deg,#eef1e9 0%,#f8f5ef 70%,#f6e8e4 100%);border:1px solid #e0e4d9;border-radius:9px}
+  .pm-industry-directory__intro{min-width:0}
+  .pm-industry-directory__eyebrow{margin:0 0 18px!important;font:600 11px/1.5 "Space Grotesk",Arial,sans-serif!important;text-transform:uppercase;letter-spacing:.13em;color:#567264}
+  .pm-industry-directory__intro h1{font:500 clamp(2.7rem,4.4vw,4.9rem)/1.06 "Playfair Display",Georgia,serif!important;letter-spacing:-.035em;color:#243f36;margin:0 0 25px!important;max-width:680px;overflow-wrap:normal}
+  .pm-industry-directory__intro h1 em{font-weight:400;color:#617968}
+  .pm-industry-directory__lead{max-width:590px;font:400 clamp(1.15rem,1.65vw,1.42rem)/1.5 "Alegreya Sans",Arial,sans-serif!important;color:#405147;margin:0 0 28px!important}
+  .pm-industry-directory__actions{display:flex;gap:14px 23px;align-items:center;flex-wrap:wrap}
+  .pm-industry-directory__cta,.pm-industry-directory__end a{display:inline-flex;justify-content:center;align-items:center;background:#29473d;color:#fff!important;text-decoration:none;border-radius:5px;padding:13px 20px;min-height:46px;font:600 13px/1.4 "Space Grotesk",Arial,sans-serif;transition:background .15s ease}
+  .pm-industry-directory__cta:hover,.pm-industry-directory__end a:hover{background:#466b5c;color:#fff!important}
+  .pm-industry-directory__quiet-link{font:600 13px/1.5 "Space Grotesk",Arial,sans-serif;color:#28473d;text-underline-offset:4px}
+  .pm-industry-directory__feature{min-width:0;background:#fffaf5;border:1px solid #d6dfd5;border-radius:7px;padding:clamp(22px,3vw,38px);box-shadow:0 20px 50px #2d453b0b}
+  .pm-industry-directory__feature-eyebrow{margin:0 0 12px!important;color:#6c8575;font:600 11px/1.4 "Space Grotesk",Arial,sans-serif!important;letter-spacing:.12em;text-transform:uppercase}
+  .pm-industry-directory__feature h2{font:500 clamp(1.6rem,2.3vw,2.6rem)/1.13 "Playfair Display",Georgia,serif!important;color:#29473d;margin:0 0 16px!important}
+  .pm-industry-directory__feature p:not(.pm-industry-directory__feature-eyebrow){font:400 18px/1.45 "Alegreya Sans",Arial,sans-serif!important;color:#4b5b50;margin:0 0 20px!important}
+  .pm-industry-directory__feature-links{display:flex;flex-direction:column;gap:0}
+  .pm-industry-directory__feature-links a{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 2px;border-top:1px solid #dbe2da;color:#29473d;text-decoration:none;font:600 13px/1.4 "Space Grotesk",Arial,sans-serif}
+  .pm-industry-directory__feature-links a:hover{color:#6d896d}
+  .pm-industry-directory__browse{scroll-margin-top:125px;padding-top:75px}
+  .pm-industry-directory__browse-intro{max-width:700px;margin-bottom:42px}
+  .pm-industry-directory__browse-intro h2{font:500 clamp(2rem,3.2vw,3.3rem)/1.1 "Playfair Display",Georgia,serif!important;color:#263d34;margin:0 0 12px!important}
+  .pm-industry-directory__browse-intro p:not(.pm-industry-directory__eyebrow){font:400 19px/1.5 "Alegreya Sans",Arial,sans-serif!important;color:#526055;margin:0!important}
+  .pm-industry-directory__group{padding:28px 0 32px;border-top:1px solid #d4dcd2}
+  .pm-industry-directory__group-top h3{font:600 clamp(1.25rem,1.9vw,1.55rem)/1.3 "Space Grotesk",Arial,sans-serif!important;color:#2f483c;margin:0 0 8px!important}
+  .pm-industry-directory__group-top p{font:400 17px/1.4 "Alegreya Sans",Arial,sans-serif!important;color:#607064;margin:0 0 19px!important}
+  .pm-industry-directory__links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .pm-industry-directory__link{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:57px;min-width:0;background:#fffdf9;border:1px solid #d9dfd5;border-radius:5px;padding:14px 16px;text-decoration:none;color:#29483c!important;font:600 13px/1.4 "Space Grotesk",Arial,sans-serif;transition:background .15s ease,border-color .15s ease}
+  .pm-industry-directory__link span:first-child{min-width:0;overflow-wrap:break-word}
+  .pm-industry-directory__link span:last-child{color:#648372;flex-shrink:0}
+  .pm-industry-directory__link:hover,.pm-industry-directory__link:focus-visible{background:#edf3ec;border-color:#9aaa9c;color:#234438!important}
+  .pm-industry-directory__end{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:55px;padding:31px clamp(22px,4vw,48px);border-radius:7px;background:#e5ede4}
+  .pm-industry-directory__end h2{font:500 clamp(1.5rem,2vw,2.2rem)/1.2 "Playfair Display",Georgia,serif!important;color:#2b483c;margin:0 0 8px!important}
+  .pm-industry-directory__end p{font:400 18px/1.4 "Alegreya Sans",Arial,sans-serif!important;color:#445b4e;margin:0!important}
+  .pm-industry-directory__end a{flex-shrink:0}
+  @media(max-width:980px){
+    .pm-industry-directory__hero{grid-template-columns:minmax(0,1fr);gap:30px}
+    .pm-industry-directory__links{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media(max-width:650px){
+    .pm-editorial:has(.pm-industry-directory){padding:115px 14px 55px!important}
+    .pm-industry-directory__hero{padding:29px 19px;gap:26px}
+    .pm-industry-directory__intro h1{font-size:clamp(2.45rem,10.2vw,3.5rem)!important}
+    .pm-industry-directory__actions{align-items:stretch;gap:15px}
+    .pm-industry-directory__cta{width:100%}
+    .pm-industry-directory__feature{padding:22px}
+    .pm-industry-directory__browse{padding-top:55px;scroll-margin-top:110px}
+    .pm-industry-directory__browse-intro{margin-bottom:30px}
+    .pm-industry-directory__group{padding:23px 0 28px}
+    .pm-industry-directory__links{grid-template-columns:minmax(0,1fr);gap:9px}
+    .pm-industry-directory__link{min-height:54px;padding:13px 15px}
+    .pm-industry-directory__end{flex-direction:column;align-items:stretch;padding:26px 21px;margin-top:35px;gap:18px}
+    .pm-industry-directory__end a{width:100%}
+  }
+</style>

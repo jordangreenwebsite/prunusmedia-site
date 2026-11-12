@@ -43,6 +43,8 @@ try {
     { route: '/', label: 'homepage-mobile', width: 390, height: 844, mobile: true },
     { route: '/seo-agency-uk/free-seo-audit/', label: 'auditor-desktop', width: 1440, height: 900 },
     { route: '/contact/', label: 'contact-mobile', width: 390, height: 844, mobile: true },
+    { route: '/industries/', label: 'industries-directory-desktop', width: 1440, height: 900 },
+    { route: '/industries/', label: 'industries-directory-mobile', width: 390, height: 844, mobile: true },
     { route: '/industries/accountants/', label: 'accountants-desktop', width: 1440, height: 900 },
     { route: '/industries/private-clinics/', label: 'clinics-desktop', width: 1440, height: 900 },
     { route: '/blog/', label: 'blog-desktop', width: 1440, height: 900 },
@@ -364,7 +366,9 @@ try {
     viewport:{width:1280,height:780},reducedMotion:'no-preference'
   });
   const motionPage = await motion.newPage();
-  for (const route of ['/', '/industries/', '/website-design/']) {
+  // /industries/ is a native Astro page, not a Breakdance-export with legacy
+  // entrance markers. Verify migrated reveal effects only on retained exports.
+  for (const route of ['/', '/website-design/']) {
     await motionPage.goto(local + route, {waitUntil:'domcontentloaded', timeout:16000});
     const reveals = motionPage.locator('[data-prunus-reveal]');
     const count = await reveals.count();
@@ -460,16 +464,16 @@ try {
         await tab.evaluate(()=>window.scrollTo(0,0));
         const state=await tab.evaluate(({legacy,width})=>{
           const hero = legacy
-            ? document.querySelector('section[class*="bde-section-"][class*="-100"]')
+            ? document.querySelector('.pm-legacy-industry-hero')
             : document.querySelector('.pm-sector__hero');
           const columns=legacy
-            ? document.querySelector('[class*="bde-columns-"][class*="-102"]')
+            ? document.querySelector('.pm-legacy-industry-hero__inner')
             : hero;
           const left=legacy
-            ? document.querySelector('[class*="bde-column-"][class*="-103"]')
+            ? document.querySelector('.pm-legacy-industry-hero__copy')
             : document.querySelector('.pm-sector__hero-copy');
           const right=legacy
-            ? document.querySelector('.pm-sector-demo-hero')
+            ? document.querySelector('.pm-legacy-industry-hero__example')
             : document.querySelector('.pm-sector__demo-preview, .pm-sector__hero-visual');
           const heading=hero?.querySelector('h1');
           const rect=(el)=>{if(!el)return null;const r=el.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width,height:r.height}};
@@ -503,9 +507,99 @@ try {
     }
     await context.close();
   }
+  // The /industries/ directory is now native Astro, so the original
+  // 25-card Breakdance export must not appear at any screen width.
+  for(const width of [1440,768,390,320]){
+    const ctx=await browser.newContext({viewport:{width,height:840},reducedMotion:'reduce'});
+    const tab=await ctx.newPage();
+    try{
+      const response=await tab.goto(local+'/industries/',{waitUntil:'domcontentloaded',timeout:15000});
+      if(response?.status()!==200)industryFindings.push('directory '+width+'px: HTTP '+response?.status());
+      const result=await tab.evaluate(()=>{
+        const host=document.querySelector('.pm-industry-directory');
+        const links=[...document.querySelectorAll('.pm-industry-directory__link')];
+        const rect=(el)=>el?.getBoundingClientRect();
+        const hero=rect(document.querySelector('.pm-industry-directory__hero'));
+        const h1=rect(document.querySelector('.pm-industry-directory__hero h1'));
+        const card=rect(links[0]);
+        const bad=links.filter(link=>{
+          const r=link.getBoundingClientRect();
+          return r.width<200 || r.height>120 || r.left < -3 || r.right > window.innerWidth + 3;
+        });
+        return {found:!!host,linkCount:links.length,headingCount:document.querySelectorAll('h1').length,
+          docWidth:document.documentElement.scrollWidth,viewport:window.innerWidth,
+          cardWidth:card?.width,heroTop:hero?.top,h1Top:h1?.top,badLinks:bad.length,
+          legacy:!!document.querySelector('.bde-section-522-100')};
+      });
+      if(!result.found||result.legacy)industryFindings.push('directory '+width+'px: legacy directory still visible');
+      if(result.linkCount!==37)industryFindings.push('directory '+width+'px: expected 37 links, got '+result.linkCount);
+      if(result.headingCount!==1)industryFindings.push('directory '+width+'px: H1 count '+result.headingCount);
+      if(result.docWidth>width+8)industryFindings.push('directory '+width+'px: horizontal page overflow '+result.docWidth);
+      if(result.badLinks)industryFindings.push('directory '+width+'px: '+result.badLinks+' cards too narrow, tall or clipped');
+      if(result.h1Top<80)industryFindings.push('directory '+width+'px: H1 under header');
+      await tab.screenshot({path:path.join(output,'industry-directory-'+width+'.png'),fullPage:true,animations:'disabled'});
+    }catch(e){industryFindings.push('directory '+width+'px: '+String(e))}
+    await ctx.close();
+  }
   console.log('INDUSTRY LAYOUT SWEEP: '+industryRoutes.length+' pages x 2 viewports; '+industryFindings.length+' findings');
   writeFileSync(path.join(output,'industry-layout-sweep.json'),JSON.stringify({pages:industryRoutes.length,widths:[1440,390],findings:industryFindings},null,2)+'\n');
   if(industryFindings.length)failures.push(...industryFindings);
+
+
+  // Beyond the 37 sector pages, inspect ALL other public Astro/legacy routes
+  // at mobile and desktop widths. The previous industry-only test missed
+  // overflow on shared pages, so treat this as a permanent regression guard.
+  const allPublicRoutes=[];
+  const scanRendered=(folder,parts=[])=>{
+    for(const entry of readdirSync(folder,{withFileTypes:true})){
+      if(['wp-content','wp-includes','assets','_astro'].includes(entry.name))continue;
+      const next=path.join(folder,entry.name);
+      if(entry.isDirectory())scanRendered(next,[...parts,entry.name]);
+      else if(entry.isFile()&&entry.name==='index.html'){
+        const route='/' + (parts.length?parts.join('/')+'/':'');
+        if(!/^\/(?:page|author|qs|client-login)\//.test(route)&&!route.startsWith('/industries/')){
+          allPublicRoutes.push(route);
+        }
+      }
+    }
+  };
+  scanRendered(path.join(process.cwd(),'dist'));
+  const otherPageFindings=[];
+  for(const width of [390,1440]){
+    const ctx=await browser.newContext({viewport:{width,height:840},reducedMotion:'reduce'});
+    const tab=await ctx.newPage();
+    for(const route of allPublicRoutes){
+      try{
+        const response=await tab.goto(local+route,{waitUntil:'domcontentloaded',timeout:12000});
+        if(response?.status()!==200){
+          otherPageFindings.push(route+' '+width+'px: HTTP '+response?.status());continue;
+        }
+        const state=await tab.evaluate(()=>{
+          const viewport=window.innerWidth;
+          const h1=[...document.querySelectorAll('h1')].filter(el=>{
+            const r=el.getBoundingClientRect();
+            const cs=getComputedStyle(el);
+            return r.width>0&&r.height>0&&cs.display!=='none'&&cs.visibility!=='hidden';
+          });
+          const headingRects=h1.map(el=>{
+            const r=el.getBoundingClientRect();
+            return {left:r.left,right:r.right,width:r.width};
+          });
+          return {viewport,documentWidth:document.documentElement.scrollWidth,
+            visibleH1:h1.length,headingRects};
+        });
+        if(state.documentWidth>width+12)otherPageFindings.push(route+' '+width+'px: horizontal page overflow '+state.documentWidth);
+        if(state.headingRects.some(r=>r.left< -15 || r.right>width+15)){
+          otherPageFindings.push(route+' '+width+'px: main heading outside viewport');
+        }
+      }catch(error){otherPageFindings.push(route+' '+width+'px: '+String(error).slice(0,135))}
+    }
+    await ctx.close();
+  }
+  console.log('SITEWIDE RESPONSIVE SWEEP: '+allPublicRoutes.length+' additional routes x 2 widths; '+otherPageFindings.length+' findings');
+  writeFileSync(path.join(output,'sitewide-responsive-sweep.json'),
+    JSON.stringify({routes:allPublicRoutes.length,widths:[390,1440],findings:otherPageFindings},null,2)+'\n');
+  if(otherPageFindings.length)failures.push(...otherPageFindings);
 
   writeFileSync(path.join(output, 'visual-metrics.json'), JSON.stringify(visualMetrics,null,2) + '\n');
   writeFileSync(path.join(output, 'readme.txt'),

@@ -194,3 +194,13 @@ Do not inspect or change historical `prunusmedia` / `prunus-media` repositories 
 - Keep benefits and distinctive brand copy in the introduction or supplementary visual treatments instead of losing the site's character. Never force keyword stuffing, claim guaranteed rankings, invent search volume or treat heading changes alone as proof of traffic growth.
 - Base future target keyword changes on verified Search Console queries, impressions, click-through rates, local search results and lead conversion data. Review indexing/canonical status and internal links as well as on-page copy.
 - Source of truth for the 34 Astro industry page headings is `src/data/industry-pages.mjs` via `seoH1` and `seoH2` plus the semantic `<h1>` and `<h2>` elements in `src/pages/industries/[slug].astro`. The three legacy industry routes `/industries/accountants/`, `/industries/private-clinics/` and `/industries/physiotherapists/` are updated in their original source HTML.
+
+
+## Industry directory and original hero mobile repairs — 12 November 2026
+
+- The public `/industries/` directory is **native Astro** in `src/pages/industries/index.astro`, with the common Prunus header and footer. It replaces the original Breakdance-exported hub with a readable, responsive, compact list of all 37 real industry links.
+- Never reinstate the old `industries/index.html` directory route in `getLegacyRoutes()`: its large square cards, floating decorative elements, disabled animations, blank spacing and broken mobile layout are not approved.
+- All three original industry pages (Accountants, Private Clinics, Physiotherapists) continue to use their original SEO headings, copy, industry background and approved URLs, but the fragile exported hero columns are replaced with isolated semantic two-column markup through `src/lib/standalone.mjs`. Do not layer a new screenshot card on top of the old Breakdance `bde-columns` markup.
+- Desktop heroes: copy and one real website screenshot side by side with a clear gap, no clipping or decorative ghost text. Mobile heroes: one column, full-width readable H1 and natural sized CTA buttons above the screenshot; avoid multiple wide CTA buttons squeezing together.
+- Keep truthful screenshot labels (concept, archived, live). Make image cards clickable. Avoid emojis, decorative numbered sections and breadcrumbs. The directory should remain visually consistent with the Prunus Media brand, not a uniform AI-looking dashboard.
+- Use `scripts/visual-smoke.mjs` to check **all 37 sector pages** at desktop/mobile and the directory at 1440, 768, 390 and 320 pixels, checking H1, link count, card sizes and overflow. Automated rectangle checks are a safeguard, not a substitute for human visual review on real devices.
