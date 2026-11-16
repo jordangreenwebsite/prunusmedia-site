@@ -10,7 +10,6 @@ tags:
 draft: false
 ---
 
-# How Much Does a Small Business Website Cost in the UK?
 
 A small business website can cost a few hundred pounds or several thousand. Neither price tells you much on its own. A simple three-page website for a new sole trader is a different job from a custom twenty-page website with service pages, original copy, quote forms and search research.
 
