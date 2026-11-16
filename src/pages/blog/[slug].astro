@@ -10,7 +10,7 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 const date = entry.data.publishedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
-<EditorialLayout title={entry.data.title} description={entry.data.description} pathname={'/blog/' + entry.id + '/'} type="BlogPosting" image={entry.data.image} date={entry.data.publishedAt.toISOString()}>
+<EditorialLayout title={entry.data.title} description={entry.data.description} pathname={'/blog/' + entry.id + '/'} type="WebPage" image={entry.data.image} date={entry.data.publishedAt.toISOString()}>
   <p class="pm-editorial__eyebrow">Prunus Media / Journal</p>
   <h1>{entry.data.title}</h1>
   <p class="pm-editorial__intro">{entry.data.description}</p>
