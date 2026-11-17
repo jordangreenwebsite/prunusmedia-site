@@ -86,5 +86,13 @@
     "description": "Bookkeeping, VAT, payroll and tax support.",
     "colour": "#334d65",
     "previewUrl": "https://uktradewebsites.co.uk/concept-websites/s-burnell-accountancy-bookkeeping/"
+  },
+  {
+    "id": "chandler-brown-carpentry-property-services",
+    "title": "Bespoke carpentry & property services",
+    "category": "Premium trades",
+    "description": "Tailored carpentry, kitchens, flooring and property care in the Forest of Dean.",
+    "colour": "#80532e",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/chandler-brown-carpentry-property-services/"
   }
 ]
