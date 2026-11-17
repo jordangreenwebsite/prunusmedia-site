@@ -19,6 +19,16 @@ function visit(dir,parts=[]){
 }
 visit(root);
 let failures=[];
+const checkoutRoutes=new Set(['/buy-now/','/buy-now/success/']);
+const checkoutSitemap=readFileSync(path.join(root,'page-sitemap.xml'),'utf8');
+for(const route of checkoutRoutes){
+ const html=pages.find(p=>p.name===route)?.source;
+ if(!html){failures.push('Missing checkout route '+route);continue;}
+ if(!/<meta\s+name="robots"\s+content="noindex,nofollow,noarchive"/i.test(html))failures.push(route+' must remain noindex, nofollow, noarchive');
+ if(checkoutSitemap.includes('https://prunusmedia.com'+route+'</loc>'))failures.push(route+' must be excluded from sitemap');
+ if(!html.includes('tel:+447789545807')||!html.includes('https://wa.me/447789545807'))failures.push(route+' missing call or WhatsApp support');
+}
+
 const descriptions=new Map();
 // Catch iOS emoji-style diagonal arrows, even when a future page injects them
 // through markup or as a numeric HTML entity. Ordinary thin text arrows remain.
@@ -74,7 +84,7 @@ function checkHours(specifications,route,label){
 }
 for(const {name,source} of pages){
   // The noindex client-login holding page is not a public search landing page.
-  if(name==='/404.html'||name==='/client-login/')continue;
+  if(name==='/404.html'||name==='/client-login/'||checkoutRoutes.has(name))continue;
   const scripts=[...source.matchAll(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   let nodes=[];
   for(const match of scripts){
@@ -175,7 +185,7 @@ for(const route of ['//','/seo-agency-uk/','/social-media-marketing-uk/']){
 // A legacy export with a second Industries column must never regress again.
 for(const {name,source} of pages){
   const publicRoute=!/^\/(?:page|author|qs|client-login)\//.test(name);
-  if(!publicRoute || name==='/404.html') continue;
+  if(!publicRoute || name==='/404.html' || checkoutRoutes.has(name)) continue;
   const header=source.match(/<header\b[^>]*>[\s\S]*?<\/header>/i)?.[0];
   if(!header){failures.push(name+' missing shared header');continue;}
   const columns=(header.match(/<div class="breakdance-dropdown-column\s*"/g)||[]).length;
