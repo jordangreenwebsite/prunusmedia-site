@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import { WEBSITE_CATALOGUE,catalogueQuote } from '../src/website-sales-catalogue.js';
+test('four choices per brand',()=>{assert.equal(WEBSITE_CATALOGUE.filter(x=>x.brand==='uk-trades').length,4);assert.equal(WEBSITE_CATALOGUE.filter(x=>x.brand==='prunus').length,4);});
+test('no upfront build fee with paid monthly financing',()=>{const q=catalogueQuote('uk-financed');assert.deepEqual([q.today,q.handover,q.monthly,q.hosting,q.minimumTotal],[6500,0,6500,3900,78000]);assert.equal(q.onlineEligible,false);});
+test('Prunus quote pricing separate',()=>{const p=catalogueQuote('pm-launch');assert.deepEqual([p.build,p.today,p.handover,p.monthly],[99500,49750,59650,9900]);assert.equal(p.onlineEligible,false);assert.equal(catalogueQuote('pm-seo').build,null);});

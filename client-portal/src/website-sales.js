@@ -21,6 +21,7 @@ function previewUrl(value){
 }
 async function prospect(env,token){return TOKEN.test(token||'')?await q(env,'SELECT * FROM website_sales_prospects WHERE token=? AND active=1',token).first():null;}
 async function offers(env,p,now=Date.now()){
+ if(p.brand!=='uk-trades')return [];
  const records=(await q(env,"SELECT * FROM website_sales_offers WHERE active=1 AND start_ms<=? AND end_ms>? AND (brand='all' OR brand=?) ORDER BY created_ms DESC, id DESC",now,now,p.brand).all()).results;
  return Object.keys(CONCEPT_PLANS).map(plan=>{
    const row=records.find(o=>o.plan===plan);
@@ -41,7 +42,7 @@ async function checkout(request,env){
  if(!configured(env))return fail('Online payment is not available yet. Please call or WhatsApp us.',503,true);
  let d;try{d=await body(request);}catch{return fail('Invalid checkout request.',400,true);}
  const p=await prospect(env,d.token),addr=text(d.email,254).toLowerCase();
- if(!p||!own(CONCEPT_PLANS,d.plan)||!email(addr)||d.agree!==true)return fail('Choose a package, supply your email and accept the payment terms.',400,true);
+ if(!p||p.brand!=='uk-trades'||!own(CONCEPT_PLANS,d.plan)||!email(addr)||d.agree!==true)return fail('Choose a package, supply your email and accept the payment terms.',400,true);
  const quote=(await offers(env,p)).find(x=>x.plan===d.plan);
  // Require the exact server-calculated quote shown at confirmation.
  if(d.today!==quote.today||d.handover!==quote.handover||d.monthly!==quote.monthly||String(d.offer_id||'')!==String(quote.offer?.id||''))return fail('Pricing changed. Refresh the quote and review it again.',409,true);
@@ -121,7 +122,7 @@ export async function websiteSalesPublic(request,env,url){
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'access-control-allow-origin':MARKETING,'access-control-allow-methods':'GET, POST, OPTIONS','access-control-allow-headers':'Content-Type','vary':'Origin'}});
  if(path==='/api/website-sales/quote'&&request.method==='GET'){
    const p=await prospect(env,url.searchParams.get('ref'));if(!p)return fail('This purchase link is not available. Speak to our team.',404,true);
-   return json({ok:true,enabled:configured(env),prospect:{name:p.name,brand:p.brand,preview_url:p.preview_url},plans:await offers(env,p),server_time:Date.now()},200,true);
+   return json({ok:true,enabled:p.brand==='uk-trades'&&configured(env),prospect:{name:p.name,brand:p.brand,preview_url:p.preview_url},plans:await offers(env,p),server_time:Date.now()},200,true);
  }
  if(path==='/api/website-sales/checkout'&&request.method==='POST')return checkout(request,env);
  return fail('Not found',404,true);
