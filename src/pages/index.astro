@@ -11,6 +11,6 @@ const gallery = getLegacyDocument('index.html')
   .replace('<!--PRUNUS_RECENT_WORK_CARDS-->', projectCardsHtml(featured));
 const galleryEnding='<a class="pm-home-work__more" href="/our-work/">See more of our recent work <span aria-hidden="true">→</span></a></div></section>';
 if(!gallery.includes(galleryEnding))throw Error('Prunus home work section has changed; avoid placing case study unexpectedly.');
-const document=gallery.replace(galleryEnding,galleryEnding+roofingComparisonHtml({id:'prunus-home-roofing',compact:true}));
+const document=gallery.replace(galleryEnding,galleryEnding+"<section class=\"pm-editorial\" style=\"padding:45px 20px;min-height:0\"><div class=\"pm-editorial__wrap\" style=\"max-width:1120px;margin:auto\"><p>Full website concept</p><h2>Route 8 Barbers</h2><p>A premium multi-page barbering website design proposal, with shop locations, services and community content. Not the official website.</p><a href=\"/our-work/route-8-barbers/\" class=\"pm-editorial__button\">Explore the project</a></div></section>"+roofingComparisonHtml({id:'prunus-home-roofing',compact:true}));
 ---
 <Fragment set:html={document} />
