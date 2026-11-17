@@ -38,7 +38,7 @@
     if(o.billing_issue)add(box,'p',o.billing_issue);
     if(['seo','pm-seo','uk-financed'].includes(o.plan))add(box,'p',String(o.paid_invoices||0)+' verified subscription invoices');
     if(o.plan==='uk-financed')add(box,'p',o.schedule_id?'£39 hosting transition scheduled':'Financed transition awaiting verification');
-    if(['seo','pm-seo'].includes(o.plan)&&!o.schedule_id&&Number(o.paid_invoices)>=(o.plan==='seo'?6:3)&&o.status==='seo_active')action(box,'Schedule requested hosting downgrade',async()=>{if(!window.confirm('Confirm the customer requested the hosting-only downgrade at their next billing date.'))return;await request('/downgrade-seo',{id:o.id,confirm:true});await window.loadWebsiteSales();});
+    if(['seo','pm-seo'].includes(o.plan)&&!o.schedule_id&&Number(o.paid_invoices)>=(Number(quote.minimumMonths)||(o.plan==='seo'?6:3))&&o.status==='seo_active')action(box,'Schedule requested hosting downgrade',async()=>{if(!window.confirm('Confirm the customer requested the hosting-only downgrade at their next billing date.'))return;await request('/downgrade-seo',{id:o.id,confirm:true});await window.loadWebsiteSales();});
     if(o.status==='deposit_paid')action(box,'Complete handover',async()=>{if(!window.confirm('Charge '+money(quote.handover)+' now and start '+money(quote.monthly)+'/month hosting?'))return;await request('/handover',{id:o.id,confirm:true});await window.loadWebsiteSales();});
     if(o.invoice_url){try{const url=new URL(o.invoice_url);if(url.protocol==='https:'&&url.hostname==='invoice.stripe.com'){const a=add(box,'a','Open Stripe invoice');a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';}}catch{}}
    }

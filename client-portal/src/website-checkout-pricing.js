@@ -3,7 +3,7 @@
 export const CONCEPT_PLANS = Object.freeze({
   starter: Object.freeze({ name: 'Starter Website', pages: '1–5 pages', build: 14900, hosting: 3900 }),
   growth: Object.freeze({ name: 'Trade Growth Website', pages: '5–9 pages', build: 24900, hosting: 3900 }),
-  seo: Object.freeze({ name: 'Website + SEO', pages: 'Up to 9 pages, subject to scope', build: 0, hosting: 0, monthly: 19500, minimumMonths: 6 })
+  seo: Object.freeze({ name: 'Website + SEO', pages: 'Up to 15 pages', build: 0, hosting: 0, monthly: 19500, minimumMonths: 6 })
 });
 const integer = (n) => Number.isSafeInteger(n) && n >= 0;
 function currentOffer(offer, plan, now) {

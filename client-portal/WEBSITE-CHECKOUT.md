@@ -32,3 +32,6 @@ Only Starter and Trade Growth deposits may be enabled by the protected one-time 
 
 ## Full catalogue launch
 All eight plans use server-owned amounts. Prunus deposits are for the listed starting-price scope; extras require separate acceptance. SEO rolling after six UK or three Prunus paid months; owner can schedule a requested hosting downgrade. Financed plan schedules 12 £65 cycles then releases to £39 hosting; daily reconciliation retries missing schedule. All eight unpaid live sessions and a future cancelled diagnostic schedule are verified before the all-packages switch. Onboarding is still manual. Prospect concept slug resolves against registered DB records, not untrusted supplied names/amounts. Both catalogues are selectable; the prospect source brand is retained separately from the package brand.
+
+## Current offer correction (17 November 2026)
+Both brands: £195/month website + SEO, full website up to 15 pages, hosting included while SEO is active, no upfront build fee, six-month minimum (£1,170 at standard pricing). First monthly payment at signup. Existing accepted agreements are not changed. Brand-specific hosting-only rates remain £39 UK Trades and £99 Prunus Media. Separate one-off builds are unchanged.

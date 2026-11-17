@@ -241,7 +241,7 @@ export async function repairWebsiteSales(env){
 async function downgradeSeo(env,id){
  const order=await q(env,'SELECT * FROM website_sales_orders WHERE id=?',id).first();
  if(!order||!['seo','pm-seo'].includes(order.plan)||!order.subscription_id)throw Error('Verified SEO subscription required');
- const min=order.plan==='seo'?6:3,paid=await q(env,"SELECT COUNT(*) AS n FROM website_sales_paid_invoices WHERE order_id=? AND billing_reason IN ('subscription_create','subscription_cycle')",order.id).first();
+ const min=Number(JSON.parse(order.quote_json).minimumMonths)||(order.plan==='seo'?6:3),paid=await q(env,"SELECT COUNT(*) AS n FROM website_sales_paid_invoices WHERE order_id=? AND billing_reason IN ('subscription_create','subscription_cycle')",order.id).first();
  if(Number(paid.n)<min)throw Error('Minimum paid months not reached');
  const sub=await stripe(env,'subscriptions/'+order.subscription_id);
  if(!isWebsiteObject(sub,order)||sub.customer!==order.customer_id||sub.items?.data?.length!==1||sub.items.data[0].price.id!==recurringPrice(order.plan)||sub.status!=='active'||sub.schedule)throw Error('SEO subscription requires manual review before changing');
