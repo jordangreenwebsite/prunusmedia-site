@@ -5,10 +5,10 @@ type Concept={title:string;category:string;description:string;colour:string;imag
 const concepts:Concept[]=data;
 ---
 <EditorialLayout title="Website Design Concepts" description="Explore our independent website design concepts for premium trades, wellbeing, creative and service businesses." pathname="/our-work/concepts/">
-<p class="pm-editorial__eyebrow">Prunus Media / Design concepts</p><h1>Website design concepts.</h1><p class="pm-editorial__intro">Explore independent design concepts created by our team. These are illustrative website proposals rather than commissioned client projects. Preview links and screenshots are added only when cleared for public sharing and checked.</p><a href="/our-work/" class="pm-editorial__button">Back to our example websites</a><div class="concept-grid">
+<p class="pm-editorial__eyebrow">Prunus Media / Design concepts</p><h1>Website design concepts.</h1><p class="pm-editorial__intro">Explore independent design concepts created by our team. These are illustrative website proposals rather than commissioned client projects. Open a concept to explore the design in a new tab.</p><a href="/our-work/" class="pm-editorial__button">Back to our example websites</a><div class="concept-grid">
  {concepts.map(item=><article class="concept-card">
   {item.image ? <img src={item.image} alt={item.imageAlt || item.title+' website screenshot'} width="900" height="520" loading="lazy" decoding="async"/> : <div class="concept-art" style={'--concept-tone:'+item.colour}><small>Design concept</small><strong>{item.category}</strong></div>}
-  <div class="concept-copy"><h2>{item.title}</h2><p>{item.description}</p>{item.previewUrl ? <a href={item.previewUrl} rel="nofollow noopener noreferrer" target="_blank">View concept website</a> : <a href="/contact/">Ask to see this concept</a>}</div>
+  <div class="concept-copy"><h2>{item.title}</h2><p>{item.description}</p>{item.previewUrl ? <a href={item.previewUrl} rel="nofollow noopener noreferrer" target="_blank">See concept build</a> : <span aria-disabled="true">Preview coming soon</span>}</div>
  </article>)}
 </div>
 </EditorialLayout>

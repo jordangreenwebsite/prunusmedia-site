@@ -4,69 +4,87 @@
     "title": "Dog grooming",
     "category": "Pet care",
     "description": "Grooming services and a welcoming customer journey.",
-    "colour": "#7c5d46"
+    "colour": "#7c5d46",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/bark-and-sparkle/"
   },
   {
     "id": "design-24-2",
     "title": "Interior painting & decorating",
     "category": "Interiors",
     "description": "Decorative finishes, wallpaper and interior improvements.",
-    "colour": "#655042"
+    "colour": "#655042",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/emjay-interior-creations/"
   },
   {
     "id": "design-11-3",
     "title": "Building & renovation",
     "category": "Construction",
     "description": "Extensions, kitchens and home refurbishments.",
-    "colour": "#454a4e"
+    "colour": "#454a4e",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/evans-build/"
   },
   {
     "id": "design-19-4",
     "title": "Mobile foot health",
     "category": "Health & wellbeing",
     "description": "Specialist foot care and a clear treatment journey.",
-    "colour": "#526b64"
+    "colour": "#526b64",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/foot-health-by-emma/"
   },
   {
     "id": "design-25-5",
     "title": "Pet & equine care",
     "category": "Pet care",
     "description": "Dog walking, horse care and pet sitting.",
-    "colour": "#7c5d46"
+    "colour": "#7c5d46",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/hooves-paws-helping-hands/"
   },
   {
     "id": "design-6-6",
     "title": "Bespoke carpentry & landscaping",
     "category": "Interiors",
     "description": "Custom carpentry and garden projects.",
-    "colour": "#655042"
+    "colour": "#655042",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/rennco/"
   },
   {
     "id": "design-8-7",
     "title": "Tattoo & beauty studio",
     "category": "Beauty",
     "description": "A multi-service studio with an expressive visual identity.",
-    "colour": "#785b69"
+    "colour": "#785b69",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/studio-3/"
   },
   {
     "id": "design-12-8",
     "title": "Lashes, brows & fine-line tattoos",
     "category": "Beauty",
     "description": "Beauty treatments, tattoo services and training.",
-    "colour": "#785b69"
+    "colour": "#785b69",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/studio-mabbs/"
   },
   {
     "id": "design-12-9",
     "title": "Architectural timber & doors",
     "category": "Interiors",
     "description": "Timber doors and architectural oak beams.",
-    "colour": "#655042"
+    "colour": "#655042",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/timber-doors/"
   },
   {
     "id": "design-18-10",
     "title": "Premium car detailing",
     "category": "Automotive",
     "description": "Vehicle detailing, interior care and paint enhancement.",
-    "colour": "#31363b"
+    "colour": "#31363b",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/williams-detailing/"
+  },
+  {
+    "id": "s-burnell-accountancy-bookkeeping",
+    "title": "Accountancy & bookkeeping",
+    "category": "Professional services",
+    "description": "Bookkeeping, VAT, payroll and tax support.",
+    "colour": "#334d65",
+    "previewUrl": "https://uktradewebsites.co.uk/concept-websites/s-burnell-accountancy-bookkeeping/"
   }
 ]
