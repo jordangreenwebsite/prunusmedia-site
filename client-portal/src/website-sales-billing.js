@@ -11,7 +11,7 @@ export async function websiteStripe(env,path,params={},key=''){
  for(const [k,v] of Object.entries(params))if(v!==null&&v!==undefined)form.append(k,String(v));
  const write=!!key;
  const res=await fetch('https://api.stripe.com/v1/'+path+(write||!form.size?'':'?'+form.toString()),{method:write?'POST':'GET',headers:{authorization:'Bearer '+env.STRIPE_WEBSITES_SECRET_KEY,'Stripe-Version':'2025-06-30.basil',...(write?{'content-type':'application/x-www-form-urlencoded','Idempotency-Key':key}:{})},...(write?{body:form}:{})});
- const result=await res.json();if(!res.ok)throw Error('Stripe '+res.status+' '+String(result.error?.code||result.error?.type||'request_failed'));
+ const result=await res.json();if(!res.ok){const param=String(result.error?.param||'').replace(/[^a-zA-Z0-9_\[\].-]/g,'').slice(0,120);const msg=String(result.error?.message||'').replace(/(?:[a-z]{1,6}_live_|whsec_|sk_|rk_)[A-Za-z0-9_]+/g,'[redacted]').replace(/[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}/g,'[email]').slice(0,170);throw Error('Stripe '+res.status+' '+String(result.error?.code||result.error?.type||'request_failed')+(param?' / '+param:'')+(path==='checkout/sessions'&&params['metadata[integration]']==='prunus_website_launch_probe'?' / '+msg:''));}
  return result;
 }
 export function handoverParams(order,quote,pm,customer){

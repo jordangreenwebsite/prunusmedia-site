@@ -35,7 +35,7 @@ async function launchCheck(request,env){
   if(d.action==='probe'){
    await verifyCatalogue(env);
    const key='website-launch-'+digest.slice(0,32);
-   const session=await stripe(env,'checkout/sessions',{mode:'payment','payment_method_types[0]':'card','customer_creation':'always','payment_intent_data[setup_future_usage]':'off_session','line_items[0][quantity]':1,'line_items[0][price_data][currency]':'gbp','line_items[0][price_data][product]':WEBSITE_STRIPE.build,'line_items[0][price_data][unit_amount]':7450,success_url:MARKETING+'/buy-now/success/',cancel_url:MARKETING+'/buy-now/','consent_collection[terms_of_service]':'required','automatic_tax[enabled]':false,'metadata[integration]':'prunus_website_launch_probe','metadata[launch_id]':digest},key);
+   const session=await stripe(env,'checkout/sessions',{mode:'payment','customer_creation':'always','payment_intent_data[setup_future_usage]':'off_session','line_items[0][quantity]':1,'line_items[0][price_data][currency]':'gbp','line_items[0][price_data][product]':WEBSITE_STRIPE.build,'line_items[0][price_data][unit_amount]':7450,success_url:MARKETING+'/buy-now/success/',cancel_url:MARKETING+'/buy-now/','automatic_tax[enabled]':false,'metadata[integration]':'prunus_website_launch_probe','metadata[launch_id]':digest},key);
    if(!/^cs_live_/.test(session.id||'')||session.livemode!==true||session.amount_total!==7450||session.payment_status!=='unpaid')throw Error('Live checkout probe did not match the intended unpaid deposit.');
    await setSetting(env,'launch_probe_session',session.id);
    const expired=await stripe(env,'checkout/sessions/'+session.id+'/expire',{},key+'-expire');
@@ -53,6 +53,7 @@ async function launchCheck(request,env){
   return fail('Invalid activation action');
  }catch(e){return fail(String(e.message||'Activation failed').slice(0,250),503);}
 }
+const PAYMENT_AGREEMENT_VERSION='website-deposit-2026-11-17';
 const email=v=>/^\S+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=254;
 async function body(request){
  if(!(request.headers.get('content-type')||'').startsWith('application/json'))throw Error('Expected JSON');
@@ -80,7 +81,7 @@ async function checkout(request,env){
  if(!(await configured(env)))return fail('Online payment is not available yet. Please call or WhatsApp us.',503,true);
  let d;try{d=await body(request);}catch{return fail('Invalid checkout request.',400,true);}
  const p=await prospect(env,d.token),addr=text(d.email,254).toLowerCase();
- if(!p||p.brand!=='uk-trades'||!['starter','growth'].includes(d.plan)||!email(addr)||d.agree!==true)return fail('Choose a package, supply your email and accept the payment terms.',400,true);
+ if(!p||p.brand!=='uk-trades'||!['starter','growth'].includes(d.plan)||!email(addr)||d.agree!==true||d.agreement_version!==PAYMENT_AGREEMENT_VERSION)return fail('Choose a package, supply your email and accept the payment terms.',400,true);
  const quote=(await offers(env,p)).find(x=>x.plan===d.plan);
  // Require the exact server-calculated quote shown at confirmation.
  if(d.today!==quote.today||d.handover!==quote.handover||d.monthly!==quote.monthly||String(d.offer_id||'')!==String(quote.offer?.id||''))return fail('Pricing changed. Refresh the quote and review it again.',409,true);
@@ -95,11 +96,13 @@ async function checkout(request,env){
  }
  const order=id(),now=Date.now();
  if(quote.offer&&quote.offer.end-now<1860000)return fail('This offer is ending shortly. Contact us to secure it, or refresh after expiry.',409,true);
- try{await q(env,'INSERT INTO website_sales_orders(id,prospect_token,plan,quote_json,status,customer_email,created_ms,updated_ms) VALUES(?,?,?,?,?,?,?,?)',order,p.token,d.plan,JSON.stringify(quote),'creating',addr,now,now).run();}
+ try{await q(env,'INSERT INTO website_sales_orders(id,prospect_token,plan,quote_json,status,customer_email,created_ms,updated_ms) VALUES(?,?,?,?,?,?,?,?)',order,p.token,d.plan,JSON.stringify({...quote,agreement_version:PAYMENT_AGREEMENT_VERSION,agreement_accepted_ms:now,agreement_text:'I am buying for my business and authorise the listed deposit today, the listed balance plus first month of hosting at handover, and recurring monthly hosting thereafter using my saved payment method.'}),'creating',addr,now,now).run();}
  catch{return fail('A checkout already exists. Please contact us.',409,true);}
  try{
-   const common={mode:d.plan==='seo'?'subscription':'payment',customer_email:addr,'payment_method_types[0]':'card',client_reference_id:order,success_url:MARKETING+'/buy-now/success/',cancel_url:MARKETING+'/buy-now/?ref='+p.token,expires_at:Math.floor(now/1000)+1860,'line_items[0][quantity]':1,'consent_collection[terms_of_service]':'required','automatic_tax[enabled]':false};
+   const common={mode:d.plan==='seo'?'subscription':'payment',customer_email:addr,client_reference_id:order,success_url:MARKETING+'/buy-now/success/',cancel_url:MARKETING+'/buy-now/?ref='+p.token,expires_at:Math.floor(now/1000)+1860,'line_items[0][quantity]':1,'automatic_tax[enabled]':false};
    metadata(common,'metadata',order);
+   common['metadata[agreement_version]']=PAYMENT_AGREEMENT_VERSION;
+   common['custom_text[submit][message]']='Website deposit only. The agreed handover balance and recurring hosting are payable separately under your website payment agreement.';
    if(d.plan==='seo'){
      common['line_items[0][price]']=WEBSITE_STRIPE.seo;
      metadata(common,'subscription_data[metadata]',order);
