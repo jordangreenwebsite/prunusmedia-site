@@ -1,0 +1,40 @@
+---
+import { CONCEPT_PLANS, quoteWebsite } from '../../../client-portal/src/website-checkout-pricing.js';
+const plans = Object.entries(CONCEPT_PLANS).map(([id,plan])=>({id,...plan,quote:quoteWebsite(id)}));
+const gbp=(n)=>new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(n/100);
+---
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow,noarchive" /><meta name="referrer" content="no-referrer" />
+<title>Buy your website | Prunus Media &amp; UK Trade Websites</title>
+</head>
+<body>
+<header><div class="brand">Prunus Media <span>+</span> UK Trade Websites</div><small>Two brands. One team.</small></header>
+<main>
+<section class="intro"><p class="eyebrow">YOUR WEBSITE, SIMPLIFIED</p><h1>Let's make your website a reality.</h1><p>Choose the package that suits your business. Clear payments, proper support and no surprise extras.</p><p class="notice">Checkout preview. Online payments are not available yet.</p></section>
+<section class="layout" aria-label="Choose your package">
+<div><h2>Choose your website package</h2><div class="plans">
+{plans.map((p)=><label class="plan"><input type="radio" name="package" value={p.id} checked={p.id==='growth'} /><div><b>{p.name}</b><small>{p.pages}</small><p>{p.id==='seo'?'Website build and hosting included while SEO is active. Six-month minimum.':'Professional design, mobile friendly and ready for enquiries.'}</p></div><strong>{p.id==='seo'?'£195/mo':gbp(p.build)}</strong></label>)}
+</div><p class="fine">These packages are for eligible concept projects. Larger or bespoke projects are quoted separately. Scope, terms and payment authorisation will be agreed before taking payment.</p></div>
+<aside><h2>Order summary</h2><dl><div><dt>Website build</dt><dd id="build">£249.00</dd></div><div><dt>At handover</dt><dd id="handover">£163.50</dd></div><div><dt>Ongoing monthly</dt><dd id="monthly">£39.00</dd></div><div class="minimum" hidden><dt>Six-month minimum</dt><dd id="minimum">£1,170.00</dd></div><div class="total"><dt>Due today</dt><dd id="today">£124.50</dd></div></dl><p id="details">50% deposit today. Remaining 50% plus the first month of hosting at handover.</p><button type="button" disabled>Secure payment coming soon</button><p class="fine">No VAT is charged as we are not currently VAT registered.</p><a href="/contact/">Speak to the team</a></aside>
+</section>
+</main><footer>Prunus Media &amp; UK Trade Websites</footer>
+<script>
+import { quoteWebsite } from '../../../client-portal/src/website-checkout-pricing.js';
+const gbp=(n:number)=>new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(n/100);
+const set=(id:string,value:string)=>{const node=document.getElementById(id);if(node)node.textContent=value;};
+for(const radio of document.querySelectorAll<HTMLInputElement>('input[name="package"]'))radio.addEventListener('change',()=>{
+  if(!radio.checked)return;
+  const q=quoteWebsite(radio.value);
+  set('build',q.build===0?'Included':gbp(q.build));set('handover',gbp(q.handover));set('monthly',gbp(q.monthly));set('today',gbp(q.today));
+  const row=document.querySelector<HTMLElement>('.minimum');if(row)row.hidden=q.plan!=='seo';
+  if(q.plan==='seo'){set('minimum',gbp(q.minimumTotal??117000));set('details','First SEO month today. After six monthly payments, continue SEO for £195/month or choose hosting only at £39/month.');}
+  else set('details','50% deposit today. Remaining 50% plus the first month of hosting at handover.');
+});
+</script>
+<style>
+:global(*){box-sizing:border-box} :global(body){margin:0;background:#f6f3ed;color:#1d2938;font:16px/1.6 Arial,sans-serif} header,footer{max-width:1180px;margin:auto;padding:22px 30px;display:flex;align-items:center;justify-content:space-between;gap:16px} header{border-bottom:1px solid #dedbd3}.brand{font:600 clamp(19px,3vw,27px)/1.2 Georgia,serif}.brand span{color:#647e91;margin:0 .2em}main{max-width:1180px;margin:0 auto;padding:48px 30px 70px}.intro{max-width:790px;margin:0 0 32px}.eyebrow{font-size:12px;letter-spacing:.14em;color:#516478;font-weight:700}h1,h2{font-family:Georgia,serif;line-height:1.1;margin:0 0 16px}h1{font-size:clamp(38px,6vw,76px)}h2{font-size:26px}.notice{font-size:14px;color:#475569}.layout{display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:start}.plans{display:grid;gap:12px}.plan{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:21px;background:white;border:1px solid #dadfe3;border-radius:12px;cursor:pointer}.plan:has(input:checked){border:2px solid #254762;padding:20px;background:#f4f9fc}.plan input{margin-top:6px;accent-color:#254762}.plan b,.plan small{display:block}.plan p{font-size:14px;margin:7px 0 0;color:#4b5969}.plan strong{white-space:nowrap;color:#173a55}aside{background:#fff;border:1px solid #dedbd3;border-radius:16px;padding:26px;box-shadow:0 16px 45px #173a5510}dl{margin:20px 0}dl div{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #eceff1}dl div[hidden]{display:none}dd{margin:0;font-weight:700;text-align:right}.total{font-size:24px;color:#173a55;font-weight:700}button{width:100%;padding:15px;background:#173a55;border:none;border-radius:6px;color:white;font-weight:bold}button:disabled{opacity:.62;cursor:not-allowed}.fine{font-size:13px;color:#536274}a{color:#173a55}footer{font-size:13px;border-top:1px solid #dedbd3;color:#536274}@media(max-width:760px){header{align-items:flex-start;flex-direction:column;padding:18px 20px}main{padding:32px 20px 48px}.layout{grid-template-columns:1fr}.plan{padding:15px}.plan:has(input:checked){padding:14px}aside{padding:20px}}
+</style>
+</body></html>
