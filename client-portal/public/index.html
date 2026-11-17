@@ -16,6 +16,8 @@
   <script src="/workspace-ui.js" defer></script>
   <script src="/integrations-ui.js" defer></script>
   <script src="/portal-pages.js" defer></script>
+  <script src="/website-sales-ui.js" defer></script>
+  <link rel="stylesheet" href="/website-sales.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to main content</a>
@@ -103,6 +105,7 @@
         <a href="/?view=businesses" data-portal-route="businesses" data-context="agency" data-permission="admin" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>Businesses</span></a>
         <a href="/?view=ai" data-portal-route="ai" data-context="agency" data-permission="admin" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>AI & MCP</span></a>
         <a href="/?view=team" data-portal-route="team" data-context="agency" data-permission="admin" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Team & alerts</span></a>
+        <a href="/?view=sales" data-portal-route="sales" data-context="agency" data-permission="admin" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Website sales</span></a>
         <div id="sidebar-business-heading" class="sidebar-label">BUSINESS</div>
         <a href="/?view=businesses" class="workspace-nav-link back-businesses" data-back-businesses><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>← All businesses</span></a>
         <a href="/?view=overview" data-portal-route="overview" data-context="business" data-permission="both" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-home"></use></svg><span>Business overview</span></a>
@@ -152,7 +155,15 @@
         </nav>
       </div>
       <div class="workspace-content">
-      <section id="screen-dashboard" class="portal-screen" hidden>
+      <section id="screen-sales" class="portal-screen" hidden>
+  <div class="website-sales-head"><p class="eyebrow">SHARED AGENCY SALES</p><h1>Website sales</h1><p>Personalised concept purchase links and time-limited offers. Not connected to Certificates.</p><p id="sales-state" role="status"></p></div>
+  <div class="website-sales-cards"><article><small>Registered concepts</small><strong id="sales-prospect-count">0</strong></article><article><small>Paid orders</small><strong id="sales-paid-count">0</strong></article><article><small>Active offers</small><strong id="sales-offer-count">0</strong></article></div>
+  <div class="website-sales-columns">
+  <section class="website-sales-card"><h2>Create purchase link</h2><form id="sales-prospect-form"><label>Business name<input name="name" required maxlength="160"></label><label>Source brand<select name="brand"><option value="uk-trades">UK Trade Websites</option><option value="prunus">Prunus Media</option></select></label><label>Concept URL<input name="preview_url" type="url" required placeholder="https://uktradewebsites.co.uk/concept-websites/example/"></label><button class="primary">Create personalised link</button></form><p id="sales-link" role="status"></p><div id="sales-prospects"></div></section>
+  <section class="website-sales-card"><h2>Offers &amp; promotions</h2><form id="sales-offer-form"><label>Offer name<input name="name" required maxlength="160"></label><label>Brand<select name="brand"><option value="all">Both brands</option><option value="uk-trades">UK Trade Websites</option><option value="prunus">Prunus Media</option></select></label><label>Package<select name="plan"><option value="starter">Starter</option><option value="growth">Trade Growth</option><option value="seo">SEO first month</option></select></label><label>Discount<select name="kind"><option value="fixed">Fixed amount off (£)</option><option value="percent">Percentage off (%)</option><option value="price">New fixed price (£)</option></select></label><label>Amount<input name="value" type="number" step="0.01" min="0.01" required></label><label>Start date/time (your local time)<input name="start" type="datetime-local" required></label><label>End date/time (your local time)<input name="end" type="datetime-local" required></label><button class="primary">Save offer</button></form><p class="hint">Offers affect the total website build, or the first SEO month only. Times are stored as absolute timestamps. Newest eligible offer wins.</p><div id="sales-offers"></div></section></div>
+  <section class="website-sales-card"><h2>Orders &amp; subscriptions</h2><p>Payment events must be verified before work or handover. Handover billing and subscription changes are not yet enabled.</p><div id="sales-orders"></div></section>
+</section>
+        <section id="screen-dashboard" class="portal-screen" hidden>
         <p class="eyebrow">AGENCY DASHBOARD</p><h1>Your businesses</h1>
         <p class="subtle">Choose a business to manage its calendar, content and website. Your agency controls stay separate from what the client sees.</p>
         <div id="agency-stat-cards" class="portal-stat-grid" aria-live="polite"></div>

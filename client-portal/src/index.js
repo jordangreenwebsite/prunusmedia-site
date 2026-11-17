@@ -7,6 +7,7 @@ import { contentRequestRoutes } from './content-requests.js';
 import { workspaceAdminRoutes } from './workspace-admin.js';
 import { gbpRoutes } from './gbp.js';
 import { normalizeWebsiteDomain } from './website-domain.js';
+import { websiteSalesPublic, websiteSalesAdmin } from './website-sales.js';
 // Prunus Media shared website-client portal.
 // Deploy independently from the marketing site using client-portal/wrangler.jsonc.
 // Cloudflare Worker: D1 (tenant-scoped records), private R2 (PDFs), Resend (OTP + notices).
@@ -369,12 +370,16 @@ export default {
     if (!env.DB || !env.AUTH_PEPPER || !env.UPLOADS) return error('Portal backend is not configured.',503);
     try {
       const method=request.method;
+      const websiteSales=await websiteSalesPublic(request,env,url);
+      if(websiteSales)return websiteSales;
       if (path==='/api/ingest/lead' && method==='POST') return await ingest(request,env);
       if (method!=='GET' && !safeOrigin(request)) return error('Origin not permitted.',403);
       if (path==='/api/auth/request-code' && method==='POST') return await requestCode(request,env);
       if (path==='/api/auth/verify' && method==='POST') return await verifyCode(request,env);
       const user=await actor(request,env);
       if (!user) return error('Sign in required.',401);
+      const websiteAdmin=await websiteSalesAdmin(request,env,user,url);
+      if(websiteAdmin)return websiteAdmin;
       if (path==='/api/auth/logout' && method==='POST') {
         await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(user.token_hash).run();
         return response({ok:true},200,{'set-cookie':sessionCookie('',0)});
