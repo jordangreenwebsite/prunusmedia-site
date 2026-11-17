@@ -16,7 +16,7 @@
   try{
    const j=await request();status(j.enabled?'Live payment configuration present.':'Payments disabled pending configuration and verification.');
    get('sales-prospect-count').textContent=j.prospects.length;
-   get('sales-paid-count').textContent=j.orders.filter(o=>['deposit_paid','seo_active'].includes(o.status)).length;
+   get('sales-paid-count').textContent=j.orders.filter(o=>['deposit_paid','seo_active','hosting_active','handover_pending'].includes(o.status)).length;
    const now=Date.now();get('sales-offer-count').textContent=j.offers.filter(o=>o.active&&o.start_ms<=now&&now<o.end_ms).length;
    const prospects=get('sales-prospects'),offers=get('sales-offers'),orders=get('sales-orders');
    for(const x of [prospects,offers,orders])x.replaceChildren();
@@ -33,7 +33,12 @@
     const box=item(offers,o.name,detail);add(box,'p',fmt(o.start_ms)+' to '+fmt(o.end_ms));
     action(box,o.active?'Pause':'Resume',async()=>{await request('/offer-status',{id:o.id,active:!o.active});await window.loadWebsiteSales();});
    }
-   for(const o of j.orders){const quote=JSON.parse(o.quote_json);item(orders,o.name,o.plan+' · '+o.status.replaceAll('_',' ')+' · '+money(quote.today)+' initial · '+money(quote.handover)+' handover · '+money(quote.monthly)+'/month');}
+   for(const o of j.orders){const quote=JSON.parse(o.quote_json);const box=item(orders,o.name,o.plan+' · '+o.status.replaceAll('_',' ')+' · '+money(quote.today)+' initial · '+money(quote.handover)+' handover · '+money(quote.monthly)+'/month');
+    if(o.billing_issue)add(box,'p',o.billing_issue);
+    if(o.plan==='seo')add(box,'p',String(o.paid_invoices||0)+' verified subscription invoices');
+    if(o.status==='deposit_paid')action(box,'Complete handover',async()=>{if(!window.confirm('Charge '+money(quote.handover)+' now and start '+money(quote.monthly)+'/month hosting?'))return;await request('/handover',{id:o.id,confirm:true});await window.loadWebsiteSales();});
+    if(o.invoice_url){try{const url=new URL(o.invoice_url);if(url.protocol==='https:'&&url.hostname==='invoice.stripe.com'){const a=add(box,'a','Open Stripe invoice');a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';}}catch{}}
+   }
    if(!j.prospects.length)add(prospects,'p','No concepts registered yet.');
    if(!j.offers.length)add(offers,'p','No offers created yet.');
    if(!j.orders.length)add(orders,'p','No orders recorded yet.');

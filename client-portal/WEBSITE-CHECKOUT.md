@@ -23,3 +23,6 @@ UK Trades concept offer: Starter 1–5 pages £149, £74.50 deposit, £113.50 at
 
 ## Brand-specific catalogue
 Both checkout pages show the shared portal-style Prunus wordmark and UK Trades logo. Four choices per brand: UK Trades Starter, Growth, £65/month no-upfront financed build, £195/month six-month SEO/free eligible build; Prunus £995/£1,795/£2,995 starting-price builds and SEO from £195/month under existing agency terms (three-month minimum, £99 standalone hosting). Prunus and UK financed packages are selectable quote/contact options until billing and contract handling are completed. Never apply UK Trades fixed-price Checkout to Prunus prospects. No live payments enabled.
+
+## Production foundation
+Dedicated live Stripe catalogue IDs are in website-sales-billing.js. The owner handover action uses a verified deposit, saved payment method, dedicated subscription, and one-time balance on its first invoice; a failed or uncertain charge is held for manual Stripe reconciliation. Paid invoices are tracked by unique Stripe invoice ID. Owner activation is intentionally still fail-closed until subscription term enforcement, financed transition, onboarding and live delivery acceptance are complete. No production secret is committed. Keep Payments disabled and retain existing concept links until activation.
