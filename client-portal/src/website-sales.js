@@ -86,7 +86,7 @@ async function body(request){
 function previewUrl(value){
  try{const u=new URL(value);if(u.origin!=='https://uktradewebsites.co.uk'&&u.origin!==MARKETING)return null;if(!/^\/concept-websites\/[a-z0-9-]+\/$/.test(u.pathname)||u.search||u.hash||u.username||u.password)return null;return u.href;}catch{return null;}
 }
-async function prospect(env,token,slug){if(TOKEN.test(token||''))return await q(env,'SELECT * FROM website_sales_prospects WHERE token=? AND active=1',token).first();if(/^[a-z0-9][a-z0-9-]{0,100}$/.test(slug||''))return await q(env,'SELECT * FROM website_sales_prospects WHERE preview_url=? AND active=1','https://uktradewebsites.co.uk/concept-websites/'+slug+'/').first();return null;}
+async function prospect(env,token,slug){if(TOKEN.test(token||''))return await q(env,'SELECT * FROM website_sales_prospects WHERE token=? AND active=1',token).first();if(/^[a-z0-9][a-z0-9-]{0,100}$/.test(slug||''))return await q(env,'SELECT * FROM website_sales_prospects WHERE preview_url=? AND active=1',slug==='jemoba'?'https://uktradewebsites.co.uk/demos/jemoba/':'https://uktradewebsites.co.uk/concept-websites/'+slug+'/').first();return null;}
 async function offers(env,p,now=Date.now()){
  const records=(await q(env,"SELECT * FROM website_sales_offers WHERE active=1 AND start_ms<=? AND end_ms>? ORDER BY created_ms DESC, id DESC",now,now).all()).results;
  return planIds().map(plan=>{

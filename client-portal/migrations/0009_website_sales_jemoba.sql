@@ -1,0 +1,1 @@
+INSERT OR IGNORE INTO website_sales_prospects(token,name,brand,preview_url,created_ms) VALUES(lower(hex(randomblob(32))),'JEMOBA','uk-trades','https://uktradewebsites.co.uk/demos/jemoba/',CAST(strftime('%s','now') AS INTEGER)*1000);
