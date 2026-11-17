@@ -178,7 +178,7 @@ export async function websiteSalesAdmin(request,env,user,url){
    const [prospects,offers,orders]=await Promise.all([
     q(env,'SELECT * FROM website_sales_prospects ORDER BY created_ms DESC LIMIT 250').all(),
     q(env,'SELECT * FROM website_sales_offers ORDER BY created_ms DESC LIMIT 100').all(),
-    q(env,'SELECT o.id,o.plan,o.status,o.quote_json,o.created_ms,o.updated_ms,o.invoice_url,o.billing_issue,(SELECT COUNT(*) FROM website_sales_paid_invoices i WHERE i.order_id=o.id AND i.billing_reason IN ('subscription_create','subscription_cycle')) AS paid_invoices,p.name,p.brand FROM website_sales_orders o JOIN website_sales_prospects p ON p.token=o.prospect_token ORDER BY o.created_ms DESC LIMIT 250').all()]);
+    q(env,"SELECT o.id,o.plan,o.status,o.quote_json,o.created_ms,o.updated_ms,o.invoice_url,o.billing_issue,(SELECT COUNT(*) FROM website_sales_paid_invoices i WHERE i.order_id=o.id AND i.billing_reason IN ('subscription_create','subscription_cycle')) AS paid_invoices,p.name,p.brand FROM website_sales_orders o JOIN website_sales_prospects p ON p.token=o.prospect_token ORDER BY o.created_ms DESC LIMIT 250").all()]);
    return json({ok:true,enabled:await configured(env),prospects:prospects.results,offers:offers.results,orders:orders.results});
  }
  if(request.method!=='POST')return fail('Not found',404);
