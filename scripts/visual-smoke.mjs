@@ -657,6 +657,50 @@ try {
     await motionCtx.close();
   }
 
+  // Real-motion mobile viewport regression: reduced-motion screenshots alone
+  // cannot detect overflowing offscreen transforms before a user scrolls.
+  // Do not submit the audit form or make any external API calls here.
+  {
+    const viewportRoutes=['/','/seo-agency-uk/free-seo-audit/','/website-design/',
+      '/pricing/','/industries/accountants/','/our-work/'];
+    for(const width of [390,430]){
+      const ctx=await browser.newContext({viewport:{width,height:844},
+        isMobile:true,hasTouch:true,deviceScaleFactor:3,reducedMotion:'no-preference'});
+      const page=await ctx.newPage();
+      async function assertViewport(route,phase){
+        const state=await page.evaluate(()=>({
+          width:document.documentElement.clientWidth,
+          scrollWidth:document.documentElement.scrollWidth,
+          bodyWidth:document.body.scrollWidth,
+          innerWidth:window.innerWidth,
+          visualWidth:window.visualViewport?.width ?? window.innerWidth,
+          scrollY:window.scrollY
+        }));
+        if(state.width>width+2||state.innerWidth>width+2||
+           state.visualWidth>width+2||state.scrollWidth>width+2||
+           state.bodyWidth>width+2){
+          failures.push(route+' '+width+'px '+phase+': mobile viewport overflow '+JSON.stringify(state));
+        }
+      }
+      for(const route of viewportRoutes){
+        try{
+          const response=await page.goto(local+route,{waitUntil:'domcontentloaded',timeout:12000});
+          if(response?.status()!==200){failures.push(route+': motion viewport HTTP '+response?.status());continue;}
+          await assertViewport(route,'initial unscrolled');
+          await Promise.race([page.evaluate(()=>document.fonts.ready),new Promise(r=>setTimeout(r,600))]);
+          await page.waitForTimeout(550);
+          await assertViewport(route,'after entrance animation');
+          await page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}));
+          await page.waitForTimeout(550);
+          await assertViewport(route,'after bottom scroll');
+          await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+          await assertViewport(route,'back at top');
+        }catch(error){failures.push(route+' '+width+'px mobile motion: '+String(error).slice(0,180));}
+      }
+      await ctx.close();
+    }
+  }
+
   // Beyond the 37 sector pages, inspect ALL other public Astro/legacy routes
   // at mobile and desktop widths. The previous industry-only test missed
   // overflow on shared pages, so treat this as a permanent regression guard.

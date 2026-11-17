@@ -656,6 +656,22 @@ export function cleanPageHtml(originalHtml, filename) {
     '<link rel="stylesheet" href="/assets/prunus-styles/portfolio.css">\n' +
     '<link rel="stylesheet" href="/assets/prunus-styles/footer.css">\n</head>');
 
+  // Mobile Safari can expand the layout viewport to accommodate transformed
+  // off-screen content, then snap back as entrance animations complete.
+  // Establish a viewport boundary before paint, without disabling zoom or
+  // creating an extra vertical scroll container on modern browsers.
+  const mobileViewportCss = '<style id="pm-mobile-viewport-critical">' +
+    '@media(max-width:1023px){' +
+    'html,body{max-width:100%;overflow-x:hidden;}' +
+    '@supports(overflow:clip){html,body{overflow-x:clip;}}' +
+    '}' +
+    '@media(max-width:1023px) and (prefers-reduced-motion:no-preference){' +
+    'html.prunus-motion-active [data-prunus-reveal]:not(.prunus-revealed){' +
+    'transform:translate3d(0,18px,0)!important;}' +
+    '}' +
+    '</style>';
+  html = html.replace('</head>', mobileViewportCss + '\n</head>');
+
   // A small utility sign-in at the very top right, outside the menu layout.
   // The shared header feeds every legacy and native editorial page, so this is
   // the one source of truth for Prunus sign-in. UK Trades already points here.
