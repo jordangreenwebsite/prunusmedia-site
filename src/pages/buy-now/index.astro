@@ -20,13 +20,14 @@ const gbp=(n)=>new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).
 <div><h2>Choose your website package</h2><div class="brand-choices" role="group" aria-label="Choose a brand">{brands.map(b=><button type="button" data-brand={b.id} aria-pressed={b.id==='uk-trades'}><b>{b.label}</b><small>{b.description}</small></button>)}</div>
 {brands.map(b=><div class="plans" data-catalogue={b.id} hidden={b.id!=='uk-trades'}>{plans.filter(p=>p.brand===b.id).sort((a,b)=>a.id==='seo'?1:b.id==='seo'?-1:0).map(p=><label class="plan"><input type="radio" name="package" value={p.id} checked={p.id==='growth'} disabled={b.id!=='uk-trades'} /><div><b>{p.name}</b><small>{p.pages}</small><p>{p.summary}</p></div><strong data-plan-price={p.id}>{p.from?'From ':''}{gbp(p.price)}{p.kind!=='build'?'/mo':''}</strong></label>)}</div>)}
 <p class="fine" id="catalogue-note">UK Trade Websites concept packages. Scope and terms must be agreed before taking payment.</p></div>
-<aside><h2>Order summary</h2><p class="fine" id="estimate" hidden>Illustrative starting prices. A fixed project quote must be agreed before payment.</p><dl><div><dt>Website build</dt><dd id="build">£249.00</dd></div><div><dt>At handover</dt><dd id="handover">£163.50</dd></div><div><dt>Ongoing monthly</dt><dd id="monthly">£39.00</dd></div><div class="minimum" hidden><dt id="minimum-label">Minimum commitment</dt><dd id="minimum">£1,170.00</dd></div><div class="total"><dt>Due today</dt><dd id="today">£124.50</dd></div></dl><p id="details">50% deposit today. Remaining 50% plus the first month of hosting at handover.</p><form id="purchase"><label for="buyer-email">Email address</label><input type="email" id="buyer-email" autocomplete="email" required maxlength="254" placeholder="you@yourbusiness.co.uk"/><label class="consent"><input type="checkbox" id="agree" required data-terms-version="website-deposit-2026-11-17"/><span>I am buying for my business and authorise the listed deposit today, the listed balance plus first month of hosting at handover, and recurring monthly hosting thereafter using my saved payment method.</span></label><button id="pay" type="submit" disabled>Continue to secure payment</button><a id="quote-contact" class="quote-contact wa-link" href="https://wa.me/447789545807" hidden>Discuss this package on WhatsApp</a><p id="payment-message" role="status"></p></form><p class="fine">No VAT is charged as we are not currently VAT registered.</p><div class="questions"><h3>Questions before buying?</h3><p>Speak directly to our team. We're happy to talk through your website and package.</p><div class="help-links"><a href="tel:+447789545807">Call 07789 545807</a><a class="wa-link" href="https://wa.me/447789545807?text=Hi%2C%20I%20have%20a%20question%20about%20my%20website.">Message on WhatsApp</a></div></div></aside>
+<aside><h2>Order summary</h2><p class="fine" id="estimate" hidden>Illustrative starting prices. A fixed project quote must be agreed before payment.</p><dl><div><dt>Website build</dt><dd id="build">£249.00</dd></div><div><dt>At handover</dt><dd id="handover">£163.50</dd></div><div><dt>Ongoing monthly</dt><dd id="monthly">£39.00</dd></div><div class="minimum" hidden><dt id="minimum-label">Minimum commitment</dt><dd id="minimum">£1,170.00</dd></div><div class="total"><dt>Due today</dt><dd id="today">£124.50</dd></div></dl><p id="details">50% deposit today. Remaining 50% plus the first month of hosting at handover.</p><form id="purchase"><label for="buyer-email">Email address</label><input type="email" id="buyer-email" autocomplete="email" required maxlength="254" placeholder="you@yourbusiness.co.uk"/><label class="consent"><input type="checkbox" id="agree" required data-terms-version="website-packages-2026-11-17"/><span id="agreement-text">I agree to the payment terms shown above.</span></label><button id="pay" type="submit" disabled>Continue to secure payment</button><a id="quote-contact" class="quote-contact wa-link" href="https://wa.me/447789545807" hidden>Discuss this package on WhatsApp</a><p id="payment-message" role="status"></p></form><p class="fine">No VAT is charged as we are not currently VAT registered.</p><div class="questions"><h3>Questions before buying?</h3><p>Speak directly to our team. We're happy to talk through your website and package.</p><div class="help-links"><a href="tel:+447789545807">Call 07789 545807</a><a class="wa-link" href="https://wa.me/447789545807?text=Hi%2C%20I%20have%20a%20question%20about%20my%20website.">Message on WhatsApp</a></div></div></aside>
 </section>
 </main><footer>Prunus Media &amp; UK Trade Websites</footer>
 <script>
-import { WEBSITE_CATALOGUE,catalogueQuote } from '../../../client-portal/src/website-sales-catalogue.js';
+import { WEBSITE_CATALOGUE,catalogueQuote,agreementFor,AGREEMENT_VERSION } from '../../../client-portal/src/website-sales-catalogue.js';
 const API='https://portal.prunusmedia.com/api/website-sales/';
 const ref=new URLSearchParams(location.search).get('ref')||'';
+const concept=new URLSearchParams(location.search).get('concept')||'';
 const gbp=(n:number)=>new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP'}).format(n/100);
 const el=(id:string)=>document.getElementById(id);
 const set=(id:string,value:string)=>{const node=el(id);if(node)node.textContent=value;};
@@ -39,17 +40,18 @@ function selectBrand(next:string){
  if(!document.querySelector('input[name="package"]:checked')){const fallback=document.querySelector<HTMLInputElement>('input[value="'+(brand==='prunus'?'pm-launch':'growth')+'"]');if(fallback)fallback.checked=true;}render();
 }
 const pay=el('pay') as HTMLButtonElement,form=el('purchase') as HTMLFormElement;
-function selected(){const plan=radio();const base=catalogueQuote(plan);const remote=quoteData?.prospect?.brand===brand&&quoteData?.plans?.find((q:any)=>q.plan===plan);return remote?{...base,...remote}:base;}
+function selected(){const plan=radio();const base=catalogueQuote(plan);const remote=quoteData?.plans?.find((q:any)=>q.plan===plan);return remote?{...base,...remote}:base;}
 function render(){
  (el('agree') as HTMLInputElement).checked=false;
  const q=selected(),plan=WEBSITE_CATALOGUE.find(p=>p.id===q.plan),isSeo=q.plan==='seo',financed=q.plan==='uk-financed',isPmSeo=q.plan==='pm-seo';
- const canPay=!!(q.onlineEligible&&quoteData?.enabled&&quoteData?.prospect?.brand===brand&&quoteData?.enabled_plans?.includes(q.plan));
- const paymentOption=q.plan==='starter'||q.plan==='growth';
+ const canPay=!!(q.onlineEligible&&quoteData?.enabled&&quoteData?.enabled_plans?.includes(q.plan));
+ const paymentOption=!!q.onlineEligible;
+ set('agreement-text',agreementFor(q));
  const amount=(n:number|null)=>n===null?'Quote separately':gbp(n);
  set('build',q.build===0?(financed?'No upfront build fee':'Included'):amount(q.build));set('handover',amount(q.handover));set('monthly',gbp(q.monthly));set('today',gbp(q.today));
  const row=document.querySelector<HTMLElement>('.minimum');if(row)row.hidden=!q.minimumMonths;
  if(q.minimumMonths){set('minimum-label',q.minimumMonths+'-month minimum');set('minimum',gbp(q.minimumTotal));}
- if(isSeo)set('details','First SEO month at sign-up. After six monthly payments, continue SEO for £195/month or choose hosting only at £39/month. Contact us to arrange this package.');
+ if(isSeo)set('details','First SEO month at sign-up. After six monthly payments, continue SEO for £195/month or choose hosting only at £39/month. The first payment is due today.');
  else if(financed)set('details','No deposit or separate handover fee. £65/month for the first 12 months, then £39/month. The first £65 is due at sign-up.');
  else if(isPmSeo)set('details','SEO from £195/month with hosting included. Current advertised minimum: three months. New website build quoted separately; standalone hosting £99/month.');
  else set('details','50% deposit today. Remaining 50% plus the first month of hosting at handover. Subsequent hosting is '+gbp(q.monthly)+'/month.'+(brand==='prunus'?' Figures based on the advertised starting price.':''));
@@ -57,18 +59,18 @@ function render(){
  const estimate=el('estimate');if(estimate)estimate.hidden=brand!=='prunus';
  for(const a of document.querySelectorAll<HTMLAnchorElement>('.wa-link'))a.href='https://wa.me/447789545807?text='+encodeURIComponent('Hi, I have a question about '+(quoteData?.prospect?.name?quoteData.prospect.name+' and ':'')+(plan?.name||'my website')+' with '+(brand==='prunus'?'Prunus Media':'UK Trade Websites')+'.');
  const banner=el('offer');if(banner)banner.hidden=!q.offer;if(q.offer){set('offer-title',q.offer_name||'Limited-time offer');tick();}
- for(const item of WEBSITE_CATALOGUE){const target=document.querySelector<HTMLElement>('[data-plan-price="'+item.id+'"]');if(target){const remote=quoteData?.prospect?.brand===brand&&quoteData?.plans?.find((p:any)=>p.plan===item.id);target.textContent=remote?(item.kind==='seo'?gbp(remote.today)+' today':gbp(remote.build)):(item.from?'From ':'')+gbp(item.price)+(item.kind!=='build'?'/mo':'');}}
+ for(const item of WEBSITE_CATALOGUE){const target=document.querySelector<HTMLElement>('[data-plan-price="'+item.id+'"]');if(target){const remote=quoteData?.plans?.find((p:any)=>p.plan===item.id);target.textContent=remote?(item.kind==='seo'||item.kind==='financed'?(item.from?'From ':'')+gbp(remote.monthly)+'/mo':(item.from?'From ':'')+gbp(remote.build)):(item.from?'From ':'')+gbp(item.price)+(item.kind!=='build'?'/mo':'');}}
  pay.disabled=!canPay||expired;pay.hidden=!paymentOption;
  const contact=el('quote-contact');if(contact)contact.hidden=paymentOption&&canPay;
  const emailField=el('buyer-email') as HTMLInputElement;const agreeField=el('agree') as HTMLInputElement;emailField.disabled=!paymentOption;agreeField.disabled=!paymentOption;emailField.hidden=!paymentOption;
  const label=document.querySelector<HTMLElement>('label[for="buyer-email"]');if(label)label.hidden=!paymentOption;const consent=document.querySelector<HTMLElement>('.consent');if(consent)consent.hidden=!paymentOption;
 }
 async function refresh(){
- if(!/^[a-f0-9]{64}$/.test(ref))return;
+ if(!/^[a-f0-9]{64}$/.test(ref)&&!/^[a-z0-9][a-z0-9-]{0,100}$/.test(concept))return;
  try{
-  const res=await fetch(API+'quote?ref='+encodeURIComponent(ref),{credentials:'omit',cache:'no-store'}),data=await res.json();
+  const res=await fetch(API+'quote?'+(ref?'ref='+encodeURIComponent(ref):'concept='+encodeURIComponent(concept)),{credentials:'omit',cache:'no-store'}),data=await res.json();
   if(!res.ok||!data.ok)throw Error(data.error||'Quote not available.');
-  quoteData=data;skew=data.server_time-Date.now();expired=false;selectBrand(data.prospect.brand);
+  quoteData=data;skew=data.server_time-Date.now();expired=false;selectBrand(new URLSearchParams(location.search).get('brand')==='prunus'?'prunus':new URLSearchParams(location.search).get('brand')==='uk-trades'?'uk-trades':data.prospect.brand);
   const section=el('prospect'), preview=el('preview') as HTMLAnchorElement;
   if(section)section.hidden=false;set('prospect-name',data.prospect.name);preview.href=data.prospect.preview_url;
   set('notice',data.enabled?'Your personalised offer. Review your package before paying.':'Your personalised quote. Online payments are not available yet; contact us to get started.');
@@ -87,11 +89,11 @@ form.addEventListener('submit',async e=>{
  e.preventDefault();if(pay.disabled)return;pay.disabled=true;set('payment-message','Opening secure payment…');
  const q=selected();
  try{
-   const res=await fetch(API+'checkout',{method:'POST',credentials:'omit',headers:{'content-type':'application/json'},body:JSON.stringify({token:ref,plan:q.plan,email:(el('buyer-email') as HTMLInputElement).value,agree:(el('agree') as HTMLInputElement).checked,agreement_version:(el('agree') as HTMLInputElement).dataset.termsVersion,today:q.today,handover:q.handover,monthly:q.monthly,offer_id:q.offer?.id||''})});
+   const res=await fetch(API+'checkout',{method:'POST',credentials:'omit',headers:{'content-type':'application/json'},body:JSON.stringify({token:ref,concept,plan:q.plan,email:(el('buyer-email') as HTMLInputElement).value,agree:(el('agree') as HTMLInputElement).checked,agreement_version:(el('agree') as HTMLInputElement).dataset.termsVersion,today:q.today,handover:q.handover,monthly:q.monthly,offer_id:q.offer?.id||''})});
    const result=await res.json();if(!res.ok||!result.ok)throw Error(result.error||'Checkout unavailable.');
    if(new URL(result.url).origin!=='https://checkout.stripe.com')throw Error('Invalid payment link.');
    location.assign(result.url);
- }catch(e){set('payment-message',e instanceof Error?e.message:'Payment unavailable. Please contact us.');pay.disabled=!quoteData?.enabled||expired;}
+ }catch(e){set('payment-message',e instanceof Error?e.message:'Payment unavailable. Please contact us.');pay.disabled=!quoteData?.enabled_plans?.includes(q.plan)||expired;}
 });
 for(const button of document.querySelectorAll<HTMLButtonElement>('[data-brand]'))button.addEventListener('click',()=>selectBrand(button.dataset.brand||'uk-trades'));
 selectBrand(new URLSearchParams(location.search).get('brand')==='prunus'?'prunus':'uk-trades');void refresh();window.setInterval(tick,1000);

@@ -7,7 +7,7 @@ import { contentRequestRoutes } from './content-requests.js';
 import { workspaceAdminRoutes } from './workspace-admin.js';
 import { gbpRoutes } from './gbp.js';
 import { normalizeWebsiteDomain } from './website-domain.js';
-import { websiteSalesPublic, websiteSalesAdmin } from './website-sales.js';
+import { websiteSalesPublic, websiteSalesAdmin, repairWebsiteSales } from './website-sales.js';
 // Prunus Media shared website-client portal.
 // Deploy independently from the marketing site using client-portal/wrangler.jsonc.
 // Cloudflare Worker: D1 (tenant-scoped records), private R2 (PDFs), Resend (OTP + notices).
@@ -439,6 +439,7 @@ export default {
     // Daily idempotent scheduling creates one weekly research task per active client.
     // Research itself requires human/source verification and is never invented here.
     await enqueueWeeklyResearch(env);
+    try{await repairWebsiteSales(env);}catch{console.error('Website sales billing reconciliation unavailable');}
     // Optional external Brave API discovery: source candidates only, never
     // a verified claim, approval, draft publication, or GitHub deployment.
     if(env.BRAVE_SEARCH_API_KEY){

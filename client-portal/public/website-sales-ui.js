@@ -14,9 +14,9 @@
  function action(box,label,fn){const b=add(box,'button',label);b.type='button';b.className='secondary';b.addEventListener('click',async()=>{b.disabled=true;try{await fn();}catch(e){status(e.message);}finally{b.disabled=false;}});return b;}
  window.loadWebsiteSales=async function(){
   try{
-   const j=await request();status(j.enabled?'Live deposits enabled for Starter and Trade Growth. Other packages: contact to arrange. Onboarding is handled manually.':'Payments disabled pending configuration and verification.');
+   const j=await request();status(j.enabled?'Live payment options: '+(j.enabled_plans||[]).length+' of 8. Onboarding is handled manually.':'Payments disabled pending configuration and verification.');
    get('sales-prospect-count').textContent=j.prospects.length;
-   get('sales-paid-count').textContent=j.orders.filter(o=>['deposit_paid','seo_active','hosting_active','handover_pending'].includes(o.status)).length;
+   get('sales-paid-count').textContent=j.orders.filter(o=>['deposit_paid','seo_active','financed_active','hosting_active','handover_pending'].includes(o.status)).length;
    const now=Date.now();get('sales-offer-count').textContent=j.offers.filter(o=>o.active&&o.start_ms<=now&&now<o.end_ms).length;
    const prospects=get('sales-prospects'),offers=get('sales-offers'),orders=get('sales-orders');
    for(const x of [prospects,offers,orders])x.replaceChildren();
@@ -36,7 +36,9 @@
    for(const o of j.orders){const quote=JSON.parse(o.quote_json);const box=item(orders,o.name,o.plan+' · '+o.status.replaceAll('_',' ')+' · '+money(quote.today)+' initial · '+money(quote.handover)+' handover · '+money(quote.monthly)+'/month');
     if(o.customer_email){const contact=add(box,'a',o.customer_email);contact.href='mailto:'+o.customer_email;}
     if(o.billing_issue)add(box,'p',o.billing_issue);
-    if(o.plan==='seo')add(box,'p',String(o.paid_invoices||0)+' verified subscription invoices');
+    if(['seo','pm-seo','uk-financed'].includes(o.plan))add(box,'p',String(o.paid_invoices||0)+' verified subscription invoices');
+    if(o.plan==='uk-financed')add(box,'p',o.schedule_id?'£39 hosting transition scheduled':'Financed transition awaiting verification');
+    if(['seo','pm-seo'].includes(o.plan)&&!o.schedule_id&&Number(o.paid_invoices)>=(o.plan==='seo'?6:3)&&o.status==='seo_active')action(box,'Schedule requested hosting downgrade',async()=>{if(!window.confirm('Confirm the customer requested the hosting-only downgrade at their next billing date.'))return;await request('/downgrade-seo',{id:o.id,confirm:true});await window.loadWebsiteSales();});
     if(o.status==='deposit_paid')action(box,'Complete handover',async()=>{if(!window.confirm('Charge '+money(quote.handover)+' now and start '+money(quote.monthly)+'/month hosting?'))return;await request('/handover',{id:o.id,confirm:true});await window.loadWebsiteSales();});
     if(o.invoice_url){try{const url=new URL(o.invoice_url);if(url.protocol==='https:'&&url.hostname==='invoice.stripe.com'){const a=add(box,'a','Open Stripe invoice');a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';}}catch{}}
    }
