@@ -5,7 +5,7 @@
  * The existing authentication and server-enforced tenant boundaries remain the source
  * of authority. Navigation state never grants server permissions.
  */
-const agencyViews=new Set(['dashboard','businesses','ai','team']);
+const agencyViews=new Set(['dashboard','businesses','ai','team','sales']);
 const businessViews=new Set(['overview','calendar','editorial','content','change','submissions','enquiries','customers','files','insights','settings']);
 const clientViews=new Set(['overview','calendar','content','change','submissions','enquiries','customers','files']);
 let portalMounted=false,portalBusy=false,portalAiLoaded=false,portalGbpClient='',portalPublishingClient='';
@@ -188,6 +188,7 @@ function portalRender(){
   portalClearScreens();
   const page=$('screen-'+view)||$('screen-'+(admin?'dashboard':'overview'));
   page.hidden=false;
+  if(view==='sales'&&admin&&typeof loadWebsiteSales==='function')void loadWebsiteSales();
   $('overview').hidden=agency;
   $('sidebar-agency-heading').hidden=!agency;
   $('sidebar-business-heading').hidden=agency;
