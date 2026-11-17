@@ -20,6 +20,39 @@ async function verifyCatalogue(env){
  const product=await websiteStripe(env,'products/'+WEBSITE_STRIPE.build);if(!product.active||!product.livemode||product.metadata?.integration!=='prunus_website_sales')throw Error('Website build product mismatch.');
  return true;
 }
+// A one-time, short-lived deployment authorisation created by the protected
+// portal-production GitHub workflow. No permanent backdoor, no customer charges.
+const getSetting=async(env,key)=>(await q(env,'SELECT value FROM website_sales_settings WHERE key=?',key).first())?.value;
+const setSetting=(env,key,value)=>q(env,'INSERT INTO website_sales_settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',key,String(value)).run();
+async function launchCheck(request,env){
+ const token=(request.headers.get('authorization')||'').match(/^Bearer ([a-f0-9]{64})$/)?.[1];
+ if(!token)return fail('Not authorised',401);
+ const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token))),n=>n.toString(16).padStart(2,'0')).join('');
+ const expected=await getSetting(env,'launch_nonce_hash'),until=Number(await getSetting(env,'launch_nonce_expires'));
+ if(!expected||digest!==expected||!Number.isFinite(until)||until<Date.now())return fail('Not authorised',401);
+ let d;try{d=await body(request);}catch{return fail('Invalid activation request');}
+ try{
+  if(d.action==='probe'){
+   await verifyCatalogue(env);
+   const key='website-launch-'+digest.slice(0,32);
+   const session=await stripe(env,'checkout/sessions',{mode:'payment','payment_method_types[0]':'card','customer_creation':'always','payment_intent_data[setup_future_usage]':'off_session','line_items[0][quantity]':1,'line_items[0][price_data][currency]':'gbp','line_items[0][price_data][product]':WEBSITE_STRIPE.build,'line_items[0][price_data][unit_amount]':7450,success_url:MARKETING+'/buy-now/success/',cancel_url:MARKETING+'/buy-now/','consent_collection[terms_of_service]':'required','automatic_tax[enabled]':false,'metadata[integration]':'prunus_website_launch_probe','metadata[launch_id]':digest},key);
+   if(!/^cs_live_/.test(session.id||'')||session.livemode!==true||session.amount_total!==7450||session.payment_status!=='unpaid')throw Error('Live checkout probe did not match the intended unpaid deposit.');
+   await setSetting(env,'launch_probe_session',session.id);
+   const expired=await stripe(env,'checkout/sessions/'+session.id+'/expire',{},key+'-expire');
+   if(expired.status!=='expired')throw Error('Could not expire the unpaid checkout probe.');
+   return json({ok:true,probe:'expired_unpaid'});
+  }
+  if(d.action==='activate'){
+   const probe=await getSetting(env,'launch_probe_session'),seen=await getSetting(env,'launch_probe_verified');
+   if(!probe||seen!==probe)return fail('Waiting for the signed expiration webhook.',409);
+   await verifyCatalogue(env);
+   await setSetting(env,'enabled','true');
+   await q(env,"DELETE FROM website_sales_settings WHERE key IN ('launch_nonce_hash','launch_nonce_expires')").run();
+   return json({ok:true,enabled:true,plans:['starter','growth']});
+  }
+  return fail('Invalid activation action');
+ }catch(e){return fail(String(e.message||'Activation failed').slice(0,250),503);}
+}
 const email=v=>/^\S+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=254;
 async function body(request){
  if(!(request.headers.get('content-type')||'').startsWith('application/json'))throw Error('Expected JSON');
@@ -47,7 +80,7 @@ async function checkout(request,env){
  if(!(await configured(env)))return fail('Online payment is not available yet. Please call or WhatsApp us.',503,true);
  let d;try{d=await body(request);}catch{return fail('Invalid checkout request.',400,true);}
  const p=await prospect(env,d.token),addr=text(d.email,254).toLowerCase();
- if(!p||p.brand!=='uk-trades'||!own(CONCEPT_PLANS,d.plan)||!email(addr)||d.agree!==true)return fail('Choose a package, supply your email and accept the payment terms.',400,true);
+ if(!p||p.brand!=='uk-trades'||!['starter','growth'].includes(d.plan)||!email(addr)||d.agree!==true)return fail('Choose a package, supply your email and accept the payment terms.',400,true);
  const quote=(await offers(env,p)).find(x=>x.plan===d.plan);
  // Require the exact server-calculated quote shown at confirmation.
  if(d.today!==quote.today||d.handover!==quote.handover||d.monthly!==quote.monthly||String(d.offer_id||'')!==String(quote.offer?.id||''))return fail('Pricing changed. Refresh the quote and review it again.',409,true);
@@ -95,6 +128,13 @@ async function webhook(request,env){
  if(!env.STRIPE_WEBSITES_WEBHOOK_SECRET)return fail('Webhook not configured',503);
  let event;try{event=await verifyWebsiteStripeEvent(await request.text(),request.headers.get('stripe-signature'),env.STRIPE_WEBSITES_WEBHOOK_SECRET);}catch{return fail('Invalid signature',400);}
  const data=event.data?.object;if(!data)return fail('Invalid event',400);
+ if(event.type==='checkout.session.expired'&&data.metadata?.integration==='prunus_website_launch_probe'){
+  const probe=await getSetting(env,'launch_probe_session'),digest=await getSetting(env,'launch_nonce_hash');
+  if(probe===data.id&&digest&&data.metadata?.launch_id===digest&&data.payment_status==='unpaid'){
+   await setSetting(env,'launch_probe_verified',data.id);
+  }
+  return json({ok:true,probe:true});
+ }
  await q(env,"INSERT INTO website_sales_settings(key,value) VALUES('last_verified_webhook',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",String(Date.now())).run();
  // Account-wide events include Certificates. Only process exact stored object IDs.
  let order=null;
@@ -139,12 +179,14 @@ async function webhook(request,env){
 export async function websiteSalesPublic(request,env,url){
  const path=url.pathname;
  if(path==='/api/stripe/websites/webhook'&&request.method==='POST')return webhook(request,env);
+ if(path==='/api/website-sales/launch-check'&&request.method==='POST')return launchCheck(request,env);
  if(!path.startsWith('/api/website-sales/'))return null;
  if(request.headers.get('origin')!==MARKETING)return fail('Origin not permitted',403);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'access-control-allow-origin':MARKETING,'access-control-allow-methods':'GET, POST, OPTIONS','access-control-allow-headers':'Content-Type','vary':'Origin'}});
  if(path==='/api/website-sales/quote'&&request.method==='GET'){
    const p=await prospect(env,url.searchParams.get('ref'));if(!p)return fail('This purchase link is not available. Speak to our team.',404,true);
-   return json({ok:true,enabled:p.brand==='uk-trades'&&await configured(env),prospect:{name:p.name,brand:p.brand,preview_url:p.preview_url},plans:await offers(env,p),server_time:Date.now()},200,true);
+   const enabled=p.brand==='uk-trades'&&await configured(env);
+   return json({ok:true,enabled,enabled_plans:enabled?['starter','growth']:[],prospect:{name:p.name,brand:p.brand,preview_url:p.preview_url},plans:await offers(env,p),server_time:Date.now()},200,true);
  }
  if(path==='/api/website-sales/checkout'&&request.method==='POST')return checkout(request,env);
  return fail('Not found',404,true);
@@ -178,7 +220,7 @@ export async function websiteSalesAdmin(request,env,user,url){
    const [prospects,offers,orders]=await Promise.all([
     q(env,'SELECT * FROM website_sales_prospects ORDER BY created_ms DESC LIMIT 250').all(),
     q(env,'SELECT * FROM website_sales_offers ORDER BY created_ms DESC LIMIT 100').all(),
-    q(env,"SELECT o.id,o.plan,o.status,o.quote_json,o.created_ms,o.updated_ms,o.invoice_url,o.billing_issue,(SELECT COUNT(*) FROM website_sales_paid_invoices i WHERE i.order_id=o.id AND i.billing_reason IN ('subscription_create','subscription_cycle')) AS paid_invoices,p.name,p.brand FROM website_sales_orders o JOIN website_sales_prospects p ON p.token=o.prospect_token ORDER BY o.created_ms DESC LIMIT 250").all()]);
+    q(env,"SELECT o.id,o.plan,o.status,o.quote_json,o.created_ms,o.updated_ms,o.customer_email,o.invoice_url,o.billing_issue,(SELECT COUNT(*) FROM website_sales_paid_invoices i WHERE i.order_id=o.id AND i.billing_reason IN ('subscription_create','subscription_cycle')) AS paid_invoices,p.name,p.brand FROM website_sales_orders o JOIN website_sales_prospects p ON p.token=o.prospect_token ORDER BY o.created_ms DESC LIMIT 250").all()]);
    return json({ok:true,enabled:await configured(env),prospects:prospects.results,offers:offers.results,orders:orders.results});
  }
  if(request.method!=='POST')return fail('Not found',404);
@@ -190,8 +232,8 @@ export async function websiteSalesAdmin(request,env,user,url){
    try{await verifyCatalogue(env);}catch(e){return fail(e.message,503);}
    const seen=await q(env,"SELECT value FROM website_sales_settings WHERE key='last_verified_webhook'").first();
    if(!seen||Date.now()-Number(seen.value)>86400000)return fail('A signed live Stripe webhook must reach this Worker within the last 24 hours.',409);
-   // This launch intentionally remains blocked until commitment lifecycle and automated onboarding are complete.
-   return fail('Subscription commitment and onboarding acceptance checks still required before opening payments.',409);
+   const probe=await getSetting(env,'launch_probe_session');if(!probe||await getSetting(env,'launch_probe_verified')!==probe)return fail('A verified live checkout probe is required.',409);
+   await setSetting(env,'enabled','true');return json({ok:true,plans:['starter','growth']});
  }
  if(path==='/api/admin/website-sales/handover'){
    if(!credentials(env)||d.confirm!==true)return fail('Confirm the handover charge and hosting start.');

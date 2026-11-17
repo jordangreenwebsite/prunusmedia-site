@@ -26,3 +26,6 @@ Both checkout pages show the shared portal-style Prunus wordmark and UK Trades l
 
 ## Production foundation
 Dedicated live Stripe catalogue IDs are in website-sales-billing.js. The owner handover action uses a verified deposit, saved payment method, dedicated subscription, and one-time balance on its first invoice; a failed or uncertain charge is held for manual Stripe reconciliation. Paid invoices are tracked by unique Stripe invoice ID. Owner activation is intentionally still fail-closed until subscription term enforcement, financed transition, onboarding and live delivery acceptance are complete. No production secret is committed. Keep Payments disabled and retain existing concept links until activation.
+
+## Owner-authorised initial live launch
+Only Starter and Trade Growth deposits may be enabled by the protected one-time production launch check, after the canonical Buy Now page, live Stripe catalogue, an unpaid live Checkout Session, and that session's signed expiration webhook are verified. All other packages remain contact-to-arrange; onboarding/notifications and subscription commitment transitions remain manual or pending. No customer is charged by the acceptance probe. The production owner can disable payments through the activation API. Existing prospect links require registration and are not replaced by this activation.

@@ -42,12 +42,13 @@ const pay=el('pay') as HTMLButtonElement,form=el('purchase') as HTMLFormElement;
 function selected(){const plan=radio();const base=catalogueQuote(plan);const remote=quoteData?.prospect?.brand===brand&&quoteData?.plans?.find((q:any)=>q.plan===plan);return remote?{...base,...remote}:base;}
 function render(){
  const q=selected(),plan=WEBSITE_CATALOGUE.find(p=>p.id===q.plan),isSeo=q.plan==='seo',financed=q.plan==='uk-financed',isPmSeo=q.plan==='pm-seo';
- const canPay=!!(q.onlineEligible&&quoteData?.enabled&&quoteData?.prospect?.brand===brand&&quoteData?.plans?.some((p:any)=>p.plan===q.plan));
+ const canPay=!!(q.onlineEligible&&quoteData?.enabled&&quoteData?.prospect?.brand===brand&&quoteData?.enabled_plans?.includes(q.plan));
+ const paymentOption=q.plan==='starter'||q.plan==='growth';
  const amount=(n:number|null)=>n===null?'Quote separately':gbp(n);
  set('build',q.build===0?(financed?'No upfront build fee':'Included'):amount(q.build));set('handover',amount(q.handover));set('monthly',gbp(q.monthly));set('today',gbp(q.today));
  const row=document.querySelector<HTMLElement>('.minimum');if(row)row.hidden=!q.minimumMonths;
  if(q.minimumMonths){set('minimum-label',q.minimumMonths+'-month minimum');set('minimum',gbp(q.minimumTotal));}
- if(isSeo)set('details','First SEO month today. After six monthly payments, continue SEO for £195/month or choose hosting only at £39/month.');
+ if(isSeo)set('details','First SEO month at sign-up. After six monthly payments, continue SEO for £195/month or choose hosting only at £39/month. Contact us to arrange this package.');
  else if(financed)set('details','No deposit or separate handover fee. £65/month for the first 12 months, then £39/month. The first £65 is due at sign-up.');
  else if(isPmSeo)set('details','SEO from £195/month with hosting included. Current advertised minimum: three months. New website build quoted separately; standalone hosting £99/month.');
  else set('details','50% deposit today. Remaining 50% plus the first month of hosting at handover. Subsequent hosting is '+gbp(q.monthly)+'/month.'+(brand==='prunus'?' Figures based on the advertised starting price.':''));
@@ -56,10 +57,10 @@ function render(){
  for(const a of document.querySelectorAll<HTMLAnchorElement>('.wa-link'))a.href='https://wa.me/447789545807?text='+encodeURIComponent('Hi, I have a question about '+(quoteData?.prospect?.name?quoteData.prospect.name+' and ':'')+(plan?.name||'my website')+' with '+(brand==='prunus'?'Prunus Media':'UK Trade Websites')+'.');
  const banner=el('offer');if(banner)banner.hidden=!q.offer;if(q.offer){set('offer-title',q.offer_name||'Limited-time offer');tick();}
  for(const item of WEBSITE_CATALOGUE){const target=document.querySelector<HTMLElement>('[data-plan-price="'+item.id+'"]');if(target){const remote=quoteData?.prospect?.brand===brand&&quoteData?.plans?.find((p:any)=>p.plan===item.id);target.textContent=remote?(item.kind==='seo'?gbp(remote.today)+' today':gbp(remote.build)):(item.from?'From ':'')+gbp(item.price)+(item.kind!=='build'?'/mo':'');}}
- pay.disabled=!canPay||expired;pay.hidden=!q.onlineEligible;
- const contact=el('quote-contact');if(contact)contact.hidden=!!q.onlineEligible;
- const emailField=el('buyer-email') as HTMLInputElement;const agreeField=el('agree') as HTMLInputElement;emailField.disabled=!q.onlineEligible;agreeField.disabled=!q.onlineEligible;emailField.hidden=!q.onlineEligible;
- const label=document.querySelector<HTMLElement>('label[for="buyer-email"]');if(label)label.hidden=!q.onlineEligible;const consent=document.querySelector<HTMLElement>('.consent');if(consent)consent.hidden=!q.onlineEligible;
+ pay.disabled=!canPay||expired;pay.hidden=!paymentOption;
+ const contact=el('quote-contact');if(contact)contact.hidden=paymentOption&&canPay;
+ const emailField=el('buyer-email') as HTMLInputElement;const agreeField=el('agree') as HTMLInputElement;emailField.disabled=!paymentOption;agreeField.disabled=!paymentOption;emailField.hidden=!paymentOption;
+ const label=document.querySelector<HTMLElement>('label[for="buyer-email"]');if(label)label.hidden=!paymentOption;const consent=document.querySelector<HTMLElement>('.consent');if(consent)consent.hidden=!paymentOption;
 }
 async function refresh(){
  if(!/^[a-f0-9]{64}$/.test(ref))return;

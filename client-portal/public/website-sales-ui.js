@@ -14,7 +14,7 @@
  function action(box,label,fn){const b=add(box,'button',label);b.type='button';b.className='secondary';b.addEventListener('click',async()=>{b.disabled=true;try{await fn();}catch(e){status(e.message);}finally{b.disabled=false;}});return b;}
  window.loadWebsiteSales=async function(){
   try{
-   const j=await request();status(j.enabled?'Live payment configuration present.':'Payments disabled pending configuration and verification.');
+   const j=await request();status(j.enabled?'Live deposits enabled for Starter and Trade Growth. Other packages: contact to arrange. Onboarding is handled manually.':'Payments disabled pending configuration and verification.');
    get('sales-prospect-count').textContent=j.prospects.length;
    get('sales-paid-count').textContent=j.orders.filter(o=>['deposit_paid','seo_active','hosting_active','handover_pending'].includes(o.status)).length;
    const now=Date.now();get('sales-offer-count').textContent=j.offers.filter(o=>o.active&&o.start_ms<=now&&now<o.end_ms).length;
@@ -34,6 +34,7 @@
     action(box,o.active?'Pause':'Resume',async()=>{await request('/offer-status',{id:o.id,active:!o.active});await window.loadWebsiteSales();});
    }
    for(const o of j.orders){const quote=JSON.parse(o.quote_json);const box=item(orders,o.name,o.plan+' · '+o.status.replaceAll('_',' ')+' · '+money(quote.today)+' initial · '+money(quote.handover)+' handover · '+money(quote.monthly)+'/month');
+    if(o.customer_email){const contact=add(box,'a',o.customer_email);contact.href='mailto:'+o.customer_email;}
     if(o.billing_issue)add(box,'p',o.billing_issue);
     if(o.plan==='seo')add(box,'p',String(o.paid_invoices||0)+' verified subscription invoices');
     if(o.status==='deposit_paid')action(box,'Complete handover',async()=>{if(!window.confirm('Charge '+money(quote.handover)+' now and start '+money(quote.monthly)+'/month hosting?'))return;await request('/handover',{id:o.id,confirm:true});await window.loadWebsiteSales();});

@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {websiteSalesPublic} from '../src/website-sales.js';
+test('launch endpoint rejects unauthorised requests before database access',async()=>{const url=new URL('https://portal.prunusmedia.com/api/website-sales/launch-check');const r=await websiteSalesPublic(new Request(url,{method:'POST',body:'{}'}),{},url);assert.equal(r.status,401);});
