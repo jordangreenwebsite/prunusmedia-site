@@ -227,6 +227,7 @@ function portalRender(){
   if(admin&&view==='insights'&&typeof loadSeoWorkspace==='function')void loadSeoWorkspace();
   if(admin&&view==='insights'&&typeof loadPaidSeo==='function')void loadPaidSeo();
   if(admin&&view==='insights'&&typeof loadSeoActions==='function')void loadSeoActions();
+  if(admin&&view==='insights'&&typeof loadSeoGrowth==='function')void loadSeoGrowth();
   if(view==='keywords'&&typeof loadSeoProgress==='function')void loadSeoProgress();
   if(view==='calendar'&&admin){
     fillCalendarBusinessOptions();

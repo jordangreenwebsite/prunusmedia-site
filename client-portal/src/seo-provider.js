@@ -11,6 +11,7 @@ const rules={
  overview:{path:'/v3/dataforseo_labs/google/keyword_overview/live',reserve:50000,ttl:30},
  competitor:{path:'/v3/dataforseo_labs/google/ranked_keywords/live',reserve:50000,ttl:30},
  backlinks:{path:'/v3/backlinks/backlinks/live',reserve:60000,ttl:7},
+ maps:{path:'/v3/serp/google/maps/live/advanced',reserve:30000,ttl:0},
  rank:{path:'/v3/serp/google/organic/live/advanced',reserve:20000,ttl:0}
 };
 export function providerConfig(env){
@@ -29,6 +30,11 @@ export function parseResults(kind,result,target){
  if(kind==='ideas'||kind==='overview')return {rows:items.slice(0,100).map(metrics).filter(x=>x.keyword)};
  if(kind==='competitor')return {rows:items.slice(0,100).map(x=>({...metrics(x),position:number(x.ranked_serp_element?.serp_item?.rank_group),url:clean(x.ranked_serp_element?.serp_item?.url,1500)})).filter(x=>x.keyword)};
  if(kind==='backlinks')return {total:number(result.total_count),rows:items.slice(0,100).map(x=>({source:clean(x.url_from,1500),target:clean(x.url_to,1500),domain:clean(x.domain_from,253),anchor:clean(x.anchor,200),rank:number(x.domain_from_rank),new:x.is_new===true,lost:x.is_lost===true,first_seen:clean(x.first_seen,80),last_seen:clean(x.last_seen,80)})).filter(x=>x.source&&x.target)};
+ if(kind==='maps'){
+  const rows=items.filter(x=>x.type==='maps_search'&&Number.isInteger(x.rank_group)&&x.rank_group>0&&x.rank_group<=30).sort((a,b)=>a.rank_group-b.rank_group);
+  const found=rows.find(x=>target.startsWith('cid:')?String(x.cid)===target.slice(4):x.place_id===target);
+  return {position:found?.rank_group??null,result_count:rows.length};
+ }
  const organic=items.filter(x=>x.type==='organic'&&Number.isInteger(x.rank_group)&&x.rank_group>0&&x.rank_group<=30).sort((a,b)=>a.rank_group-b.rank_group);
  const found=organic.filter(x=>matching(x.domain,target)).sort((a,b)=>a.rank_group-b.rank_group)[0];
  return {position:found?.rank_group??null,url:found?clean(found.url,1500):null,result_count:organic.length,corrected:clean(result?.spell?.keyword,200)||null,rivals:organic.slice(0,10).map(x=>({position:x.rank_group,domain:clean(x.domain,253),url:clean(x.url,1500)}))};
@@ -46,7 +52,7 @@ export async function reserve(env,clientId,kind,key){
  if(!row)fail('Budget limit, another recent request, or a provider billing discrepancy. No new call was made.',429);
  return id;
 }
-async function requestProvider(env,clientId,kind,key,params,target,force=false){
+export async function requestProvider(env,clientId,kind,key,params,target,force=false){
  const rule=rules[kind];
  const old=await env.DB.prepare('SELECT payload,fetched_at FROM seo_provider_cache WHERE client_id=? AND kind=? AND request_key=?').bind(clientId,kind,key).first();
  if(!force&&old&&Date.now()-Date.parse(old.fetched_at.replace(' ','T')+'Z')<rule.ttl*86400000)return {...JSON.parse(old.payload),fetched_at:old.fetched_at,cached:true};

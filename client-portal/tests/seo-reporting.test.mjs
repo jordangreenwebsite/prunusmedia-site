@@ -6,7 +6,7 @@ import {analyticsRequest,parseAnalytics,analyticsMetrics,buildClientReport,rende
 const dates={month:'2026-10',start:'2026-10-01',end:'2026-10-31',priorStart:'2026-09-01',priorEnd:'2026-09-30'};
 function setup(){
  const db=new DatabaseSync(':memory:');
- for(const name of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql','0010_seo_workspace.sql','0011_seo_paid_research.sql','0012_seo_actions.sql','0013_seo_client_progress.sql','0014_seo_client_keyword_selection.sql','0015_seo_reporting.sql'])db.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
+ for(const name of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql','0010_seo_workspace.sql','0011_seo_paid_research.sql','0012_seo_actions.sql','0013_seo_client_progress.sql','0014_seo_client_keyword_selection.sql','0015_seo_reporting.sql','0016_seo_growth.sql'])db.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
  db.exec("INSERT INTO clients(id,slug,name,domain,contact_email) VALUES('a','a','A','a.co.uk','a@example.com'),('b','b','B','b.co.uk','b@example.com')");
  const DB={prepare(sql){const p=db.prepare(sql);let args=[];const q={bind(...v){args=v;return q;},async first(){return p.get(...args)||null;},async all(){return {results:p.all(...args)};},async run(){return p.run(...args);}};return q;}};
  return {db,DB};

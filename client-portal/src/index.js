@@ -5,6 +5,7 @@ import { paidSeoRoute,runPaidSeoSchedule } from './seo-provider.js';
 import { seoActionsRoute,runSeoActionsSchedule } from './seo-actions.js';
 import { seoProgressRoute } from './seo-progress.js';
 import { reportingRoute } from './seo-reporting.js';
+import { growthRoute,runMapsSchedule } from './seo-growth.js';
 import { researchDiscoveryRoute, runAutomaticDiscovery } from './research.js';
 import { createPrRoute } from './github-pr.js';
 import { mcpHandler } from './mcp.js';
@@ -418,6 +419,8 @@ export default {
       if(gbp)return gbp;
       const extra=await extraRoutes(request,env,user,url);
       if (extra) return extra;
+      const growth=await growthRoute(request,env,user,url);
+      if(growth)return growth;
       const reporting=await reportingRoute(request,env,user,url);
       if(reporting)return reporting;
       const seoProgress=await seoProgressRoute(request,env,user,url);
@@ -451,6 +454,7 @@ export default {
     }
     if(_event?.cron==='43 */6 * * *'){
       try{await runPaidSeoSchedule(env);}catch{console.error('Paid SEO scheduled sync unavailable');}
+      try{await runMapsSchedule(env);}catch{console.error('Maps schedule unavailable');}
       return;
     }
     if(_event?.cron==='23 */6 * * *'){

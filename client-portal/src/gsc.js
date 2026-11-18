@@ -148,6 +148,13 @@ export async function getSeoMonthlyMetrics(env,client,start,end,priorStart,prior
   return {status:'ok',current:a.rows?.length?summary(a.rows[0]):null,previous:b.rows?.length?summary(b.rows[0]):null};
 }
 
+export async function listMatchingProperties(env,client){
+ if(!env.GSC_SERVICE_ACCOUNT_JSON)throw Error('Service account not configured');
+ const token=await gscToken(env);
+ const r=await fetch('https://www.googleapis.com/webmasters/v3/sites',{headers:{authorization:'Bearer '+token},redirect:'error',signal:AbortSignal.timeout(12000)});
+ if(!r.ok)throw Error('Unable to list Search Console properties');
+ const data=await r.json();return (data.siteEntry||[]).filter(x=>['siteOwner','siteFullUser','siteRestrictedUser'].includes(x.permissionLevel)&&validProperty(x.siteUrl,client.domain)).map(x=>({property:x.siteUrl,permission:x.permissionLevel}));
+}
 export async function getSeoFocusMetrics(env,client,dates,terms){
  if(!env.GSC_SERVICE_ACCOUNT_JSON||!validProperty(client.gsc_property,client.domain)||!terms.length)return {current:[],previous:[]};
  const token=await gscToken(env);
