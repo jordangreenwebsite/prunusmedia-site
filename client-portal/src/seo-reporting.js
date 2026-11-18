@@ -97,6 +97,17 @@ export async function buildClientReport(env,c,dates,performance,ev,stamp){
  });
  const outreach=contacted.map(x=>({domain:safeHost(x.source_url),date:x.contacted_on,status:x.outreach_status})).filter(x=>x.domain);
  const narrative=reportNarrative(performance,analytics,keywords,work,outreach);
+ // Only focus-term work can enter the client report; never reproduce private evidence or raw internal task text.
+ const focusNames=new Set(keywords.map(k=>k.keyword.toLowerCase()));
+ const actionable=[];
+ for(const k of keywords){
+  const mapped=(ev.mapping||[]).find(m=>String(m.keyword).toLowerCase()===k.keyword.toLowerCase());
+  if(mapped?.mismatch)actionable.push('Review the intended landing page for '+k.keyword+' against the page Google is currently showing.');
+  if((ev.opportunities||[]).some(t=>t.status==='open'&&t.type==='overlap'&&focusNames.has(String(t.query).toLowerCase())&&String(t.query).toLowerCase()===k.keyword.toLowerCase()))actionable.push('Review whether more than one page is targeting '+k.keyword+'. Keep distinct search intent where it is useful.');
+  if((ev.opportunities||[]).some(t=>t.status==='open'&&t.type==='improve'&&String(t.query).toLowerCase()===k.keyword.toLowerCase()))actionable.push('Improve the relevant page for '+k.keyword+' using the observed impression and position opportunity.');
+ }
+ if(ev.audit?.links?.some(x=>[404,410].includes(x.status)))actionable.push('Repair and recheck confirmed broken internal links from the latest technical sample.');
+ narrative.next=[...new Set([...actionable,...narrative.next])].slice(0,8);
  const audit=ev.audit?{date:ev.audit.checked_at,pages:ev.audit.pages.length,broken:ev.audit.links.filter(x=>[404,410].includes(x.status)).length}:null;
  return {version:1,brand:brandName(s.brand,c),business:c.name,domain:c.domain,month:dates.month,start:dates.start,end:dates.end,priorStart:dates.priorStart,priorEnd:dates.priorEnd,generated_at:stamp,performance,analytics,keywords,work,outreach,posts:posts.map(x=>x.title),recorded_enquiries:Number(leads?.n||0),audit,...narrative};
 }

@@ -177,6 +177,6 @@ export async function runSeoActionsSchedule(env){
  const audits=await all(env.DB.prepare("SELECT c.id,c.domain,c.name,c.gsc_property FROM clients c JOIN seo_action_settings a ON c.id=a.client_id WHERE c.active=1 AND a.audit_enabled=1 AND (a.audit_attempted_at IS NULL OR a.audit_attempted_at<datetime('now','-7 days')) ORDER BY COALESCE(a.audit_attempted_at,''),c.id LIMIT 1"));
  for(const c of audits)try{await auditRun(env,c,true);}catch{}
  const m=priorMonth();if(!calendarMonth(m))return;
- const reports=await all(env.DB.prepare("SELECT c.id,c.domain,c.name,c.gsc_property FROM clients c JOIN seo_action_settings a ON c.id=a.client_id LEFT JOIN seo_monthly_reports r ON r.client_id=c.id AND r.month=? WHERE c.active=1 AND a.reports_enabled=1 AND (r.month IS NULL OR a.report_status='partial') AND (a.report_attempted_month IS NULL OR a.report_attempted_month<>? OR a.report_attempted_at<datetime('now','-7 days')) ORDER BY COALESCE(a.report_attempted_at,''),c.id LIMIT 1").bind(m,m));
+ const reports=await all(env.DB.prepare("SELECT c.id,c.domain,c.name,c.gsc_property,c.brand FROM clients c JOIN seo_action_settings a ON c.id=a.client_id LEFT JOIN seo_monthly_reports r ON r.client_id=c.id AND r.month=? WHERE c.active=1 AND a.reports_enabled=1 AND (r.month IS NULL OR a.report_status='partial') AND (a.report_attempted_month IS NULL OR a.report_attempted_month<>? OR a.report_attempted_at<datetime('now','-7 days')) ORDER BY COALESCE(a.report_attempted_at,''),c.id LIMIT 1").bind(m,m));
  for(const c of reports)try{await reportRun(env,c,m,true);}catch{}
 }
