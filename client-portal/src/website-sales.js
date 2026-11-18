@@ -1,5 +1,5 @@
 import { CONCEPT_PLANS, quoteWebsite } from './website-checkout-pricing.js';
-import { AGREEMENT_VERSION,planIds,isRecurringPlan,isBuildPlan,agreementFor,checkoutQuote } from './website-sales-catalogue.js';
+import { AGREEMENT_VERSION,planIds,purchasablePlanIds,isRecurringPlan,isBuildPlan,agreementFor,checkoutQuote } from './website-sales-catalogue.js';
 import { verifyWebsiteStripeEvent } from './website-checkout-signature.js';
 import { WEBSITE_STRIPE, websiteStripe, handoverParams, isWebsiteObject, subscriptionInvoiceMatches, recurringPrice, financedScheduleParams } from './website-sales-billing.js';
 const MARKETING='https://prunusmedia.com', APP='https://portal.prunusmedia.com';
@@ -37,7 +37,7 @@ async function launchCheck(request,env){
    await verifyCatalogue(env);
    const key='website-launch-'+digest.slice(0,32);
    const probes=[];
-   for(const plan of planIds()){
+   for(const plan of purchasablePlanIds()){
     const q=checkoutQuote(plan),rec=recurringPrice(plan);
     const form={mode:rec?'subscription':'payment','line_items[0][quantity]':1,success_url:MARKETING+'/buy-now/success/',cancel_url:MARKETING+'/buy-now/','automatic_tax[enabled]':false,'metadata[integration]':'prunus_website_launch_probe','metadata[launch_id]':digest,'metadata[plan]':plan};
     if(rec)form['line_items[0][price]']=rec;
@@ -62,21 +62,21 @@ async function launchCheck(request,env){
     if(schedule?.id){const cancelled=await stripe(env,'subscription_schedules/'+schedule.id+'/cancel',{},key+'-schedule-cancel');if(cancelled.status!=='canceled')throw Error('Diagnostic schedule not cancelled');}
    }
    await setSetting(env,'launch_all_verified_key',digest);
-   return json({ok:true,probe:'8_expired_unpaid_schedule_cancelled'});
+   return json({ok:true,probe:'7_expired_unpaid_schedule_cancelled'});
   }
   if(d.action==='activate'){
    if(await getSetting(env,'launch_all_verified_key')!==digest)return fail('Awaiting live schedule validation',409);
-   for(const plan of planIds()){const probe=await getSetting(env,'launch_expected_'+plan);if(!probe||await getSetting(env,'launch_seen_'+plan)!==probe)return fail('Waiting for signed expiration webhook: '+plan,409);}
+   for(const plan of purchasablePlanIds()){const probe=await getSetting(env,'launch_expected_'+plan);if(!probe||await getSetting(env,'launch_seen_'+plan)!==probe)return fail('Waiting for signed expiration webhook: '+plan,409);}
    await verifyCatalogue(env);
    await setSetting(env,'enabled','true');await setSetting(env,'all_packages','true');
    await q(env,"DELETE FROM website_sales_settings WHERE key IN ('launch_nonce_hash','launch_nonce_expires')").run();
-   return json({ok:true,enabled:true,plans:planIds()});
+   return json({ok:true,enabled:true,plans:purchasablePlanIds()});
   }
   return fail('Invalid activation action');
  }catch(e){return fail(String(e.message||'Activation failed').slice(0,250),503);}
 }
 const PAYMENT_AGREEMENT_VERSION=AGREEMENT_VERSION;
-async function enabledPlans(env){if(!(await configured(env)))return [];return await getSetting(env,'all_packages')==='true'?planIds():['starter','growth'];}
+async function enabledPlans(env){if(!(await configured(env)))return [];return await getSetting(env,'all_packages')==='true'?purchasablePlanIds():['starter','growth'];}
 const email=v=>/^\S+@[^\s@]+\.[^\s@]+$/.test(v)&&v.length<=254;
 async function body(request){
  if(!(request.headers.get('content-type')||'').startsWith('application/json'))throw Error('Expected JSON');
@@ -213,7 +213,7 @@ export async function websiteSalesPublic(request,env,url){
  if(path==='/api/website-sales/quote'&&request.method==='GET'){
    const p=await prospect(env,url.searchParams.get('ref'),url.searchParams.get('concept'));if(!p)return fail('This purchase link is not available. Speak to our team.',404,true);
    const plans=await enabledPlans(env),enabled=plans.length>0;
-   return json({ok:true,enabled,enabled_plans:plans,prospect:{name:p.name,brand:p.brand,preview_url:p.preview_url},plans:await offers(env,p),server_time:Date.now()},200,true);
+   return json({ok:true,enabled,enabled_plans:plans,agreement_version:PAYMENT_AGREEMENT_VERSION,prospect:{name:p.name,brand:p.brand,preview_url:p.preview_url},plans:await offers(env,p),server_time:Date.now()},200,true);
  }
  if(path==='/api/website-sales/checkout'&&request.method==='POST')return checkout(request,env);
  return fail('Not found',404,true);
