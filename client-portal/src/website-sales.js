@@ -1,3 +1,4 @@
+import { EXTRAS,SOURCES,extraPreferences } from './website-sales-extras.js';
 import { CONCEPT_PLANS, quoteWebsite } from './website-checkout-pricing.js';
 import { AGREEMENT_VERSION,planIds,purchasablePlanIds,isRecurringPlan,isBuildPlan,agreementFor,checkoutQuote } from './website-sales-catalogue.js';
 import { verifyWebsiteStripeEvent } from './website-checkout-signature.js';
@@ -24,6 +25,7 @@ async function verifyCatalogue(env){
 // A one-time, short-lived deployment authorisation created by the protected
 // portal-production GitHub workflow. No permanent backdoor, no customer charges.
 const getSetting=async(env,key)=>(await q(env,'SELECT value FROM website_sales_settings WHERE key=?',key).first())?.value;
+const disabledExtras=async env=>{const raw=await getSetting(env,'disabled_checkout_extras');if(!raw)return [];try{const a=JSON.parse(raw);return Array.isArray(a)?a.filter(id=>EXTRAS.some(e=>e.id===id)):[];}catch{return []}};
 const setSetting=(env,key,value)=>q(env,'INSERT INTO website_sales_settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',key,String(value)).run();
 async function launchCheck(request,env){
  const token=(request.headers.get('authorization')||'').match(/^Bearer ([a-f0-9]{64})$/)?.[1];
@@ -105,6 +107,9 @@ async function checkout(request,env){
  const p=await prospect(env,d.token,d.concept),addr=text(d.email,254).toLowerCase();
  if(!p||!(await enabledPlans(env)).includes(d.plan)||!email(addr)||d.agree!==true||d.agreement_version!==PAYMENT_AGREEMENT_VERSION)return fail('Choose a package, supply your email and accept the payment terms.',400,true);
  const quote=(await offers(env,p)).find(x=>x.plan===d.plan);
+ const extras=d.extras?extraPreferences(d.extras,quote.brand,d.plan,await disabledExtras(env)):{};
+ if(Object.values(extras).includes('yes'))return fail('Please agree your optional extras with our team before payment.',409,true);
+ const referral=SOURCES.includes(d.referral)?d.referral:null;
  // Require the exact server-calculated quote shown at confirmation.
  if(d.today!==quote.today||d.handover!==quote.handover||d.monthly!==quote.monthly||String(d.offer_id||'')!==String(quote.offer?.id||''))return fail('Pricing changed. Refresh the quote and review it again.',409,true);
  const existing=await q(env,"SELECT * FROM website_sales_orders WHERE prospect_token=? AND status NOT IN ('expired','cancelled')",p.token).first();
@@ -118,7 +123,7 @@ async function checkout(request,env){
  }
  const order=id(),now=Date.now();
  if(quote.offer&&quote.offer.end-now<1860000)return fail('This offer is ending shortly. Contact us to secure it, or refresh after expiry.',409,true);
- try{await q(env,'INSERT INTO website_sales_orders(id,prospect_token,plan,quote_json,status,customer_email,created_ms,updated_ms) VALUES(?,?,?,?,?,?,?,?)',order,p.token,d.plan,JSON.stringify({...quote,agreement_version:PAYMENT_AGREEMENT_VERSION,agreement_accepted_ms:now,agreement_text:agreementFor(quote)}),'creating',addr,now,now).run();}
+ try{await q(env,'INSERT INTO website_sales_orders(id,prospect_token,plan,quote_json,status,customer_email,created_ms,updated_ms) VALUES(?,?,?,?,?,?,?,?)',order,p.token,d.plan,JSON.stringify({...quote,extras,referral,agreement_version:PAYMENT_AGREEMENT_VERSION,agreement_accepted_ms:now,agreement_text:agreementFor(quote)}),'creating',addr,now,now).run();}
  catch{return fail('A checkout already exists. Please contact us.',409,true);}
  try{
    const common={mode:isRecurringPlan(d.plan)?'subscription':'payment',customer_email:addr,client_reference_id:order,success_url:MARKETING+'/buy-now/success/',cancel_url:MARKETING+'/buy-now/?ref='+p.token,expires_at:Math.floor(now/1000)+1860,'line_items[0][quantity]':1,'automatic_tax[enabled]':false};
@@ -210,6 +215,7 @@ export async function websiteSalesPublic(request,env,url){
  if(!path.startsWith('/api/website-sales/'))return null;
  if(request.headers.get('origin')!==MARKETING)return fail('Origin not permitted',403);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'access-control-allow-origin':MARKETING,'access-control-allow-methods':'GET, POST, OPTIONS','access-control-allow-headers':'Content-Type','vary':'Origin'}});
+ if(path==='/api/website-sales/extras'&&request.method==='GET')return json({ok:true,disabled:await disabledExtras(env)},200,true);
  if(path==='/api/website-sales/quote'&&request.method==='GET'){
    const p=await prospect(env,url.searchParams.get('ref'),url.searchParams.get('concept'));if(!p)return fail('This purchase link is not available. Speak to our team.',404,true);
    const plans=await enabledPlans(env),enabled=plans.length>0;
@@ -280,14 +286,16 @@ export async function websiteSalesAdmin(request,env,user,url){
  const path=url.pathname;if(!path.startsWith('/api/admin/website-sales'))return null;
  if(!user.admin)return fail('Forbidden',403);
  if(path==='/api/admin/website-sales'&&request.method==='GET'){
+   const disabled=await disabledExtras(env);
    const [prospects,offers,orders]=await Promise.all([
     q(env,'SELECT * FROM website_sales_prospects ORDER BY created_ms DESC LIMIT 250').all(),
     q(env,'SELECT * FROM website_sales_offers ORDER BY created_ms DESC LIMIT 100').all(),
     q(env,"SELECT o.id,o.plan,o.status,o.quote_json,o.created_ms,o.updated_ms,o.customer_email,o.invoice_url,o.billing_issue,o.schedule_id,(SELECT COUNT(*) FROM website_sales_paid_invoices i WHERE i.order_id=o.id AND i.billing_reason IN ('subscription_create','subscription_cycle')) AS paid_invoices,p.name,p.brand FROM website_sales_orders o JOIN website_sales_prospects p ON p.token=o.prospect_token ORDER BY o.created_ms DESC LIMIT 250").all()]);
-   return json({ok:true,enabled:await configured(env),enabled_plans:await enabledPlans(env),prospects:prospects.results,offers:offers.results,orders:orders.results});
+   return json({ok:true,enabled:await configured(env),enabled_plans:await enabledPlans(env),extras:EXTRAS.map(e=>({id:e.id,title:e.short,price:e.price,enabled:!disabled.includes(e.id)})),prospects:prospects.results,offers:offers.results,orders:orders.results});
  }
  if(request.method!=='POST')return fail('Not found',404);
  let d;try{d=await body(request);}catch{return fail('Invalid data');}
+ if(path==='/api/admin/website-sales/extras'){if(!EXTRAS.some(e=>e.id===d.id)||typeof d.enabled!=='boolean')return fail('Invalid extra');const disabled=new Set(await disabledExtras(env));if(d.enabled)disabled.delete(d.id);else disabled.add(d.id);await setSetting(env,'disabled_checkout_extras',JSON.stringify([...disabled]));return json({ok:true});}
  if(path==='/api/admin/website-sales/activate'){
    if(d.enabled===false){await q(env,"UPDATE website_sales_settings SET value='false' WHERE key='enabled'").run();return json({ok:true});}
    // Activation is owner-only, and requires signed live delivery to this actual Worker.

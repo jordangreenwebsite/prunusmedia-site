@@ -18,7 +18,8 @@
    get('sales-prospect-count').textContent=j.prospects.length;
    get('sales-paid-count').textContent=j.orders.filter(o=>['deposit_paid','seo_active','financed_active','hosting_active','handover_pending'].includes(o.status)).length;
    const now=Date.now();get('sales-offer-count').textContent=j.offers.filter(o=>o.active&&o.start_ms<=now&&now<o.end_ms).length;
-   const prospects=get('sales-prospects'),offers=get('sales-offers'),orders=get('sales-orders');
+   const prospects=get('sales-prospects'),offers=get('sales-offers'),orders=get('sales-orders'),extras=get('sales-extras');
+   if(extras){extras.replaceChildren();for(const e of j.extras||[]){const box=item(extras,e.title,e.price+' · '+(e.enabled?'Shown':'Hidden'));action(box,e.enabled?'Hide':'Show',async()=>{await request('/extras',{id:e.id,enabled:!e.enabled});await window.loadWebsiteSales();});}}
    for(const x of [prospects,offers,orders])x.replaceChildren();
    for(const p of j.prospects){
     const box=item(prospects,p.name,p.brand+' · '+(p.active?'Active':'Paused'));
@@ -35,6 +36,8 @@
    }
    for(const o of j.orders){const quote=JSON.parse(o.quote_json);const box=item(orders,o.name,o.plan+' · '+o.status.replaceAll('_',' ')+' · '+money(quote.today)+' initial · '+money(quote.handover)+' handover · '+money(quote.monthly)+'/month');
     if(o.customer_email){const contact=add(box,'a',o.customer_email);contact.href='mailto:'+o.customer_email;}
+    if(quote.referral)add(box,'p','Heard about us: '+quote.referral);
+    for(const [id,answer] of Object.entries(quote.extras||{}))if(answer==='unsure')add(box,'p','Discuss optional extra: '+((j.extras||[]).find(e=>e.id===id)?.title||id));
     if(o.billing_issue)add(box,'p',o.billing_issue);
     if(['seo','pm-seo','uk-financed'].includes(o.plan))add(box,'p',String(o.paid_invoices||0)+' verified subscription invoices');
     if(o.plan==='uk-financed')add(box,'p',o.schedule_id?'£39 hosting transition scheduled':'Financed transition awaiting verification');
