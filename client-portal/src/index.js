@@ -432,6 +432,11 @@ export default {
   // under the separately agreed customer data-retention policy, never auto-deleted here.
   async scheduled(_event,env) {
     if (!env.DB) return;
+    // Separate SEO schedule so additional runs never repeat editorial/sales jobs.
+    if(_event?.cron==='13 */6 * * *'){
+      try{await runSeoSchedule(env);}catch{console.error('SEO workspace scheduled sync unavailable');}
+      return;
+    }
     const now=Date.now();
     await env.DB.batch([
       env.DB.prepare('DELETE FROM sessions WHERE expires_at<?').bind(now),
@@ -442,7 +447,6 @@ export default {
     // Daily idempotent scheduling creates one weekly research task per active client.
     // Research itself requires human/source verification and is never invented here.
     await enqueueWeeklyResearch(env);
-    try{await runSeoSchedule(env);}catch{console.error('SEO workspace scheduled sync unavailable');}
     try{await repairWebsiteSales(env);}catch{console.error('Website sales billing reconciliation unavailable');}
     // Optional external Brave API discovery: source candidates only, never
     // a verified claim, approval, draft publication, or GitHub deployment.

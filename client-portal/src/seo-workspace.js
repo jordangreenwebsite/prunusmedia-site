@@ -69,7 +69,13 @@ export async function syncSeoClient(env,client){
     // Discard if the business property was changed during the network request.
     const current=await env.DB.prepare('SELECT gsc_property FROM clients WHERE id=? AND active=1').bind(id).first();
     if(current?.gsc_property!==property)return 'changed';
-    const stmts=data.daily.map(row=>env.DB.prepare('INSERT INTO seo_daily(client_id,day,clicks,impressions,ctr,position) VALUES(?,?,?,?,?,?) ON CONFLICT(client_id,day) DO UPDATE SET clicks=excluded.clicks,impressions=excluded.impressions,ctr=excluded.ctr,position=excluded.position').bind(id,row.day,row.clicks,row.impressions,row.ctr,row.position));
+    const stmts=[];
+    // Use <= 90 bound parameters per statement (D1 limit is 100).
+    for(let i=0;i<data.daily.length;i+=15){
+      const rows=data.daily.slice(i,i+15);
+      stmts.push(env.DB.prepare('INSERT INTO seo_daily(client_id,day,clicks,impressions,ctr,position) VALUES '+rows.map(()=>'(?,?,?,?,?,?)').join(',')+' ON CONFLICT(client_id,day) DO UPDATE SET clicks=excluded.clicks,impressions=excluded.impressions,ctr=excluded.ctr,position=excluded.position')
+        .bind(...rows.flatMap(row=>[id,row.day,row.clicks,row.impressions,row.ctr,row.position])));
+    }
     const {daily,...snapshot}=data;
     stmts.push(env.DB.prepare("UPDATE seo_sync SET snapshot=?,synced_at=datetime('now'),status='ok' WHERE client_id=? AND property=?").bind(JSON.stringify(snapshot),id,property));
     await env.DB.batch(stmts);
@@ -106,7 +112,7 @@ async function checkBacklink(env,row){
 }
 export async function runSeoSchedule(env){
   if(env.GSC_SERVICE_ACCOUNT_JSON){
-    const clients=await all(env.DB.prepare("SELECT c.id,c.domain,c.gsc_property FROM clients c LEFT JOIN seo_sync s ON s.client_id=c.id WHERE c.active=1 AND COALESCE(c.gsc_property,'')<>'' AND (s.attempted_at IS NULL OR s.property<>c.gsc_property OR s.attempted_at<datetime('now','-20 hours')) ORDER BY COALESCE(s.attempted_at,'') LIMIT 4"));
+    const clients=await all(env.DB.prepare("SELECT c.id,c.domain,c.gsc_property FROM clients c LEFT JOIN seo_sync s ON s.client_id=c.id WHERE c.active=1 AND COALESCE(c.gsc_property,'')<>'' AND (s.attempted_at IS NULL OR s.property<>c.gsc_property OR s.attempted_at<datetime('now','-23 hours')) ORDER BY COALESCE(s.attempted_at,'') LIMIT 2"));
     for(const client of clients)await syncSeoClient(env,client);
   }
   // Opt-in only. Limit external requests; oldest due links first.

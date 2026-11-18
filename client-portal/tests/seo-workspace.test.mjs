@@ -48,3 +48,27 @@ test('UI is on the existing agency-only SEO screen',()=>{
   assert.ok(html.includes('id="seo-workspace-root"'));
   assert.ok(html.includes('/seo-workspace-ui.js'));
 });
+
+test('failed or redirected links remain unverified and checks do not forward credentials',async()=>{
+  const e=env();
+  const result=await call(e,'a','/backlinks','POST',{source_url:'https://directory.co.uk/page',target_url:'https://a.co.uk/',monitor:false});
+  const prev=globalThis.fetch;
+  let requests=0;
+  globalThis.fetch=async(url,options)=>{
+    requests++;assert.equal(url,'https://directory.co.uk/page');assert.equal(options.redirect,'manual');
+    assert.equal(options.headers.authorization,undefined);
+    return new Response(null,{status:302,headers:{location:'https://private.internal/'}});
+  };
+  try{
+    const c=await call(e,'a','/backlinks/'+result.data.id+'/check','POST',{});
+    assert.equal(c.status,200);assert.equal(c.data.status,'unverified');assert.equal(requests,1);
+    assert.equal((await call(e,'a')).data.links[0].check_status,'unverified');
+    assert.equal((await call(e,'a','/backlinks/'+result.data.id+'/check','POST',{})).status,429);
+  }finally{globalThis.fetch=prev;}
+});
+test('SEO schedule is separate from editorial and billing',()=>{
+  const worker=readFileSync(new URL('../src/index.js',import.meta.url),'utf8');
+  const config=readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8');
+  assert.ok(config.includes('13 */6 * * *'));
+  assert.ok(worker.includes("_event?.cron==='13 */6 * * *'"));
+});
