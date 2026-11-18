@@ -224,6 +224,7 @@ function portalRender(){
   if(admin&&view==='settings'&&portalPublishingClient!==state.clientId)loadPublishingSettings();
   if(admin&&view==='team')renderTeamOptions();
   if(admin&&view==='insights'&&typeof loadSeoWorkspace==='function')void loadSeoWorkspace();
+  if(admin&&view==='insights'&&typeof loadPaidSeo==='function')void loadPaidSeo();
   if(view==='calendar'&&admin){
     fillCalendarBusinessOptions();
     const selected=$('calendar-client-filter');

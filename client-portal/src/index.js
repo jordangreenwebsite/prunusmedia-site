@@ -1,6 +1,7 @@
 import { extraRoutes, enqueueWeeklyResearch } from './editorial.js';
 import { gscRoute } from './gsc.js';
 import { seoWorkspaceRoute,runSeoSchedule } from './seo-workspace.js';
+import { paidSeoRoute,runPaidSeoSchedule } from './seo-provider.js';
 import { researchDiscoveryRoute, runAutomaticDiscovery } from './research.js';
 import { createPrRoute } from './github-pr.js';
 import { mcpHandler } from './mcp.js';
@@ -414,6 +415,8 @@ export default {
       if(gbp)return gbp;
       const extra=await extraRoutes(request,env,user,url);
       if (extra) return extra;
+      const paidSeo=await paidSeoRoute(request,env,user,url);
+      if(paidSeo)return paidSeo;
       const seoWorkspace=await seoWorkspaceRoute(request,env,user,url);
       if(seoWorkspace)return seoWorkspace;
       const seo=await gscRoute(request,env,user,url);
@@ -435,6 +438,7 @@ export default {
     // Separate SEO schedule so additional runs never repeat editorial/sales jobs.
     if(_event?.cron==='13 */6 * * *'){
       try{await runSeoSchedule(env);}catch{console.error('SEO workspace scheduled sync unavailable');}
+      try{await runPaidSeoSchedule(env);}catch{console.error('Paid SEO scheduled sync unavailable');}
       return;
     }
     const now=Date.now();
