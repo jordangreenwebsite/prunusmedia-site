@@ -181,7 +181,12 @@ async function getDashboard(env, user, url) {
   const attachments = (await env.DB.prepare('SELECT id,request_id,file_name,file_type,file_size FROM request_attachments WHERE client_id=? ORDER BY created_at DESC LIMIT 400').bind(clientId).all()).results;
   for(const item of requests)item.attachments=attachments.filter(f=>f.request_id===item.id);
   const sites = (await env.DB.prepare('SELECT id,domain FROM sites WHERE client_id=? AND active=1').bind(clientId).all()).results;
-  return response({ ok: true, client, leads, customers, requests, sites });
+  let calculator_activity=null;
+  if(String(client.domain||'').toLowerCase().replace(/^www\./,'')==='windowcleaningcalculator.co.uk'){
+    const rows=(await env.DB.prepare("SELECT event_type,COUNT(*) AS total,SUM(CASE WHEN created_at>=datetime('now','-30 days') THEN 1 ELSE 0 END) AS last30,MAX(created_at) AS latest FROM calculator_activity WHERE client_id=? GROUP BY event_type").bind(clientId).all()).results;
+    calculator_activity=rows;
+  }
+  return response({ ok: true, client, leads, customers, requests, sites, calculator_activity });
 }
 async function createRequest(request, env, user, context, isBlog) {
   if (Number(request.headers.get('content-length') || 0) > 6200000) return error('Upload too large.', 413);
@@ -334,6 +339,19 @@ async function convertLeadToCustomer(env,user,leadId,method){
   await audit(env,user.email,'lead.customer_removed',lead.client_id,lead.id);
   return response({ok:true,id:lead.id,is_customer:false});
 }
+// Aggregate-only calculator events, restricted to the calculator's registered site token.
+async function ingestCalculatorActivity(request,env){
+  const bearer=request.headers.get('authorization')||'';
+  if(!/^Bearer [a-f0-9]{64}$/.test(bearer))return error('Unauthorized.',401);
+  const hashed=await sha(bearer.slice(7));
+  const site=await env.DB.prepare("SELECT s.id,s.client_id,s.domain FROM site_tokens t JOIN sites s ON s.id=t.site_id JOIN clients c ON c.id=s.client_id WHERE t.token_hash=? AND s.active=1 AND c.active=1").bind(hashed).first();
+  if(!site||String(site.domain).toLowerCase().replace(/^www\./,'')!=='windowcleaningcalculator.co.uk')return error('Unauthorized.',401);
+  let d;try{d=await parseJson(request,1024);}catch{return error('Invalid activity.');}
+  const id=clean(d.external_id,100),kind=clean(d.event_type,40);
+  if(!/^[a-zA-Z0-9._:-]{8,100}$/.test(id)||!['calculation','email_result_request','marketing_opt_in','cleaner_feedback'].includes(kind))return error('Invalid activity.');
+  await env.DB.prepare('INSERT INTO calculator_activity(site_id,client_id,external_id,event_type) VALUES(?,?,?,?) ON CONFLICT(site_id,external_id,event_type) DO NOTHING').bind(site.id,site.client_id,id,kind).run();
+  return response({ok:true},201);
+}
 async function ingest(request, env) {
   const bearer = request.headers.get('authorization') || '';
   if (!/^Bearer [a-f0-9]{64}$/.test(bearer)) return error('Unauthorized.',401);
@@ -373,6 +391,7 @@ export default {
       const websiteSales=await websiteSalesPublic(request,env,url);
       if(websiteSales)return websiteSales;
       if (path==='/api/ingest/lead' && method==='POST') return await ingest(request,env);
+      if (path==='/api/ingest/calculator-activity' && method==='POST') return await ingestCalculatorActivity(request,env);
       if (method!=='GET' && !safeOrigin(request)) return error('Origin not permitted.',403);
       if (path==='/api/auth/request-code' && method==='POST') return await requestCode(request,env);
       if (path==='/api/auth/verify' && method==='POST') return await verifyCode(request,env);
