@@ -216,13 +216,14 @@ function portalRender(){
   const names={dashboard:'Your businesses',businesses:'All businesses',ai:'AI & MCP',team:'Team and alerts',
     overview:'Overview',calendar:'Calendar',editorial:'Blog planner',content:'Content request',
     change:'Request a change',submissions:'Submissions',enquiries:'Enquiries',customers:'Customers',files:'Photos and documents',
-    insights:'Search insights',settings:'Business settings'};
+    insights:'SEO command centre',settings:'Business settings'};
   document.title=names[view]+' | Client portal';
   if(admin&&agency)renderAgencyHome();
   if(businessViews.has(view))renderBusinessHome();
   if(admin&&view==='ai'&&!portalAiLoaded)loadAiSettings();
   if(admin&&view==='settings'&&portalPublishingClient!==state.clientId)loadPublishingSettings();
   if(admin&&view==='team')renderTeamOptions();
+  if(admin&&view==='insights'&&typeof loadSeoWorkspace==='function')void loadSeoWorkspace();
   if(view==='calendar'&&admin){
     fillCalendarBusinessOptions();
     const selected=$('calendar-client-filter');

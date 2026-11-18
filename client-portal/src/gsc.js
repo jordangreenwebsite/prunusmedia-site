@@ -119,3 +119,19 @@ export async function gscRoute(request,env,user,url){
     return json({error:message.startsWith('Search Console')||message.startsWith('Google')?message:'Unable to load Search Console data.'},502);
   }
 }
+
+ // Rolling 28-day query comparisons and daily totals, based exclusively on finalised GSC data.
+export async function getSeoWorkspaceMetrics(env,client){
+  if(!env.GSC_SERVICE_ACCOUNT_JSON||!validProperty(client.gsc_property,client.domain))return null;
+  const token=await gscToken(env);
+  const from=utcDate(31),to=utcDate(4),previousFrom=utcDate(59),previousTo=utcDate(32);
+  const [daily,current,previous]=await Promise.all([
+    querySearchConsole(token,client.gsc_property,from,to,['date'],1000),
+    querySearchConsole(token,client.gsc_property,from,to,['query'],500),
+    querySearchConsole(token,client.gsc_property,previousFrom,previousTo,['query'],500)
+  ]);
+  const rows=r=>(r.rows||[]).map(x=>({query:clean(x.keys?.[0],200),...summary(x)})).filter(x=>x.query);
+  return {property:client.gsc_property,from,to,previousFrom,previousTo,
+    daily:(daily.rows||[]).map(x=>({day:x.keys?.[0],...summary(x)})).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.day)),
+    current:rows(current),previous:rows(previous)};
+}

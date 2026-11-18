@@ -15,6 +15,7 @@
   <script src="/editorial-ui.js" defer></script>
   <script src="/workspace-ui.js" defer></script>
   <script src="/integrations-ui.js" defer></script>
+  <script src="/seo-workspace-ui.js" defer></script>
   <script src="/portal-pages.js" defer></script>
   <script src="/website-sales-ui.js" defer></script>
   <link rel="stylesheet" href="/website-sales.css">
@@ -117,7 +118,7 @@
         <a href="/?view=enquiries" data-portal-route="enquiries" data-context="business" data-permission="client" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Enquiries</span></a>
         <a href="/?view=customers" data-portal-route="customers" data-context="business" data-permission="client" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>Customers</span></a>
         <a href="/?view=files" data-portal-route="files" data-context="business" data-permission="both" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-files"></use></svg><span>Photos & documents</span></a>
-        <a href="/?view=insights" data-portal-route="insights" data-context="business" data-permission="admin" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Search insights</span></a>
+        <a href="/?view=insights" data-portal-route="insights" data-context="business" data-permission="admin" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>SEO command centre</span></a>
         <a href="/?view=settings" data-portal-route="settings" data-context="business" data-permission="admin" data-mobile-tab="1" class="workspace-nav-link"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Business settings</span></a>
         <div class="sidebar-footer"><span>Secure client portal</span><small>Your permissions determine the pages you can access</small></div>
       </nav>
@@ -149,7 +150,7 @@
           <a href="/?view=enquiries" data-portal-route="enquiries" data-context="business" data-permission="client" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-inbox"></use></svg><span>Enquiries</span></a>
         <a href="/?view=customers" data-portal-route="customers" data-context="business" data-permission="client" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>Customers</span></a>
           <a href="/?view=files" data-portal-route="files" data-context="business" data-permission="both" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-files"></use></svg><span>Photos & documents</span></a>
-          <a href="/?view=insights" data-portal-route="insights" data-context="business" data-permission="admin" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>Search insights</span></a>
+          <a href="/?view=insights" data-portal-route="insights" data-context="business" data-permission="admin" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-research"></use></svg><span>SEO command centre</span></a>
           <a href="/?view=settings" data-portal-route="settings" data-context="business" data-permission="admin" data-mobile-tab="1" class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-settings"></use></svg><span>Business settings</span></a>
           <a href="/?view=businesses" data-back-businesses class="more-route"><svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24"><use href="#nav-users"></use></svg><span>← All businesses</span></a>
         </nav>
@@ -255,7 +256,7 @@
         </section>
       </section>
       <section id="screen-files" class="portal-screen" hidden><p class="eyebrow">MEDIA LIBRARY</p><h1>Photos &amp; documents</h1><div id="business-files-slot"></div></section>
-      <section id="screen-insights" class="portal-screen" hidden><p class="eyebrow">AGENCY / SEO</p><h1>Search insights</h1><div id="business-seo-slot"></div></section>
+      <section id="screen-insights" class="portal-screen" hidden><p class="eyebrow">AGENCY / SEO</p><h1>SEO command centre</h1><div id="business-seo-slot"></div><div id="seo-workspace-root"></div></section>
       <section id="screen-settings" class="portal-screen" hidden>
         <p class="eyebrow">AGENCY / BUSINESS</p><h1>Business settings</h1>
         <p class="subtle">Only the agency can manage publishing destinations and external connections. A saved repository is not automatically authorised for uploads.</p>

@@ -1,5 +1,6 @@
 import { extraRoutes, enqueueWeeklyResearch } from './editorial.js';
 import { gscRoute } from './gsc.js';
+import { seoWorkspaceRoute,runSeoSchedule } from './seo-workspace.js';
 import { researchDiscoveryRoute, runAutomaticDiscovery } from './research.js';
 import { createPrRoute } from './github-pr.js';
 import { mcpHandler } from './mcp.js';
@@ -413,6 +414,8 @@ export default {
       if(gbp)return gbp;
       const extra=await extraRoutes(request,env,user,url);
       if (extra) return extra;
+      const seoWorkspace=await seoWorkspaceRoute(request,env,user,url);
+      if(seoWorkspace)return seoWorkspace;
       const seo=await gscRoute(request,env,user,url);
       if(seo)return seo;
       const discovery=await researchDiscoveryRoute(request,env,user,url);
@@ -439,6 +442,7 @@ export default {
     // Daily idempotent scheduling creates one weekly research task per active client.
     // Research itself requires human/source verification and is never invented here.
     await enqueueWeeklyResearch(env);
+    try{await runSeoSchedule(env);}catch{console.error('SEO workspace scheduled sync unavailable');}
     try{await repairWebsiteSales(env);}catch{console.error('Website sales billing reconciliation unavailable');}
     // Optional external Brave API discovery: source candidates only, never
     // a verified claim, approval, draft publication, or GitHub deployment.
