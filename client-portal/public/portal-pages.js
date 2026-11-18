@@ -292,6 +292,13 @@ function renderBusinessHome(){
   stat(stats,'Blog plans',posts.filter(p=>!!p.scheduled_at&&p.status!=='published'&&p.status!=='rejected').length,'With a date in the calendar');
   stat(stats,'Open requests',requests.filter(r=>r.status!=='complete').length,'Content and website changes');
   stat(stats,admin?'Enquiries (30 days)':'New enquiries',admin?current?.lead_last30||0:(state.dashboard.leads||[]).filter(l=>l.status==='new').length,'From connected forms');
+  if(Array.isArray(state.dashboard.calculator_activity)){
+    const events=state.dashboard.calculator_activity;
+    for(const [kind,label] of [['calculation','Calculations'],['email_result_request','Email result requests'],['marketing_opt_in','Marketing opt-ins'],['cleaner_feedback','Cleaner feedback']]){
+      const item=events.find(e=>e.event_type===kind);
+      stat(stats,label+' (30 days)',Number(item?.last30||0),'Recorded activity · '+Number(item?.total||0)+' all time');
+    }
+  }
   const links=$('business-quick-links');links.replaceChildren();
   businessShortcut(links,'calendar','Calendar','See what is coming up');
   businessShortcut(links,admin?'editorial':'content',admin?'Blog planner':'Request content',admin?'Manage articles and approvals':'Ideas, words and files in one form');
