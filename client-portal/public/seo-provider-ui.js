@@ -39,14 +39,14 @@ function renderPaidSeo(root,id,data,keywords){
  const form=add(research,'form',null,'form-stack');
  seoField(form,'Seed keywords (one per line; up to 20)','seeds',{type:'textarea',required:true});
  seoField(form,'Market (full provider location)','location',{value:'United Kingdom'});
- seoField(form,'Research mode','mode',{options:[['ideas','Related keyword ideas'],['overview','Exact keyword metrics']]});
+ seoField(form,'Research mode','mode',{value:'ideas',options:[['ideas','Related keyword ideas'],['overview','Exact keyword metrics']]});
  const results=add(research,'div');
  function renderKeywordRows(parent,rows,competitor=false){
   parent.replaceChildren();const body=seoTable(parent,competitor?['Keyword','Volume','Difficulty','Intent','Position','Ranking page','Save']:['Keyword','Volume','Difficulty','Intent','CPC (USD)','Save']);
   for(const r of rows||[]){
    const tr=add(body,'tr'),values=[r.keyword,seoNum(r.volume),seoNum(r.difficulty),r.intent||'Not reported',...(competitor?[seoNum(r.position),r.url||'—']:[seoNum(r.cpc)])];
    for(const x of values)add(tr,'td',x);
-   const cell=add(tr,'td');action(cell,'Save keyword',async()=>{await jsonPost(seoEndpoint(id,'/keywords'),{keyword:r.keyword});});
+   const cell=add(tr,'td');action(cell,'Save keyword',async()=>{await jsonPost(seoEndpoint(id,'/keywords'),{keyword:r.keyword});await loadSeoWorkspace(true);});
   }
   if(!body.children.length)seoEmpty(body,competitor?7:6,'No rows returned.');
  }
@@ -61,7 +61,7 @@ function renderPaidSeo(root,id,data,keywords){
  const rf=add(rank,'form',null,'form-stack');
  seoField(rf,'Saved keyword','keyword_id',{required:true,options:[['','Select a saved keyword'],...keywords.map(k=>[k.id,k.keyword])]});
  seoField(rf,'Search location (exact provider name)','location',{value:'United Kingdom',required:true,placeholder:'Swindon,England,United Kingdom'});
- seoField(rf,'Device','device',{options:[['desktop','Desktop'],['mobile','Mobile']]});
+ seoField(rf,'Device','device',{value:'desktop',options:[['desktop','Desktop'],['mobile','Mobile']]});
  seoField(rf,'Enable weekly checks','enabled',{type:'checkbox'});
  submit(rf,'Add rank target',async b=>{await paidCall('/targets',{...b,enabled:rf.elements.enabled.checked});await loadPaidSeo();});
  const rt=seoTable(rank,['Keyword','Location / device','Organic position','Last checked','Schedule','Actions']);
@@ -77,10 +77,10 @@ function renderPaidSeo(root,id,data,keywords){
  }
  if(!rt.children.length)seoEmpty(rt,6,'No independent rank targets saved.');
  const back=seoPanel(root,'Backlink discovery','A capped provider index sample (up to 100). New/lost labels come from the provider; absence from this sample does not mean a link was lost.');
- const cache=data.cache.find(x=>x.kind==='backlinks'),br=add(back,'div');
+ const cache=data.cache.find(x=>x.kind==='backlinks'&&x.key===data.domain),br=add(back,'div');
  function backlinkRows(r){br.replaceChildren();add(br,'p','Provider total: '+seoNum(r.total)+' · Sample fetched: '+r.fetched_at,'subtle');const body=seoTable(br,['Source','Target','Domain rank /100','Provider status','Outreach record']);for(const x of r.rows||[]){const row=add(body,'tr');for(const s of [x.source,x.target,seoNum(x.rank),x.lost?'Reported lost':x.new?'Reported new':'Reported'])add(row,'td',s);const cell=add(row,'td');action(cell,'Save',()=>jsonPost(seoEndpoint(id,'/backlinks'),{source_url:x.source,target_url:x.target,outreach_status:'prospect',monitor:false,notes:'Discovered by DataForSEO; not independently verified.'}));}if(!body.children.length)seoEmpty(body,5,'No backlink rows returned.');}
  if(cache)backlinkRows(cache);
- action(back,'Discover backlinks',async()=>backlinkRows(await paidCall('/backlinks',{})),!spendOk);
+ action(back,'Discover backlinks',async()=>{backlinkRows(await paidCall('/backlinks',{}));},!spendOk);
  action(back,'Refresh from provider (paid)',async()=>{if(confirm('Request a new paid backlink sample?'))backlinkRows(await paidCall('/backlinks',{force:true}));},!spendOk);
  action(back,data.discovery.enabled?'Pause weekly discovery':'Enable weekly discovery',async()=>{await paidCall('/backlink-settings',{enabled:!data.discovery.enabled});await loadPaidSeo();});
  const recent=seoPanel(root,'Saved research','Recent cached research is available without paying again.');

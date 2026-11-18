@@ -53,3 +53,29 @@ test('mock provider results are cached, actual charges recorded and credentials 
   assert.equal((await call(e,'a','/ideas','POST',{keyword:'site:a.co.uk'})).status,400);
  }finally{globalThis.fetch=old;}
 });
+
+test('rank check stores the exact location and device result with provider usage',async()=>{
+ const e=Object.assign(setup(),{DATAFORSEO_LOGIN:'mock',DATAFORSEO_PASSWORD:'mock',DATAFORSEO_ENABLED:'true'});
+ await call(e,'a','/targets','POST',{keyword_id:'k',location:'Swindon,England,United Kingdom',device:'mobile'});
+ const t=(await call(e,'a')).data.tracked[0],old=globalThis.fetch;
+ globalThis.fetch=async(url,opts)=>{
+   assert.equal(url,'https://api.dataforseo.com/v3/serp/google/organic/live/advanced');
+   const [body]=JSON.parse(opts.body);assert.equal(body.location_name,'Swindon,England,United Kingdom');assert.equal(body.device,'mobile');assert.equal(body.depth,30);
+   return new Response(JSON.stringify({status_code:20000,cost:0.006,tasks:[{status_code:20000,result:[{items:[{type:'organic',rank_group:4,domain:'a.co.uk',url:'https://a.co.uk/'}]}]}]}));
+ };
+ try{
+  assert.equal((await call(e,'a','/targets/'+t.id+'/check','POST',{})).status,200);
+  assert.equal((await call(e,'a')).data.tracked[0].position,4);
+  assert.equal((await call(e,'a','/targets/'+t.id+'/history')).data.history[0].position,4);
+  assert.equal((await call(e,'b','/targets/'+t.id+'/history')).status,404);
+  assert.equal((await call(e,'a','/targets/'+t.id+'/check','POST',{})).status,429);
+ }finally{globalThis.fetch=old;}
+});
+test('unknown charges remain reserved after a timeout',async()=>{
+ const e=Object.assign(setup(),{DATAFORSEO_LOGIN:'mock',DATAFORSEO_PASSWORD:'mock',DATAFORSEO_ENABLED:'true'});
+ const old=globalThis.fetch;globalThis.fetch=async()=>{throw Error('timeout');};
+ try{
+  assert.equal((await call(e,'a','/ideas','POST',{keyword:'roofer'})).status,502);
+  const s=(await call(e,'a')).data.spend;assert.equal(s.used,50000);assert.equal(s.unconfirmed,50000);
+ }finally{globalThis.fetch=old;}
+});

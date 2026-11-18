@@ -1,5 +1,5 @@
 import {allowedClient} from './gsc.js';
-import {keywordKey,publicUrl,siteUrl} from './seo-workspace.js';
+import {keywordKey} from './seo-workspace.js';
 const clean=(v,n=200)=>String(v??'').trim().slice(0,n);
 const all=async q=>(await q.all()).results||[];
 const response=(data,status=200)=>new Response(JSON.stringify({ok:status<400,...data}),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -29,7 +29,7 @@ export function parseResults(kind,result,target){
  if(kind==='ideas'||kind==='overview')return {rows:items.slice(0,100).map(metrics).filter(x=>x.keyword)};
  if(kind==='competitor')return {rows:items.slice(0,100).map(x=>({...metrics(x),position:number(x.ranked_serp_element?.serp_item?.rank_group),url:clean(x.ranked_serp_element?.serp_item?.url,1500)})).filter(x=>x.keyword)};
  if(kind==='backlinks')return {total:number(result.total_count),rows:items.slice(0,100).map(x=>({source:clean(x.url_from,1500),target:clean(x.url_to,1500),domain:clean(x.domain_from,253),anchor:clean(x.anchor,200),rank:number(x.domain_from_rank),new:x.is_new===true,lost:x.is_lost===true,first_seen:clean(x.first_seen,80),last_seen:clean(x.last_seen,80)})).filter(x=>x.source&&x.target)};
- const organic=items.filter(x=>x.type==='organic'&&Number.isInteger(x.rank_group)&&x.rank_group>0&&x.rank_group<=30);
+ const organic=items.filter(x=>x.type==='organic'&&Number.isInteger(x.rank_group)&&x.rank_group>0&&x.rank_group<=30).sort((a,b)=>a.rank_group-b.rank_group);
  const found=organic.filter(x=>matching(x.domain,target)).sort((a,b)=>a.rank_group-b.rank_group)[0];
  return {position:found?.rank_group??null,url:found?clean(found.url,1500):null,result_count:organic.length,corrected:clean(result?.spell?.keyword,200)||null,rivals:organic.slice(0,10).map(x=>({position:x.rank_group,domain:clean(x.domain,253),url:clean(x.url,1500)}))};
 }
@@ -81,6 +81,7 @@ async function saveRank(env,client,t){
  return data;
 }
 async function checkRank(env,client,t){
+ const cfg=providerConfig(env);if(!cfg.configured||!cfg.enabled||!cfg.cap)fail('Paid SEO is disabled or not configured.',409);
  // Claim first to prevent concurrent/manual duplicate calls.
  const claim=await env.DB.prepare("UPDATE seo_rank_targets SET attempted_at=datetime('now'),status='running' WHERE id=? AND client_id=? AND (attempted_at IS NULL OR attempted_at<datetime('now','-2 minutes'))").bind(t.id,client.id).run();
  if((claim.meta?.changes??claim.changes??0)!==1)fail('A check was attempted recently.',429);
@@ -92,10 +93,10 @@ async function discover(env,client,force=false){
  return requestProvider(env,client.id,'backlinks',d,{target:d,limit:100,rank_scale:'one_hundred',backlinks_status_type:'all',include_subdomains:true,exclude_internal_backlinks:true},d,force);
 }
 async function readBody(req){if(!req.headers.get('content-type')?.startsWith('application/json'))fail('JSON required');const s=await req.text();if(s.length>40000)fail('Request too large');try{const b=JSON.parse(s);if(!b||Array.isArray(b)||typeof b!=='object')throw Error();return b;}catch{fail('Invalid JSON');}}
-async function targets(env,id){return all(env.DB.prepare("SELECT t.*,k.keyword,k.target_url,(SELECT h.position FROM seo_rank_history h WHERE h.target_id=t.id AND h.keyword=k.keyword ORDER BY h.checked_at DESC LIMIT 1) AS position,(SELECT h.checked_at FROM seo_rank_history h WHERE h.target_id=t.id AND h.keyword=k.keyword ORDER BY h.checked_at DESC LIMIT 1) AS last_check FROM seo_rank_targets t JOIN seo_keywords k ON k.id=t.keyword_id AND k.client_id=t.client_id WHERE t.client_id=? ORDER BY k.keyword,t.location,t.device LIMIT 1000").bind(id));}
+async function targets(env,id){return all(env.DB.prepare("SELECT t.*,k.keyword,k.target_url,(SELECT h.position FROM seo_rank_history h WHERE h.target_id=t.id AND h.keyword=k.keyword AND h.domain=lower(replace(c.domain,'www.','')) ORDER BY h.checked_at DESC LIMIT 1) AS position,(SELECT h.checked_at FROM seo_rank_history h WHERE h.target_id=t.id AND h.keyword=k.keyword AND h.domain=lower(replace(c.domain,'www.','')) ORDER BY h.checked_at DESC LIMIT 1) AS last_check FROM seo_rank_targets t JOIN seo_keywords k ON k.id=t.keyword_id AND k.client_id=t.client_id JOIN clients c ON c.id=t.client_id WHERE t.client_id=? ORDER BY k.keyword,t.location,t.device LIMIT 1000").bind(id));}
 async function state(env,c){
  const [tracked,spend,discovery,cache]=await Promise.all([targets(env,c.id),usage(env),env.DB.prepare('SELECT enabled,status,attempted_at FROM seo_backlink_discovery WHERE client_id=?').bind(c.id).first(),all(env.DB.prepare("SELECT kind,request_key,payload,fetched_at FROM seo_provider_cache WHERE client_id=? AND kind IN ('ideas','overview','competitor','backlinks') ORDER BY fetched_at DESC LIMIT 12").bind(c.id))]);
- return {config:providerConfig(env),spend,tracked,discovery:discovery||{enabled:0,status:'pending'},cache:cache.map(x=>({kind:x.kind,key:x.request_key,fetched_at:x.fetched_at,...JSON.parse(x.payload)}))};
+ return {domain:host(c.domain),config:providerConfig(env),spend,tracked,discovery:discovery||{enabled:0,status:'pending'},cache:cache.map(x=>({kind:x.kind,key:x.request_key,fetched_at:x.fetched_at,...JSON.parse(x.payload)}))};
 }
 export async function paidSeoRoute(req,env,user,url){
  const prefix='/api/admin/seo-provider';
@@ -131,7 +132,7 @@ export async function paidSeoRoute(req,env,user,url){
   if(p==='/ideas'||p==='/overview'){
    const kind=p.slice(1),terms=Array.isArray(b.keywords)?b.keywords:[b.keyword];
    if(terms.length<1||terms.length>20)fail('Use 1–20 seed keywords.');
-   const ks=[...new Set(terms.map(keyword))],l=location(b.location);
+   const ks=[...new Map(terms.map(x=>{const k=keyword(x);return [keywordKey(k),k];})).values()],l=location(b.location);
    const params={keywords:ks,location_name:l,language_code:'en',include_serp_info:false};
    if(kind==='ideas')params.limit=100;
    return response(await requestProvider(env,c.id,kind,JSON.stringify([ks,l]),params,null,b.force===true));
@@ -150,7 +151,7 @@ export async function runPaidSeoSchedule(env){
  await Promise.allSettled(due.map(t=>checkRank(env,{id:t.client_id,domain:t.domain},t)));
  const links=await all(env.DB.prepare("SELECT c.id,c.domain FROM seo_backlink_discovery b JOIN clients c ON c.id=b.client_id WHERE c.active=1 AND b.enabled=1 AND (b.attempted_at IS NULL OR b.attempted_at<datetime('now','-7 days')) ORDER BY COALESCE(b.attempted_at,''),c.id LIMIT 1"));
  for(const c of links){
-  await env.DB.prepare("UPDATE seo_backlink_discovery SET attempted_at=datetime('now'),status='running' WHERE client_id=?").bind(c.id).run();
+  const claim=await env.DB.prepare("UPDATE seo_backlink_discovery SET attempted_at=datetime('now'),status='running' WHERE client_id=? AND enabled=1 AND (attempted_at IS NULL OR attempted_at<datetime('now','-7 days'))").bind(c.id).run();if((claim.meta?.changes??claim.changes??0)!==1)continue;
   try{await discover(env,c,true);await env.DB.prepare("UPDATE seo_backlink_discovery SET status='ok' WHERE client_id=?").bind(c.id).run();}
   catch{await env.DB.prepare("UPDATE seo_backlink_discovery SET status='error' WHERE client_id=?").bind(c.id).run();}
  }

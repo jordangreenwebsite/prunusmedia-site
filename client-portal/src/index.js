@@ -438,6 +438,9 @@ export default {
     // Separate SEO schedule so additional runs never repeat editorial/sales jobs.
     if(_event?.cron==='13 */6 * * *'){
       try{await runSeoSchedule(env);}catch{console.error('SEO workspace scheduled sync unavailable');}
+      return;
+    }
+    if(_event?.cron==='43 */6 * * *'){
       try{await runPaidSeoSchedule(env);}catch{console.error('Paid SEO scheduled sync unavailable');}
       return;
     }

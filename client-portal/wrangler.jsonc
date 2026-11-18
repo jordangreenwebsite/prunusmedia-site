@@ -5,7 +5,7 @@
   "compatibility_date": "2026-11-01",
   "workers_dev": true,
   "routes": [{ "pattern": "portal.prunusmedia.com", "custom_domain": true }],
-  "triggers": { "crons": ["13 3 * * *", "13 */6 * * *"] },
+  "triggers": { "crons": ["13 3 * * *", "13 */6 * * *", "43 */6 * * *"] },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
