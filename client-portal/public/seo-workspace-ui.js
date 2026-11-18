@@ -14,7 +14,7 @@ function seoField(form,label,name,opts={}){
   return field;
 }
 function seoButton(parent,label,fn,css='secondary'){
-  const b=add(parent,'button',label,css);b.type='button';b.addEventListener('click',async()=>{b.disabled=true;try{await fn();}catch(e){if(state.clientId===seoWorkClient)showMessage('seo-work-message',e.message,true);}finally{b.disabled=false;}});return b;
+  const b=add(parent,'button',label,css);b.type='button';b.addEventListener('click',async()=>{b.disabled=true;try{await fn();}catch(e){if(state.clientId===seoWorkClient&&$('seo-work-message'))showMessage('seo-work-message',e.message,true);}finally{b.disabled=false;}});return b;
 }
 function seoPanel(root,title,desc){
   const panel=add(root,'section',null,'panel');
@@ -29,7 +29,7 @@ function seoEmpty(body,n,message){const td=add(add(body,'tr'),'td',message);td.c
 function seoNum(x){return x===undefined||x===null?'Not reported':Number(x).toLocaleString('en-GB',{maximumFractionDigits:1});}
 function seoSubmit(form,fn){
   const b=add(form,'button','Save','primary');b.type='submit';
-  form.addEventListener('submit',async e=>{e.preventDefault();b.disabled=true;try{await fn();}catch(err){showMessage('seo-work-message',err.message,true);}finally{b.disabled=false;}});
+  form.onsubmit=async e=>{e.preventDefault();b.disabled=true;try{await fn();}catch(err){if($('seo-work-message'))showMessage('seo-work-message',err.message,true);}finally{b.disabled=false;}};
 }
 async function loadSeoWorkspace(force=false){
   if(!state.session?.admin||!state.clientId||portalView()!=='insights')return;
@@ -56,8 +56,8 @@ function renderSeoWorkspace(root,id,data){
   const days=seoTable(history,['Date','Clicks','Impressions','CTR','Avg. position']);
   for(const r of [...data.daily].reverse()) {const row=add(days,'tr');for(const x of [r.day,seoNum(r.clicks),seoNum(r.impressions),(r.ctr*100).toFixed(1)+'%',seoNum(r.position)])add(row,'td',x);}
   if(!data.daily.length)seoEmpty(days,5,'No daily measurements saved yet.');
-  const current=new Map((data.snapshot?.current||[]).map(r=>[r.query.toLowerCase(),r]));
-  const previous=new Map((data.snapshot?.previous||[]).map(r=>[r.query.toLowerCase(),r]));
+  const current=new Map((data.snapshot?.current||[]).map(r=>[r.query.trim().replace(/\s+/g,' ').toLowerCase(),r]));
+  const previous=new Map((data.snapshot?.previous||[]).map(r=>[r.query.trim().replace(/\s+/g,' ').toLowerCase(),r]));
   const keywords=seoPanel(root,'Keyword manager','Add one keyword or import up to 200 at a time. A missing Search Console query is not proof of no ranking.');
   const edit=add(keywords,'form',null,'form-stack');edit.hidden=true;
   const create=add(keywords,'form',null,'form-stack');
@@ -86,9 +86,9 @@ function renderSeoWorkspace(root,id,data){
   if(data.snapshot)add(discovery,'p',data.snapshot.from+' to '+data.snapshot.to+' · Prior: '+data.snapshot.previousFrom+' to '+data.snapshot.previousTo,'subtle');
   const qbody=seoTable(discovery,['Search query','Clicks','Impressions','Impression change','Avg. position','Save']);
   for(const q of data.snapshot?.current||[]){
-    const r=add(qbody,'tr'),prior=previous.get(q.query.toLowerCase()),delta=prior?q.impressions-prior.impressions:null;
+    const r=add(qbody,'tr'),prior=previous.get(q.query.trim().replace(/\s+/g,' ').toLowerCase()),delta=prior?q.impressions-prior.impressions:null;
     for(const x of [q.query,seoNum(q.clicks),seoNum(q.impressions),delta===null?'Not reported':(delta>0?'+':'')+seoNum(delta),seoNum(q.position)])add(r,'td',x);
-    const cell=add(r,'td');if(data.keywords.some(k=>k.keyword_key===q.query.toLowerCase()))add(cell,'span','Saved');else seoButton(cell,'Save',()=>send('/keywords',{keyword:q.query}));
+    const cell=add(r,'td');if(data.keywords.some(k=>k.keyword_key===q.query.trim().replace(/\s+/g,' ').toLowerCase()))add(cell,'span','Saved');else seoButton(cell,'Save',()=>send('/keywords',{keyword:q.query}));
   }
   if(!qbody.children.length)seoEmpty(qbody,6,'Sync Search Console to discover existing queries.');
   const links=seoPanel(root,'Backlinks & outreach','Record link prospects and confirmed links. Optional weekly checks look for a direct link on public HTML; blocked, redirected or large pages cannot be verified.');
