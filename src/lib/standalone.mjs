@@ -169,12 +169,12 @@ export function cleanPageHtml(originalHtml, filename) {
     /<li\b[^>]*class="breakdance-dropdown-item[^"]*"[^>]*>\s*<a\b[^>]*href="\/pricing\/"[^>]*>[\s\S]*?<\/a>\s*<\/li>/gi, ''));
   const pricingEntry = '<li class="breakdance-dropdown-item prunus-pricing-dropdown-item">' +
     '<a class="breakdance-link breakdance-dropdown-link" href="/pricing/" target="_self" data-type="url">' +
-    '<span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">Pricing</span></span></a></li>' + '<li class="breakdance-dropdown-item"><a class="breakdance-link breakdance-dropdown-link" href="/buy-now/?brand=prunus" target="_self" data-type="url"><span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">Buy Now</span></span></a></li>';
+    '<span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">Pricing</span></span></a></li>';
   for (const number of ['148', '149', '153', '152']) {
     const pattern = new RegExp('(<li class="bde-menu-dropdown-27-' + number +
       '\\b[\\s\\S]*?<ul class="breakdance-dropdown-links">)', 'i');
     if (!pattern.test(html)) throw new Error('Missing menu dropdown '+number+' on '+filename);
-    html = html.replace(pattern, match => match + pricingEntry);
+    html = html.replace(pattern, match => match + pricingEntry + (number==='148'?dropdownEntry('/buy-now/?brand=prunus', 'Buy Now'):''));
   }
   const pricingMenuCount = (html.match(/class="breakdance-dropdown-item prunus-pricing-dropdown-item"/g)||[]).length;
   if (pricingMenuCount !== 4) throw new Error('Expected four pricing dropdown links, found '+pricingMenuCount+' on '+filename);
