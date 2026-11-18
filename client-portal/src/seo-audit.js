@@ -1,11 +1,12 @@
 import {publicUrl,siteUrl} from './seo-workspace.js';
 const limit=800000;
 const clean=(v,n=250)=>String(v??'').trim().slice(0,n);
-const safePath=p=>!/(?:^|\/)(?:api|admin|wp-admin|wp-json|wp-login(?:\.php)?|login|sign-in|logout|account|cart|checkout|payment|booking|client-login|portal|mcp|auth|search|private|download|delete|unsubscribe)(?:\/|$)/i.test(p);
+const safePath=p=>!/(?:^|\/)(?:api|admin|wp-admin|wp-json|wp-login(?:\.php)?|login|sign-in|logout|account|cart|checkout|payment|booking|client-login|portal|mcp|auth|search|private|download|delete|unsubscribe|concept-websites)(?:\/|$)/i.test(p);
 export function crawlUrl(raw,domain,from){
  try{
   const u=new URL(raw,from);u.hash='';
-  if(u.search||!safePath(decodeURIComponent(u.pathname))||!siteUrl(u.href,[domain]))return null;
+  const decoded=decodeURIComponent(u.pathname);
+  if(u.search||/%[0-9a-f]{2}/i.test(decoded)||decoded.includes('\\')||!safePath(decoded)||!siteUrl(u.href,[domain]))return null;
   return u.href;
  }catch{return null;}
 }
@@ -101,7 +102,7 @@ export async function auditSite(domain,fetcher=fetch,now=new Date()){
  if(!start)throw Error('Invalid registered website domain.');
  const base=new URL(start).origin;
  const robot=await retrieve(base+'/robots.txt',domain,null,fetcher);
- const policy=robot.status===200&&typeof robot.text==='string'?robotsPolicy(robot.text):null;
+ const policy=robot.status===200&&typeof robot.text==='string'&&!/<(?:html|!doctype html)\b/i.test(robot.text)?robotsPolicy(robot.text):null;
  const canCrawl=robot.status===404||robot.status===410||Boolean(policy);
  const allowed=u=>canCrawl&&(!policy||policy.allows(u));
  const result={domain,robots:{status:robot.status,error:robot.error||null,restrictive:!canCrawl||!!policy?.rules.length||!!policy?.delay},sitemap:{status:null,entries:0,index:false},pages:[],links:[],notes:[]};

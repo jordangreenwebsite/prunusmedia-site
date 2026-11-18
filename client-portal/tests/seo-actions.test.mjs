@@ -31,6 +31,8 @@ test('bounded verified evidence generates mappings, possible overlap and blog ca
 test('site crawl never follows external hosts, queries or sensitive paths',()=>{
  assert.equal(crawlUrl('https://other.co.uk/page','a.co.uk','https://a.co.uk/'),null);
  assert.equal(crawlUrl('/checkout','a.co.uk','https://a.co.uk/'),null);
+ assert.equal(crawlUrl('/concept-websites/example/','a.co.uk','https://a.co.uk/'),null);
+ assert.equal(crawlUrl('/%2561pi/status','a.co.uk','https://a.co.uk/'),null);
  assert.equal(crawlUrl('/%61pi/status','a.co.uk','https://a.co.uk/'),null);
  assert.equal(crawlUrl('/page?secret=1','a.co.uk','https://a.co.uk/'),null);
  assert.equal(crawlUrl('/page#section','a.co.uk','https://a.co.uk/'),'https://a.co.uk/page');

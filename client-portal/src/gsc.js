@@ -135,7 +135,7 @@ export async function getSeoWorkspaceMetrics(env,client){
   return {property:client.gsc_property,from,to,previousFrom,previousTo,
     daily:(daily.rows||[]).map(x=>({day:x.keys?.[0],...summary(x)})).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.day)),
     current:rows(current),previous:rows(previous),pairs_available:pairs!==null,
-    pairs:(pairs?.rows||[]).map(x=>({query:clean(x.keys?.[0],200),page:clean(x.keys?.[1],1500),...summary(x)})).filter(x=>x.query&&x.page)};
+    pairs:(pairs?.rows||[]).filter(x=>String(x.keys?.[1]||'').length<=900).map(x=>({query:clean(x.keys?.[0],200),page:clean(x.keys?.[1],900),...summary(x)})).filter(x=>x.query&&x.page)};
 }
 
 export async function getSeoMonthlyMetrics(env,client,start,end,priorStart,priorEnd){

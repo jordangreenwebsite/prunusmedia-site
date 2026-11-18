@@ -95,9 +95,10 @@ async function auditRun(env,c,scheduled=false){
   const live=await env.DB.prepare('SELECT domain FROM clients WHERE id=? AND active=1').bind(c.id).first();
   if(live?.domain!==c.domain)throw Error('Domain changed');
   const id=crypto.randomUUID(),stamp=now();
+  const inspected=a.pages.some(p=>p.html);
   await env.DB.batch([
    env.DB.prepare('INSERT INTO seo_audits(id,client_id,domain,checked_at,payload) VALUES(?,?,?,?,?)').bind(id,c.id,c.domain,stamp,JSON.stringify(a)),
-   env.DB.prepare("UPDATE seo_action_settings SET audit_status='ok' WHERE client_id=?").bind(c.id)
+   env.DB.prepare('UPDATE seo_action_settings SET audit_status=? WHERE client_id=?').bind(inspected?'ok':'partial',c.id)
   ]);
   return {id,checked_at:stamp,...a};
  }catch{
@@ -128,7 +129,7 @@ async function reportRun(env,c,m,scheduled=false){
    caveats:['Search Console finalised calendar-month aggregate; missing rows are not zero.','Rank results are the latest saved observation per current target in this month, not an average.','Outreach counts show current statuses of records created before month end, not historical status changes.','Published blog entries were last updated in the month; this is not a verified publication date.','Audit and priorities reflect the latest evidence at report generation, not necessarily the reporting month.','Reports require review before client delivery.']};
   await env.DB.batch([
    env.DB.prepare("INSERT INTO seo_monthly_reports(client_id,month,domain,property,generated_at,payload) VALUES(?,?,?,?,?,?) ON CONFLICT(client_id,month) DO UPDATE SET domain=excluded.domain,property=excluded.property,generated_at=excluded.generated_at,payload=excluded.payload").bind(c.id,m,c.domain,c.gsc_property||'',stamp,JSON.stringify(payload)),
-   env.DB.prepare('UPDATE seo_action_settings SET report_status=? WHERE client_id=?').bind(performance.status==='unavailable'?'partial':'ok',c.id)
+   env.DB.prepare('UPDATE seo_action_settings SET report_status=? WHERE client_id=?').bind(performance.status!=='ok'?'partial':'ok',c.id)
   ]);
   return payload;
  }catch{

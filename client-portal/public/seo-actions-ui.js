@@ -132,7 +132,7 @@ function renderSeoActions(root,id,data,keywords){
  }
  function showReport(r){
   output.replaceChildren();add(output,'h3',r.business+' · '+r.month+' SEO report');
-  const text=makeText(r),preview=add(output,'textarea');preview.value=text;preview.readOnly=true;preview.rows=16;preview.setAttribute('aria-label','Editable report copy source');
+  const text=makeText(r),preview=add(output,'textarea');preview.value=text;preview.readOnly=true;preview.rows=16;preview.setAttribute('aria-label','Report preview and copy source');
   button(output,'Copy report',async()=>{await navigator.clipboard.writeText(text);});
   button(output,'Download report (.txt)',async()=>{const url=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='seo-report-'+r.month+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
  }
