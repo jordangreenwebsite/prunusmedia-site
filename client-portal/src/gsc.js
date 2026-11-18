@@ -147,3 +147,18 @@ export async function getSeoMonthlyMetrics(env,client,start,end,priorStart,prior
   ]);
   return {status:'ok',current:a.rows?.length?summary(a.rows[0]):null,previous:b.rows?.length?summary(b.rows[0]):null};
 }
+
+export async function getSeoFocusMetrics(env,client,dates,terms){
+ if(!env.GSC_SERVICE_ACCOUNT_JSON||!validProperty(client.gsc_property,client.domain)||!terms.length)return {current:[],previous:[]};
+ const token=await gscToken(env);
+ const query='^(?:'+terms.slice(0,5).map(x=>String(x).toLowerCase().replace(/[.*+?^$(){}|[\]\\]/g,'\\$&')).join('|')+')$';
+ const read=async(startDate,endDate)=>{
+  const url='https://www.googleapis.com/webmasters/v3/sites/'+encodeURIComponent(client.gsc_property)+'/searchAnalytics/query';
+  const r=await fetch(url,{method:'POST',redirect:'error',headers:{authorization:'Bearer '+token,'content-type':'application/json'},signal:AbortSignal.timeout(12000),body:JSON.stringify({startDate,endDate,dimensions:['query'],rowLimit:50,type:'web',dataState:'final',dimensionFilterGroups:[{filters:[{dimension:'query',operator:'includingRegex',expression:query}]}]})});
+  if(!r.ok)throw Error('Focus query metrics unavailable');
+  const x=await r.json(),keys=new Set(terms.map(t=>String(t).toLowerCase()));
+  return (x.rows||[]).filter(r=>keys.has(String(r.keys?.[0]).toLowerCase())).map(r=>({query:clean(r.keys[0],200),...summary(r)}));
+ };
+ const [current,previous]=await Promise.all([read(dates.start,dates.end),read(dates.priorStart,dates.priorEnd)]);
+ return {current,previous};
+}
