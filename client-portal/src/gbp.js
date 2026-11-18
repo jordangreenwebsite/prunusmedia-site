@@ -137,6 +137,24 @@ async function disconnect(env,user,id){
     .bind(crypto.randomUUID(),user.email,'gbp.disconnected',id,id).run();
   return json({message:'Disconnected in the portal. You can also revoke access in your Google Account permissions.'});
 }
+export async function gbpDailyPerformance(env,id,start,end){
+ if(!configured(env))return {status:'not-configured',series:[]};
+ const row=await env.DB.prepare('SELECT token_ciphertext,token_iv,location_name FROM gbp_connections WHERE client_id=?').bind(id).first();
+ if(!/^locations\/\d+$/.test(row?.location_name||''))return {status:'not-connected',series:[]};
+ const valid=s=>/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;
+ if(!valid(start)||!valid(end)||start>end||Date.parse(end)-Date.parse(start)>31*86400000||end>new Date().toISOString().slice(0,10))throw Error('Choose up to 32 days of past data');
+ try{
+ const refresh_token=await decrypt(env,row.token_iv,row.token_ciphertext),token=await tokenRequest(env,{grant_type:'refresh_token',refresh_token});
+ const u=new URL('https://businessprofileperformance.googleapis.com/v1/'+row.location_name+':fetchMultiDailyMetricsTimeSeries');
+ const metrics=['WEBSITE_CLICKS','CALL_CLICKS','BUSINESS_DIRECTION_REQUESTS','BUSINESS_IMPRESSIONS_DESKTOP_MAPS','BUSINESS_IMPRESSIONS_MOBILE_MAPS','BUSINESS_IMPRESSIONS_DESKTOP_SEARCH','BUSINESS_IMPRESSIONS_MOBILE_SEARCH'];
+ for(const metric of metrics)u.searchParams.append('dailyMetrics',metric);
+ for(const [prefix,date] of [['start_date',start],['end_date',end]]){const [y,m,d]=date.split('-').map(Number);for(const [k,v] of [['year',y],['month',m],['day',d]])u.searchParams.set('dailyRange.'+prefix+'.'+k,String(v));}
+ const r=await fetch(u,{headers:{authorization:'Bearer '+token.access_token},redirect:'error',signal:AbortSignal.timeout(15000)});
+ if(!r.ok)throw Error('Performance unavailable');const data=await r.json();
+ const series=(data.multiDailyMetricTimeSeries||[]).flatMap(x=>x.dailyMetricTimeSeries||[]).filter(x=>metrics.includes(x.dailyMetric)).map(x=>({metric:x.dailyMetric,values:(x.timeSeries?.datedValues||[]).slice(0,32).map(v=>({date:v.date,value:v.value??null}))}));
+ return {status:'ok',series};
+ }catch{return {status:'unavailable',series:[]};}
+}
 export async function gbpRoutes(request,env,user,url){
   const path=url.pathname,method=request.method;
   if(path==='/api/admin/gbp/connect'&&method==='GET')return connect(request,env,user,url);

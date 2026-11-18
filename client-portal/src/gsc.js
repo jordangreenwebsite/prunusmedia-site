@@ -47,13 +47,13 @@ function serviceCredentials(env){
   }
   return parsed;
 }
-export async function gscToken(env){
+export async function gscToken(env,scope='https://www.googleapis.com/auth/webmasters.readonly'){
   const creds=serviceCredentials(env);
   if(!creds)return null;
   const now=Math.floor(Date.now()/1000);
   const head=as64(JSON.stringify({alg:'RS256',typ:'JWT',kid:creds.private_key_id||undefined}));
   const claims=as64(JSON.stringify({
-    iss:creds.client_email,scope:'https://www.googleapis.com/auth/webmasters.readonly',
+    iss:creds.client_email,scope,
     aud:'https://oauth2.googleapis.com/token',iat:now-20,exp:now+3400
   }));
   const keyBytes=Uint8Array.from(atob(creds.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g,'')),c=>c.charCodeAt(0));
@@ -118,4 +118,54 @@ export async function gscRoute(request,env,user,url){
     const message=clean(err.message,180);
     return json({error:message.startsWith('Search Console')||message.startsWith('Google')?message:'Unable to load Search Console data.'},502);
   }
+}
+
+ // Rolling 28-day query comparisons and daily totals, based exclusively on finalised GSC data.
+export async function getSeoWorkspaceMetrics(env,client){
+  if(!env.GSC_SERVICE_ACCOUNT_JSON||!validProperty(client.gsc_property,client.domain))return null;
+  const token=await gscToken(env);
+  const from=utcDate(31),to=utcDate(4),previousFrom=utcDate(59),previousTo=utcDate(32);
+  const [daily,current,previous,pairs]=await Promise.all([
+    querySearchConsole(token,client.gsc_property,from,to,['date'],1000),
+    querySearchConsole(token,client.gsc_property,from,to,['query'],500),
+    querySearchConsole(token,client.gsc_property,previousFrom,previousTo,['query'],500),
+    querySearchConsole(token,client.gsc_property,from,to,['query','page'],1000).catch(()=>null)
+  ]);
+  const rows=r=>(r.rows||[]).map(x=>({query:clean(x.keys?.[0],200),...summary(x)})).filter(x=>x.query);
+  return {property:client.gsc_property,from,to,previousFrom,previousTo,
+    daily:(daily.rows||[]).map(x=>({day:x.keys?.[0],...summary(x)})).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.day)),
+    current:rows(current),previous:rows(previous),pairs_available:pairs!==null,
+    pairs:(pairs?.rows||[]).filter(x=>String(x.keys?.[1]||'').length<=900).map(x=>({query:clean(x.keys?.[0],200),page:clean(x.keys?.[1],900),...summary(x)})).filter(x=>x.query&&x.page)};
+}
+
+export async function getSeoMonthlyMetrics(env,client,start,end,priorStart,priorEnd){
+  if(!env.GSC_SERVICE_ACCOUNT_JSON||!validProperty(client.gsc_property,client.domain))return {status:'not-configured',current:null,previous:null};
+  const token=await gscToken(env);
+  const [a,b]=await Promise.all([
+    querySearchConsole(token,client.gsc_property,start,end,[],1),
+    querySearchConsole(token,client.gsc_property,priorStart,priorEnd,[],1)
+  ]);
+  return {status:'ok',current:a.rows?.length?summary(a.rows[0]):null,previous:b.rows?.length?summary(b.rows[0]):null};
+}
+
+export async function listMatchingProperties(env,client){
+ if(!env.GSC_SERVICE_ACCOUNT_JSON)throw Error('Service account not configured');
+ const token=await gscToken(env);
+ const r=await fetch('https://www.googleapis.com/webmasters/v3/sites',{headers:{authorization:'Bearer '+token},redirect:'error',signal:AbortSignal.timeout(12000)});
+ if(!r.ok)throw Error('Unable to list Search Console properties');
+ const data=await r.json();return (data.siteEntry||[]).filter(x=>['siteOwner','siteFullUser','siteRestrictedUser'].includes(x.permissionLevel)&&validProperty(x.siteUrl,client.domain)).map(x=>({property:x.siteUrl,permission:x.permissionLevel}));
+}
+export async function getSeoFocusMetrics(env,client,dates,terms){
+ if(!env.GSC_SERVICE_ACCOUNT_JSON||!validProperty(client.gsc_property,client.domain)||!terms.length)return {current:[],previous:[]};
+ const token=await gscToken(env);
+ const query='^(?:'+terms.slice(0,5).map(x=>String(x).toLowerCase().replace(/[.*+?^$(){}|[\]\\]/g,'\\$&')).join('|')+')$';
+ const read=async(startDate,endDate)=>{
+  const url='https://www.googleapis.com/webmasters/v3/sites/'+encodeURIComponent(client.gsc_property)+'/searchAnalytics/query';
+  const r=await fetch(url,{method:'POST',redirect:'error',headers:{authorization:'Bearer '+token,'content-type':'application/json'},signal:AbortSignal.timeout(12000),body:JSON.stringify({startDate,endDate,dimensions:['query'],rowLimit:50,type:'web',dataState:'final',dimensionFilterGroups:[{filters:[{dimension:'query',operator:'includingRegex',expression:query}]}]})});
+  if(!r.ok)throw Error('Focus query metrics unavailable');
+  const x=await r.json(),keys=new Set(terms.map(t=>String(t).toLowerCase()));
+  return (x.rows||[]).filter(r=>keys.has(String(r.keys?.[0]).toLowerCase())).map(r=>({query:clean(r.keys[0],200),...summary(r)}));
+ };
+ const [current,previous]=await Promise.all([read(dates.start,dates.end),read(dates.priorStart,dates.priorEnd)]);
+ return {current,previous};
 }

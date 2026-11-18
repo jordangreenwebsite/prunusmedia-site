@@ -1,5 +1,11 @@
 import { extraRoutes, enqueueWeeklyResearch } from './editorial.js';
 import { gscRoute } from './gsc.js';
+import { seoWorkspaceRoute,runSeoSchedule } from './seo-workspace.js';
+import { paidSeoRoute,runPaidSeoSchedule } from './seo-provider.js';
+import { seoActionsRoute,runSeoActionsSchedule } from './seo-actions.js';
+import { seoProgressRoute } from './seo-progress.js';
+import { reportingRoute } from './seo-reporting.js';
+import { growthRoute,runMapsSchedule } from './seo-growth.js';
 import { researchDiscoveryRoute, runAutomaticDiscovery } from './research.js';
 import { createPrRoute } from './github-pr.js';
 import { mcpHandler } from './mcp.js';
@@ -364,8 +370,14 @@ async function ingest(request, env) {
     message=clean(d.message,5000),source=clean(d.source_page,300);
   if (!/^[a-zA-Z0-9._:-]{8,100}$/.test(externalId) || name.length<2 || (!phone&&!email) || !source.startsWith('/')) return error('Invalid lead data.');
   const id = crypto.randomUUID();
-  await env.DB.prepare('INSERT INTO leads (id,client_id,site_id,external_id,full_name,email,phone,postcode,service,message,source_page) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(site_id,external_id) DO NOTHING')
-    .bind(id,site.client_id,site.id,externalId,name,email||null,phone,postcode,service,message,source).run();
+  const insert=env.DB.prepare('INSERT INTO leads (id,client_id,site_id,external_id,full_name,email,phone,postcode,service,message,source_page) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(site_id,external_id) DO NOTHING')
+    .bind(id,site.client_id,site.id,externalId,name,email||null,phone,postcode,service,message,source);
+  // Optional, non-identifying channel only, asserted by the authorised site's server after consent.
+  const channel=typeof d.attribution_channel==='string'?d.attribution_channel:'';
+  if(d.attribution_consented===true&&['organic-search-inferred','paid-search-inferred','social-inferred','referral-inferred','direct-or-unknown','campaign-other'].includes(channel)){
+    const attribution=env.DB.prepare('INSERT INTO seo_lead_attribution(lead_id,client_id,channel) SELECT id,client_id,? FROM leads WHERE id=? AND client_id=?').bind(channel,id,site.client_id);
+    await env.DB.batch([insert,attribution]);
+  }else await insert.run();
   return response({ok:true},201);
 }
 export default {
@@ -432,6 +444,18 @@ export default {
       if(gbp)return gbp;
       const extra=await extraRoutes(request,env,user,url);
       if (extra) return extra;
+      const growth=await growthRoute(request,env,user,url);
+      if(growth)return growth;
+      const reporting=await reportingRoute(request,env,user,url);
+      if(reporting)return reporting;
+      const seoProgress=await seoProgressRoute(request,env,user,url);
+      if(seoProgress)return seoProgress;
+      const seoActions=await seoActionsRoute(request,env,user,url);
+      if(seoActions)return seoActions;
+      const paidSeo=await paidSeoRoute(request,env,user,url);
+      if(paidSeo)return paidSeo;
+      const seoWorkspace=await seoWorkspaceRoute(request,env,user,url);
+      if(seoWorkspace)return seoWorkspace;
       const seo=await gscRoute(request,env,user,url);
       if(seo)return seo;
       const discovery=await researchDiscoveryRoute(request,env,user,url);
@@ -448,6 +472,20 @@ export default {
   // under the separately agreed customer data-retention policy, never auto-deleted here.
   async scheduled(_event,env) {
     if (!env.DB) return;
+    // Separate SEO schedule so additional runs never repeat editorial/sales jobs.
+    if(_event?.cron==='13 */6 * * *'){
+      try{await runSeoSchedule(env);}catch{console.error('SEO workspace scheduled sync unavailable');}
+      return;
+    }
+    if(_event?.cron==='43 */6 * * *'){
+      try{await runPaidSeoSchedule(env);}catch{console.error('Paid SEO scheduled sync unavailable');}
+      try{await runMapsSchedule(env);}catch{console.error('Maps schedule unavailable');}
+      return;
+    }
+    if(_event?.cron==='23 */6 * * *'){
+      try{await runSeoActionsSchedule(env);}catch{console.error('SEO actions schedule unavailable');}
+      return;
+    }
     const now=Date.now();
     await env.DB.batch([
       env.DB.prepare('DELETE FROM sessions WHERE expires_at<?').bind(now),
