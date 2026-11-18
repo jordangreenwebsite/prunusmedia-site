@@ -17,3 +17,9 @@ CREATE TABLE IF NOT EXISTS seo_website_changes (
  shared INTEGER NOT NULL DEFAULT 0 CHECK(shared IN(0,1)), created_at TEXT NOT NULL DEFAULT(datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS seo_changes_date ON seo_website_changes(client_id,changed_on DESC);
+
+CREATE TABLE IF NOT EXISTS seo_lead_attribution (
+ lead_id TEXT PRIMARY KEY REFERENCES leads(id) ON DELETE CASCADE,
+ client_id TEXT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+ channel TEXT NOT NULL CHECK(channel IN ('organic-search-inferred','paid-search-inferred','social-inferred','referral-inferred','direct-or-unknown','campaign-other'))
+);

@@ -352,8 +352,14 @@ async function ingest(request, env) {
     message=clean(d.message,5000),source=clean(d.source_page,300);
   if (!/^[a-zA-Z0-9._:-]{8,100}$/.test(externalId) || name.length<2 || (!phone&&!email) || !source.startsWith('/')) return error('Invalid lead data.');
   const id = crypto.randomUUID();
-  await env.DB.prepare('INSERT INTO leads (id,client_id,site_id,external_id,full_name,email,phone,postcode,service,message,source_page) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(site_id,external_id) DO NOTHING')
-    .bind(id,site.client_id,site.id,externalId,name,email||null,phone,postcode,service,message,source).run();
+  const insert=env.DB.prepare('INSERT INTO leads (id,client_id,site_id,external_id,full_name,email,phone,postcode,service,message,source_page) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(site_id,external_id) DO NOTHING')
+    .bind(id,site.client_id,site.id,externalId,name,email||null,phone,postcode,service,message,source);
+  // Optional, non-identifying channel only, asserted by the authorised site's server after consent.
+  const channel=typeof d.attribution_channel==='string'?d.attribution_channel:'';
+  if(d.attribution_consented===true&&['organic-search-inferred','paid-search-inferred','social-inferred','referral-inferred','direct-or-unknown','campaign-other'].includes(channel)){
+    const attribution=env.DB.prepare('INSERT INTO seo_lead_attribution(lead_id,client_id,channel) SELECT id,client_id,? FROM leads WHERE id=? AND client_id=?').bind(channel,id,site.client_id);
+    await env.DB.batch([insert,attribution]);
+  }else await insert.run();
   return response({ok:true},201);
 }
 export default {

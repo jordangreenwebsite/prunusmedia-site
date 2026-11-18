@@ -5,7 +5,7 @@
  * The existing authentication and server-enforced tenant boundaries remain the source
  * of authority. Navigation state never grants server permissions.
  */
-const agencyViews=new Set(['dashboard','businesses','ai','team','sales']);
+const agencyViews=new Set(['dashboard','businesses','ai','team','sales','audits']);
 const businessViews=new Set(['overview','calendar','editorial','content','change','submissions','enquiries','customers','files','keywords','insights','settings']);
 const clientViews=new Set(['overview','calendar','content','change','submissions','enquiries','customers','files','keywords']);
 let portalMounted=false,portalBusy=false,portalAiLoaded=false,portalGbpClient='',portalPublishingClient='';

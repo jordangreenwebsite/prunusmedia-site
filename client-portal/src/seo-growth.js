@@ -31,7 +31,7 @@ async function checkMap(env,c,t,scheduled=false){
  const claim=await env.DB.prepare("UPDATE seo_maps_targets SET attempted_at=datetime('now'),status='running' WHERE id=? AND client_id=? AND (attempted_at IS NULL OR attempted_at<datetime('now',?))"+(scheduled?' AND enabled=1':'')).bind(t.id,c.id,scheduled?'-7 days':'-2 minutes').run();
  if((claim.meta?.changes??claim.changes??0)!==1)throw Error('A check was recently attempted.');
  try{
-  const r=await requestProvider(env,c.id,'maps',JSON.stringify([t.keyword,t.location,t.place_identity]),{keyword:t.keyword,location_name:t.location,language_code:'en',device:'desktop',depth:30},t.place_identity,true);
+  const r=await requestProvider(env,c.id,'maps',JSON.stringify([t.keyword,t.location,t.place_identity]),{keyword:t.keyword,location_name:t.location,language_code:'en',device:'desktop',depth:30,search_places:false},t.place_identity,true);
   if(!r.result_count)throw Error('No Maps results');
   const live=await env.DB.prepare('SELECT k.keyword FROM seo_maps_targets t JOIN seo_keywords k ON k.id=t.keyword_id AND k.client_id=t.client_id WHERE t.client_id=? AND t.id=?').bind(c.id,t.id).first();
   if(live?.keyword!==t.keyword)throw Error('Target changed');
@@ -44,13 +44,14 @@ export async function runMapsSchedule(env){
  const rows=await all(env.DB.prepare("SELECT t.*,k.keyword,c.domain FROM seo_maps_targets t JOIN seo_keywords k ON k.id=t.keyword_id AND k.client_id=t.client_id JOIN clients c ON c.id=t.client_id WHERE c.active=1 AND t.enabled=1 AND (t.attempted_at IS NULL OR t.attempted_at<datetime('now','-7 days')) ORDER BY COALESCE(t.attempted_at,''),t.id LIMIT 2"));
  await Promise.allSettled(rows.map(t=>checkMap(env,{id:t.client_id,domain:t.domain},t,true)));
 }
-export async function reportGrowth(env,c,dates,ids,property){
- const [events,maps,changes]=await Promise.all([
+export async function reportGrowth(env,c,dates,property){
+ const [events,maps,changes,attribution]=await Promise.all([
   conversionMetrics(env,c,dates,property),
   all(env.DB.prepare("SELECT k.keyword,t.location,h.position,h.checked_at FROM seo_maps_targets t JOIN seo_client_keyword_slots s ON s.client_id=t.client_id AND s.keyword_id=t.keyword_id JOIN seo_keywords k ON k.id=t.keyword_id AND k.client_id=t.client_id JOIN seo_maps_checks h ON h.target_id=t.id AND h.keyword=k.keyword AND h.domain=? WHERE t.client_id=? AND substr(h.checked_at,1,10) BETWEEN ? AND ? AND h.checked_at=(SELECT MAX(z.checked_at) FROM seo_maps_checks z WHERE z.target_id=t.id AND z.keyword=k.keyword AND z.domain=h.domain AND substr(z.checked_at,1,10) BETWEEN ? AND ?) ORDER BY s.slot,t.location LIMIT 100").bind(c.domain,c.id,dates.start,dates.end,dates.start,dates.end)),
-  all(env.DB.prepare('SELECT title,changed_on FROM seo_website_changes WHERE client_id=? AND shared=1 AND changed_on BETWEEN ? AND ? ORDER BY changed_on LIMIT 100').bind(c.id,dates.start,dates.end))
+  all(env.DB.prepare('SELECT title,changed_on FROM seo_website_changes WHERE client_id=? AND shared=1 AND changed_on BETWEEN ? AND ? ORDER BY changed_on LIMIT 100').bind(c.id,dates.start,dates.end)),
+  all(env.DB.prepare('SELECT COALESCE(a.channel,\'unknown\') AS channel,COUNT(*) AS n FROM leads l LEFT JOIN seo_lead_attribution a ON a.lead_id=l.id AND a.client_id=l.client_id WHERE l.client_id=? AND substr(l.created_at,1,10) BETWEEN ? AND ? GROUP BY COALESCE(a.channel,\'unknown\')').bind(c.id,dates.start,dates.end))
  ]);
- return {events,maps,changes};
+ return {events,maps,changes,attribution};
 }
 export async function growthRoute(req,env,user,url){
  const prefix='/api/admin/seo-growth';if(url.pathname!==prefix&&!url.pathname.startsWith(prefix+'/'))return null;
@@ -59,7 +60,13 @@ export async function growthRoute(req,env,user,url){
  const path=url.pathname.slice(prefix.length),m=req.method;
  try{
   if(path==='/properties'&&m==='GET')return reply({properties:await listMatchingProperties(env,c)});
-  if(path==='/gbp'&&m==='GET'){const start=clean(url.searchParams.get('start'),10),end=clean(url.searchParams.get('end'),10);if(!day(start)||!day(end)||start>end||Date.parse(end)-Date.parse(start)>31*86400000)return fail('Choose up to 32 days.');return reply(await gbpDailyPerformance(env,c.id,start,end));}
+  if(path==='/conversions'&&m==='GET'){
+   const start=clean(url.searchParams.get('start'),10),end=clean(url.searchParams.get('end'),10);
+   if(!day(start)||!day(end)||start>end||Date.parse(end)-Date.parse(start)>31*86400000||end>new Date().toISOString().slice(0,10))return fail('Choose up to 32 days of past data.');
+   const settings=await env.DB.prepare('SELECT ga_property,domain FROM seo_reporting_settings WHERE client_id=?').bind(c.id).first();
+   return reply(await conversionMetrics(env,c,{start,end},settings?.domain===c.domain?settings.ga_property:''));
+  }
+  if(path==='/gbp'&&m==='GET'){const start=clean(url.searchParams.get('start'),10),end=clean(url.searchParams.get('end'),10);if(!day(start)||!day(end)||start>end||Date.parse(end)-Date.parse(start)>31*86400000||end>new Date().toISOString().slice(0,10))return fail('Choose up to 32 days of past data.');return reply(await gbpDailyPerformance(env,c.id,start,end));}
   if(!path&&m==='GET'){
    const [maps,changes,keywords]=await Promise.all([
     all(env.DB.prepare("SELECT t.*,k.keyword,h.position,h.result_count,h.checked_at FROM seo_maps_targets t JOIN seo_keywords k ON k.id=t.keyword_id AND k.client_id=t.client_id LEFT JOIN seo_maps_checks h ON h.target_id=t.id AND h.checked_at=(SELECT MAX(z.checked_at) FROM seo_maps_checks z WHERE z.target_id=t.id AND z.keyword=k.keyword AND z.domain=?) WHERE t.client_id=? ORDER BY k.keyword,t.location LIMIT 200").bind(c.domain,c.id)),
