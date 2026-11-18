@@ -222,6 +222,7 @@ function portalRender(){
   if(businessViews.has(view))renderBusinessHome();
   if(admin&&view==='ai'&&!portalAiLoaded)loadAiSettings();
   if(admin&&view==='settings'&&portalPublishingClient!==state.clientId)loadPublishingSettings();
+  if(admin&&view==='settings'&&typeof loadReportingConnections==='function')void loadReportingConnections();
   if(admin&&view==='team')renderTeamOptions();
   if(admin&&view==='insights'&&typeof loadSeoWorkspace==='function')void loadSeoWorkspace();
   if(admin&&view==='insights'&&typeof loadPaidSeo==='function')void loadPaidSeo();

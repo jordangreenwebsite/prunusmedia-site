@@ -132,6 +132,8 @@ function renderSeoActions(root,id,data,keywords){
  }
  function showReport(r){
   output.replaceChildren();add(output,'h3',r.business+' · '+r.month+' SEO report');
+  if(r.client_report){const link=add(output,'a','Open branded client report (print / save as PDF)','secondary');link.href='/api/admin/seo-reporting/print?client='+encodeURIComponent(id)+'&month='+encodeURIComponent(r.month);link.target='_blank';link.rel='noopener';}else add(output,'p','Regenerate this older draft to create a branded client-safe version.','subtle');
+  add(output,'p','The text below is an internal agency report, not for client delivery. Use the branded version for clients.','subtle');
   const text=makeText(r),preview=add(output,'textarea');preview.value=text;preview.readOnly=true;preview.rows=16;preview.setAttribute('aria-label','Report preview and copy source');
   button(output,'Copy report',async()=>{await navigator.clipboard.writeText(text);});
   button(output,'Download report (.txt)',async()=>{const url=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='seo-report-'+r.month+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});

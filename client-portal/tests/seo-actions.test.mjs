@@ -6,7 +6,7 @@ import {crawlUrl,robotsPolicy,sitemapEntries,pageIssues,auditSite} from '../src/
 import {buildOpportunities,calendarMonth,seoActionsRoute,runSeoActionsSchedule} from '../src/seo-actions.js';
 function setup(){
  const db=new DatabaseSync(':memory:');
- for(const f of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql','0010_seo_workspace.sql','0011_seo_paid_research.sql','0012_seo_actions.sql'])db.exec(readFileSync(new URL('../migrations/'+f,import.meta.url),'utf8'));
+ for(const f of ['0001_initial.sql','0002_editorial.sql','0003_integrations.sql','0004_workspaces.sql','0010_seo_workspace.sql','0011_seo_paid_research.sql','0012_seo_actions.sql','0013_seo_client_progress.sql','0014_seo_client_keyword_selection.sql','0015_seo_reporting.sql'])db.exec(readFileSync(new URL('../migrations/'+f,import.meta.url),'utf8'));
  db.exec("INSERT INTO clients(id,slug,name,domain,contact_email) VALUES('a','a','A','a.co.uk','a@example.com'),('b','b','B','b.co.uk','b@example.com')");
  const DB={prepare(sql){const s=db.prepare(sql);let args=[];const q={bind(...v){args=v;return q;},async first(){return s.get(...args)||null;},async all(){return {results:s.all(...args)};},async run(){return s.run(...args);}};return q;},async batch(q){db.exec('BEGIN');try{for(const i of q)await i.run();db.exec('COMMIT');}catch(e){db.exec('ROLLBACK');throw e;}}};
  return {db,DB};

@@ -47,13 +47,13 @@ function serviceCredentials(env){
   }
   return parsed;
 }
-export async function gscToken(env){
+export async function gscToken(env,scope='https://www.googleapis.com/auth/webmasters.readonly'){
   const creds=serviceCredentials(env);
   if(!creds)return null;
   const now=Math.floor(Date.now()/1000);
   const head=as64(JSON.stringify({alg:'RS256',typ:'JWT',kid:creds.private_key_id||undefined}));
   const claims=as64(JSON.stringify({
-    iss:creds.client_email,scope:'https://www.googleapis.com/auth/webmasters.readonly',
+    iss:creds.client_email,scope,
     aud:'https://oauth2.googleapis.com/token',iat:now-20,exp:now+3400
   }));
   const keyBytes=Uint8Array.from(atob(creds.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g,'')),c=>c.charCodeAt(0));

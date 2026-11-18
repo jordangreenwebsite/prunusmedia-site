@@ -1,6 +1,7 @@
 import {allowedClient,getSeoMonthlyMetrics} from './gsc.js';
 import {keywordKey,siteUrl} from './seo-workspace.js';
 import {auditSite} from './seo-audit.js';
+import {buildClientReport} from './seo-reporting.js';
 const all=async q=>(await q.all()).results||[];
 const clean=(v,n=200)=>String(v??'').trim().slice(0,n);
 const json=(body,status=200)=>new Response(JSON.stringify({ok:status<400,...body}),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -123,13 +124,14 @@ async function reportRun(env,c,m,scheduled=false){
   const live=await env.DB.prepare('SELECT domain,gsc_property FROM clients WHERE id=? AND active=1').bind(c.id).first();
   if(live?.domain!==c.domain||live?.gsc_property!==c.gsc_property)throw Error('Business changed');
   const stamp=now();
-  const payload={business:c.name,domain:c.domain,...dates,generated_at:stamp,performance,rank_checks:rank,outreach_current_status:outreach,posts_updated_in_period:posts,completed_tasks:completed,
+  const client_report=await buildClientReport(env,c,dates,performance,ev,stamp);
+  const payload={client_report,business:c.name,domain:c.domain,...dates,generated_at:stamp,performance,rank_checks:rank,outreach_current_status:outreach,posts_updated_in_period:posts,completed_tasks:completed,
    latest_audit:ev.audit?{checked_at:ev.audit.checked_at,pages:ev.audit.pages.length,broken:ev.audit.links.filter(x=>[404,410].includes(x.status)).length,issues:ev.audit.pages.reduce((n,x)=>n+x.issues.length,0)}:null,
    priorities:ev.opportunities.filter(x=>x.status==='open'&&x.type!=='blog').slice(0,10),
    caveats:['Search Console finalised calendar-month aggregate; missing rows are not zero.','Rank results are the latest saved observation per current target in this month, not an average.','Outreach counts show current statuses of records created before month end, not historical status changes.','Published blog entries were last updated in the month; this is not a verified publication date.','Audit and priorities reflect the latest evidence at report generation, not necessarily the reporting month.','Reports require review before client delivery.']};
   await env.DB.batch([
    env.DB.prepare("INSERT INTO seo_monthly_reports(client_id,month,domain,property,generated_at,payload) VALUES(?,?,?,?,?,?) ON CONFLICT(client_id,month) DO UPDATE SET domain=excluded.domain,property=excluded.property,generated_at=excluded.generated_at,payload=excluded.payload").bind(c.id,m,c.domain,c.gsc_property||'',stamp,JSON.stringify(payload)),
-   env.DB.prepare('UPDATE seo_action_settings SET report_status=? WHERE client_id=?').bind(performance.status!=='ok'?'partial':'ok',c.id)
+   env.DB.prepare('UPDATE seo_action_settings SET report_status=? WHERE client_id=?').bind(performance.status!=='ok'||client_report.analytics.status==='unavailable'?'partial':'ok',c.id)
   ]);
   return payload;
  }catch{
