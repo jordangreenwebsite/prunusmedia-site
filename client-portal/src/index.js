@@ -2,6 +2,7 @@ import { extraRoutes, enqueueWeeklyResearch } from './editorial.js';
 import { gscRoute } from './gsc.js';
 import { seoWorkspaceRoute,runSeoSchedule } from './seo-workspace.js';
 import { paidSeoRoute,runPaidSeoSchedule } from './seo-provider.js';
+import { seoActionsRoute,runSeoActionsSchedule } from './seo-actions.js';
 import { researchDiscoveryRoute, runAutomaticDiscovery } from './research.js';
 import { createPrRoute } from './github-pr.js';
 import { mcpHandler } from './mcp.js';
@@ -415,6 +416,8 @@ export default {
       if(gbp)return gbp;
       const extra=await extraRoutes(request,env,user,url);
       if (extra) return extra;
+      const seoActions=await seoActionsRoute(request,env,user,url);
+      if(seoActions)return seoActions;
       const paidSeo=await paidSeoRoute(request,env,user,url);
       if(paidSeo)return paidSeo;
       const seoWorkspace=await seoWorkspaceRoute(request,env,user,url);
@@ -442,6 +445,10 @@ export default {
     }
     if(_event?.cron==='43 */6 * * *'){
       try{await runPaidSeoSchedule(env);}catch{console.error('Paid SEO scheduled sync unavailable');}
+      return;
+    }
+    if(_event?.cron==='23 */6 * * *'){
+      try{await runSeoActionsSchedule(env);}catch{console.error('SEO actions schedule unavailable');}
       return;
     }
     const now=Date.now();

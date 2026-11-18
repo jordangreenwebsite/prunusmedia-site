@@ -125,13 +125,25 @@ export async function getSeoWorkspaceMetrics(env,client){
   if(!env.GSC_SERVICE_ACCOUNT_JSON||!validProperty(client.gsc_property,client.domain))return null;
   const token=await gscToken(env);
   const from=utcDate(31),to=utcDate(4),previousFrom=utcDate(59),previousTo=utcDate(32);
-  const [daily,current,previous]=await Promise.all([
+  const [daily,current,previous,pairs]=await Promise.all([
     querySearchConsole(token,client.gsc_property,from,to,['date'],1000),
     querySearchConsole(token,client.gsc_property,from,to,['query'],500),
-    querySearchConsole(token,client.gsc_property,previousFrom,previousTo,['query'],500)
+    querySearchConsole(token,client.gsc_property,previousFrom,previousTo,['query'],500),
+    querySearchConsole(token,client.gsc_property,from,to,['query','page'],1000).catch(()=>null)
   ]);
   const rows=r=>(r.rows||[]).map(x=>({query:clean(x.keys?.[0],200),...summary(x)})).filter(x=>x.query);
   return {property:client.gsc_property,from,to,previousFrom,previousTo,
     daily:(daily.rows||[]).map(x=>({day:x.keys?.[0],...summary(x)})).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.day)),
-    current:rows(current),previous:rows(previous)};
+    current:rows(current),previous:rows(previous),pairs_available:pairs!==null,
+    pairs:(pairs?.rows||[]).map(x=>({query:clean(x.keys?.[0],200),page:clean(x.keys?.[1],1500),...summary(x)})).filter(x=>x.query&&x.page)};
+}
+
+export async function getSeoMonthlyMetrics(env,client,start,end,priorStart,priorEnd){
+  if(!env.GSC_SERVICE_ACCOUNT_JSON||!validProperty(client.gsc_property,client.domain))return {status:'not-configured',current:null,previous:null};
+  const token=await gscToken(env);
+  const [a,b]=await Promise.all([
+    querySearchConsole(token,client.gsc_property,start,end,[],1),
+    querySearchConsole(token,client.gsc_property,priorStart,priorEnd,[],1)
+  ]);
+  return {status:'ok',current:a.rows?.length?summary(a.rows[0]):null,previous:b.rows?.length?summary(b.rows[0]):null};
 }

@@ -25,6 +25,8 @@ jobs:
           node --check src/gsc.js
           node --check src/seo-workspace.js
           node --check src/seo-provider.js
+          node --check src/seo-audit.js
+          node --check src/seo-actions.js
           node --check src/research.js
           node --check src/mcp.js
           node --check src/github-pr.js
@@ -37,6 +39,7 @@ jobs:
           node --check public/integrations-ui.js
           node --check public/seo-workspace-ui.js
           node --check public/seo-provider-ui.js
+          node --check public/seo-actions-ui.js
           node --check public/portal-pages.js
       - name: Security and tenant isolation tests
         working-directory: client-portal
