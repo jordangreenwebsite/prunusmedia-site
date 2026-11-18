@@ -46,7 +46,7 @@ function renderSeoWorkspace(root,id,data){
   root.replaceChildren();
   const msg=add(root,'p','','message');msg.id='seo-work-message';msg.setAttribute('role','status');
   const active=()=>state.session?.admin&&state.clientId===id&&portalView()==='insights';
-  const refresh=async()=>{if(active()){await loadSeoWorkspace(true);if(typeof loadPaidSeo==='function')void loadPaidSeo();}};
+  const refresh=async()=>{if(active()){await loadSeoWorkspace(true);if(typeof loadPaidSeo==='function')void loadPaidSeo();if(typeof loadSeoActions==='function')void loadSeoActions();}};
   const send=async(path,payload,method='POST')=>{if(!active())throw Error('Reopen the correct business.');await jsonPost(seoEndpoint(id,path),payload,method);await refresh();};
   const remove=async(path)=>{if(!active()||!confirm('Remove this saved record?'))return;await api(seoEndpoint(id,path),{method:'DELETE'});await refresh();};
   const history=seoPanel(root,'Search performance history','Finalised Google Search Console measurements, not live rankings or estimated search volume.');
