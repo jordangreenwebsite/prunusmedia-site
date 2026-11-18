@@ -33,9 +33,10 @@ function renderSeoProgress(root,id,data,admin){
  const formatMonth=m=>new Date(m+'-01T00:00:00Z').toLocaleDateString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'});
  const period=seoPanel(root,'Your SEO this month','Website: '+data.business.domain+' · '+formatMonth(data.month));
  const tiles=add(period,'div',null,'seo-metric-grid');
- measure(tiles,'Saved keywords',String(data.counts.saved),'Target search terms');
- measure(tiles,'Weekly monitoring',String(data.counts.monitored),'Keywords with an enabled rank target');
- measure(tiles,'Keywords improved',String(data.counts.improved),'At least one comparable rank target improved this month');
+ measure(tiles,admin?'Saved keywords':'Your focus keywords',admin?String(data.counts.saved):String(data.counts.saved)+' / '+data.client_keyword_limit,admin?'Full private tracking list':'Keywords included in your SEO package');
+ if(admin)measure(tiles,'Client-visible keywords',String(data.client_keyword_ids.length)+' / '+data.client_keyword_limit,'Selected focus keywords');
+ measure(tiles,'Weekly monitoring',String(data.counts.monitored),admin?'All keywords with an enabled rank target':'Focus keywords with an enabled rank target');
+ measure(tiles,'Keywords improved',String(data.counts.improved),admin?'At least one comparable rank target improved this month':'Focus keywords with a comparable improvement this month');
  measure(tiles,'Work updates',String(data.updates.length),'Reviewed work shared this month');
  const p=data.performance,summary=add(period,'div',null,'seo-metric-grid');
  const delta=(key)=>{
@@ -43,13 +44,25 @@ function renderSeoProgress(root,id,data,admin){
   const a=p.matchedCurrent[key],b=p.matchedPrevious[key],change=a-b;
   return (change>0?'+':'')+seoNum(change)+' vs prior month over '+p.matchedCurrent.days+' matched reported days';
  };
- measure(summary,'Google clicks',seoNum(p.current?.clicks),delta('clicks'));
- measure(summary,'Google impressions',seoNum(p.current?.impressions),delta('impressions'));
+ measure(summary,'Website Google clicks',seoNum(p.current?.clicks),delta('clicks'));
+ measure(summary,'Website Google impressions',seoNum(p.current?.impressions),delta('impressions'));
+ add(period,'p','Website search totals cover the whole website, not only the focus keywords.','subtle');
  if(p.current)add(period,'p','Search Console reported '+p.current.days+' day(s), '+p.first+' to '+p.through+'. Totals reflect reported days only. Previous-month comparisons exclude unmatched days. Google data is delayed.','subtle');
  else add(period,'p','No Search Console daily data saved for this month yet. This is not zero traffic.','subtle');
  if(p.matchedCurrent)add(period,'p','Matched-day clicks: '+seoNum(p.matchedPrevious.clicks)+' to '+seoNum(p.matchedCurrent.clicks)+'; impressions: '+seoNum(p.matchedPrevious.impressions)+' to '+seoNum(p.matchedCurrent.impressions)+'.','subtle');
  if(admin){button(period,'Open full SEO command centre',async()=>portalNavigate('insights',id));button(period,'Refresh progress',reload);}
- const tracked=seoPanel(root,'Keyword rankings','Independent Google organic checks (up to 30 results), grouped by saved keyword. Rankings depend on search location and device.');
+ if(admin){
+  const share=seoPanel(root,'Client focus keywords','Choose up to five keywords included in this client’s SEO package. All other saved keywords and their individual results remain agency-only. Changing this selection does not pause or delete tracking.');
+  const form=add(share,'form',null,'form-stack');
+  const options=[['','Not selected'],...data.keywords.map(k=>[k.id,k.keyword])];
+  for(let i=0;i<data.client_keyword_limit;i++)seoField(form,'Focus keyword '+(i+1),'slot_'+i,{value:data.client_keyword_ids[i]||'',options});
+  submit(form,'Save client focus keywords',async b=>{
+   const ids=Array.from({length:data.client_keyword_limit},(_,i)=>b['slot_'+i]).filter(Boolean);
+   if(new Set(ids).size!==ids.length)throw Error('Choose a different keyword for each slot.');
+   await jsonPost(progressPath(id,'/client-keywords'),{keyword_ids:ids});await reload();
+  });
+ }
+ const tracked=seoPanel(root,admin?'Keyword rankings':'Your focus keyword rankings','Independent Google organic checks (up to 30 results), grouped by keyword. Rankings depend on search location and device.');
  add(tracked,'p','Monthly movement compares the latest check this month with the last check in the previous month, or the first check this month when no prior-month baseline exists. Not found is not a numerical rank.','subtle');
  if(data.search_console_period)add(tracked,'p','Search Console keyword averages: '+data.search_console_period.from+' to '+data.search_console_period.to+' (separate from independent rankings).','subtle');
  const filter=seoField(tracked,'Filter keywords','search',{placeholder:'Keyword or location'});
@@ -64,7 +77,7 @@ function renderSeoProgress(root,id,data,admin){
    for(const t of rows){
     const r=add(grid,'tr');
     if(admin){const cell=add(r,'td');if(first){const cb=add(cell,'input');cb.type='checkbox';cb.checked=selected.has(k.id);cb.setAttribute('aria-label','Select '+k.keyword);cb.addEventListener('change',()=>{if(cb.checked&&selected.size>=50){cb.checked=false;message.textContent='Select at most 50 keywords.';return;}if(cb.checked)selected.add(k.id);else selected.delete(k.id);updateSelected();});}}
-    const key=add(r,'td');add(key,'strong',k.keyword);if(k.target_url)add(key,'div',k.target_url,'meta');
+    const key=add(r,'td');add(key,'strong',k.keyword);if(admin&&k.client_slot)add(key,'div','Client focus keyword','meta');if(k.target_url)add(key,'div',k.target_url,'meta');
     if(k.service||k.location)add(key,'div',[k.service,k.location].filter(Boolean).join(' / '),'meta');
     add(r,'td',t?t.location+' / '+t.device:'Not configured');
     const pos=add(r,'td');add(pos,'strong',rankText(t?.latest));if(t?.latest?.checked_at)add(pos,'div',t.latest.checked_at.slice(0,10),'meta');if(t?.latest?.url)add(pos,'div',t.latest.url,'meta');
@@ -75,7 +88,7 @@ function renderSeoProgress(root,id,data,admin){
     first=false;
    }
   }
-  if(!grid.children.length)seoEmpty(grid,admin?8:6,'No saved keywords match yet.');
+  if(!grid.children.length)seoEmpty(grid,admin?8:6,admin?'No saved keywords match yet.':!data.keywords.length?'Your website team has not selected your focus keywords yet.':'No focus keywords match your filter.');
  }
  filter.addEventListener('input',renderRows);renderRows();
  if(admin){

@@ -35,7 +35,7 @@ const sample=(row,prefix)=>row[prefix+'_at']?{checked_at:row[prefix+'_at'],posit
 async function progress(env,c,user){
  const dates=monthBounds(),domain=c.domain.toLowerCase().replace(/^www\./,'');
  const [keys,rankRows,sync,daily,updates,tasks]=await Promise.all([
-  all(env.DB.prepare('SELECT id,keyword,keyword_key,service,location,target_url FROM seo_keywords WHERE client_id=? ORDER BY keyword_key LIMIT 1000').bind(c.id)),
+  all(env.DB.prepare('SELECT k.id,k.keyword,k.keyword_key,k.service,k.location,k.target_url,s.slot AS client_slot FROM seo_keywords k LEFT JOIN seo_client_keyword_slots s ON s.client_id=k.client_id AND s.keyword_id=k.id WHERE k.client_id=? AND (?=1 OR s.slot IS NOT NULL) ORDER BY CASE WHEN ?=1 THEN 0 ELSE s.slot END,k.keyword_key LIMIT 1000').bind(c.id,user.admin?1:0,user.admin?1:0)),
   all(env.DB.prepare(`SELECT t.id,t.keyword_id,t.location,t.device,t.enabled,t.status,
     l.checked_at AS latest_at,l.position AS latest_position,l.result_count AS latest_count,l.url AS latest_url,
     b.checked_at AS baseline_at,b.position AS baseline_position,b.result_count AS baseline_count
@@ -44,7 +44,7 @@ async function progress(env,c,user){
    LEFT JOIN seo_rank_history b ON b.target_id=t.id AND b.checked_at=COALESCE(
     (SELECT MAX(h.checked_at) FROM seo_rank_history h WHERE h.target_id=t.id AND h.keyword=k.keyword AND h.domain=? AND h.checked_at>=? AND h.checked_at<?),
     (SELECT MIN(h.checked_at) FROM seo_rank_history h WHERE h.target_id=t.id AND h.keyword=k.keyword AND h.domain=? AND h.checked_at>=?))
-   WHERE t.client_id=? ORDER BY k.keyword_key,t.location,t.device LIMIT 1000`).bind(domain,domain,dates.previousStart,dates.start,domain,dates.start,c.id)),
+   WHERE t.client_id=? AND (?=1 OR EXISTS(SELECT 1 FROM seo_client_keyword_slots s WHERE s.client_id=t.client_id AND s.keyword_id=t.keyword_id)) ORDER BY k.keyword_key,t.location,t.device LIMIT 1000`).bind(domain,domain,dates.previousStart,dates.start,domain,dates.start,c.id,user.admin?1:0)),
   env.DB.prepare('SELECT property,snapshot,synced_at FROM seo_sync WHERE client_id=?').bind(c.id).first(),
   all(env.DB.prepare('SELECT day,clicks,impressions,ctr,position FROM seo_daily WHERE client_id=? AND day>=? AND day<=? ORDER BY day').bind(c.id,dates.previousStart,dates.today)),
   all(env.DB.prepare('SELECT id,title,detail,completed_on,published_at FROM seo_client_updates WHERE client_id=? AND completed_on>=? AND completed_on<=? ORDER BY completed_on DESC,published_at DESC LIMIT 100').bind(c.id,dates.start,dates.today)),
@@ -62,12 +62,12 @@ async function progress(env,c,user){
  const safePage=v=>siteUrl(v,[c.domain])||null;
  const keywords=keys.map(k=>{
   const q=queries.get(k.keyword_key),targets=(byId.get(k.id)||[]).map(t=>({...t,latest:t.latest?{...t.latest,url:safePage(t.latest.url)}:null}));
-  return {id:k.id,keyword:k.keyword,service:k.service,location:k.location,target_url:safePage(k.target_url),search_console:q?{clicks:q.clicks,impressions:q.impressions,position:q.position,ctr:q.ctr}:null,targets};
+  return {id:k.id,keyword:k.keyword,service:k.service,location:k.location,target_url:safePage(k.target_url),...(user.admin?{client_slot:k.client_slot??null}:{}),search_console:q?{clicks:q.clicks,impressions:q.impressions,position:q.position,ctr:q.ctr}:null,targets};
  });
  return {business:{name:c.name,domain:c.domain},month:dates.month,performance:monthPerformance(same?daily:[],dates),
   search_console_period:snapshot?{from:snapshot.from,to:snapshot.to,synced_at:sync.synced_at}:null,
   keywords,counts:{saved:keywords.length,monitored:keywords.filter(k=>k.targets.some(t=>t.enabled)).length,improved:keywords.filter(k=>k.targets.some(t=>t.movement.change>0||t.movement.label==='Now found in sampled results')).length},
-  updates,...(user.admin?{tasks:tasks.map(t=>({key:t.task_key,title:t.title,updated_at:t.updated_at,shared:!!t.update_id}))}:{})};
+  updates,client_keyword_limit:5,...(user.admin?{client_keyword_ids:keys.filter(k=>k.client_slot!==null).sort((a,b)=>a.client_slot-b.client_slot).map(k=>k.id),tasks:tasks.map(t=>({key:t.task_key,title:t.title,updated_at:t.updated_at,shared:!!t.update_id}))}:{})};
 }
 async function body(req){
  if(!req.headers.get('content-type')?.startsWith('application/json'))throw Error('JSON required');
@@ -88,6 +88,20 @@ export async function seoProgressRoute(req,env,user,url){
  }
  if(method!=='POST')return fail('Not found.',404);
  let b;try{b=await body(req);}catch{return fail('Invalid or oversized request.');}
+ if(path==='/client-keywords'){
+  if(!Array.isArray(b.keyword_ids)||b.keyword_ids.length>5||b.keyword_ids.some(x=>typeof x!=='string'||!x.trim()||x.length>100))return fail('Choose up to five saved keywords for the client.');
+  const ids=b.keyword_ids.map(x=>x.trim());
+  if(new Set(ids).size!==ids.length)return fail('Choose a different keyword for each slot.');
+  if(ids.length){
+   const rows=await all(env.DB.prepare('SELECT id FROM seo_keywords WHERE client_id=? AND id IN ('+ids.map(()=>'?').join(',')+')').bind(c.id,...ids));
+   if(rows.length!==ids.length)return fail('One or more keywords do not belong to this business.',404);
+  }
+  // Replace the complete selection atomically. Slot constraints enforce the five-keyword maximum even during concurrent writes.
+  const changes=[env.DB.prepare('DELETE FROM seo_client_keyword_slots WHERE client_id=?').bind(c.id)];
+  ids.forEach((id,i)=>changes.push(env.DB.prepare('INSERT INTO seo_client_keyword_slots(client_id,slot,keyword_id) VALUES(?,?,?)').bind(c.id,i+1,id)));
+  await env.DB.batch(changes);
+  return reply({selected:ids.length});
+ }
  if(path==='/track'){
   const ids=Array.isArray(b.keyword_ids)?[...new Set(b.keyword_ids.map(x=>str(x,100)))]:[];
   if(!ids.length||ids.length>50)return fail('Select 1–50 saved keywords per batch.');
