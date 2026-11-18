@@ -6,8 +6,8 @@
  * of authority. Navigation state never grants server permissions.
  */
 const agencyViews=new Set(['dashboard','businesses','ai','team','sales']);
-const businessViews=new Set(['overview','calendar','editorial','content','change','submissions','enquiries','customers','files','insights','settings']);
-const clientViews=new Set(['overview','calendar','content','change','submissions','enquiries','customers','files']);
+const businessViews=new Set(['overview','calendar','editorial','content','change','submissions','enquiries','customers','files','keywords','insights','settings']);
+const clientViews=new Set(['overview','calendar','content','change','submissions','enquiries','customers','files','keywords']);
 let portalMounted=false,portalBusy=false,portalAiLoaded=false,portalGbpClient='',portalPublishingClient='';
 const portalView=()=>new URL(location.href).searchParams.get('view')||'';
 const portalId=()=>new URL(location.href).searchParams.get('client')||'';
@@ -210,13 +210,13 @@ function portalRender(){
   document.querySelectorAll('[data-back-businesses]').forEach(a=>{a.hidden=!admin||agency;});
   // Use a four-icon bottom navigation plus More, not a scrolled menu.
   const tabs=Array.from(document.querySelectorAll('#workspace-mobile-nav a[data-portal-route]'));
-  const picks=agency?['dashboard','businesses','ai']:admin?['overview','calendar','editorial','settings']:['overview','calendar','content','submissions'];
+  const picks=agency?['dashboard','businesses','ai']:admin?['overview','calendar','editorial','keywords']:['overview','calendar','submissions','keywords'];
   for(const item of tabs)item.hidden=!picks.includes(item.dataset.portalRoute);
   $('sidebar-context').textContent=agency?'Agency workspace':(state.dashboard?.client?.name||'Your business');
   const names={dashboard:'Your businesses',businesses:'All businesses',ai:'AI & MCP',team:'Team and alerts',
     overview:'Overview',calendar:'Calendar',editorial:'Blog planner',content:'Content request',
     change:'Request a change',submissions:'Submissions',enquiries:'Enquiries',customers:'Customers',files:'Photos and documents',
-    insights:'SEO command centre',settings:'Business settings'};
+    keywords:'Keywords & SEO progress',insights:'SEO command centre',settings:'Business settings'};
   document.title=names[view]+' | Client portal';
   if(admin&&agency)renderAgencyHome();
   if(businessViews.has(view))renderBusinessHome();
@@ -226,6 +226,7 @@ function portalRender(){
   if(admin&&view==='insights'&&typeof loadSeoWorkspace==='function')void loadSeoWorkspace();
   if(admin&&view==='insights'&&typeof loadPaidSeo==='function')void loadPaidSeo();
   if(admin&&view==='insights'&&typeof loadSeoActions==='function')void loadSeoActions();
+  if(view==='keywords'&&typeof loadSeoProgress==='function')void loadSeoProgress();
   if(view==='calendar'&&admin){
     fillCalendarBusinessOptions();
     const selected=$('calendar-client-filter');
@@ -299,6 +300,8 @@ function renderBusinessHome(){
   businessShortcut(links,'calendar','Calendar','See what is coming up');
   businessShortcut(links,admin?'editorial':'content',admin?'Blog planner':'Request content',admin?'Manage articles and approvals':'Ideas, words and files in one form');
   businessShortcut(links,'submissions','Submissions','Follow the progress of requests');
+  businessShortcut(links,'keywords','Keywords & SEO progress','Tracked search terms and monthly performance');
+  if(admin)businessShortcut(links,'insights','SEO command centre','Research, audits and priority improvements');
   businessShortcut(links,admin?'settings':'change',admin?'Business settings':'Request a change',admin?'Website and Google connections':'Ask for a website update');
   const next=$('business-next-items');next.replaceChildren();
   const items=(calendarState.posts||[]).filter(x=>x.client_id===state.clientId&&x.day>=new Date().toISOString().slice(0,10))
