@@ -14,7 +14,7 @@
  function action(box,label,fn){const b=add(box,'button',label);b.type='button';b.className='secondary';b.addEventListener('click',async()=>{b.disabled=true;try{await fn();}catch(e){status(e.message);}finally{b.disabled=false;}});return b;}
  window.loadWebsiteSales=async function(){
   try{
-   const j=await request();status(j.enabled?'Live payment options: '+(j.enabled_plans||[]).length+' of 8. Onboarding is handled manually.':'Payments disabled pending configuration and verification.');
+   const j=await request();status(j.enabled?'Live payment options: '+(j.enabled_plans||[]).length+' available. Prunus SEO requires a separately agreed build or existing website. Onboarding is handled manually.':'Payments disabled pending configuration and verification.');
    get('sales-prospect-count').textContent=j.prospects.length;
    get('sales-paid-count').textContent=j.orders.filter(o=>['deposit_paid','seo_active','financed_active','hosting_active','handover_pending'].includes(o.status)).length;
    const now=Date.now();get('sales-offer-count').textContent=j.offers.filter(o=>o.active&&o.start_ms<=now&&now<o.end_ms).length;

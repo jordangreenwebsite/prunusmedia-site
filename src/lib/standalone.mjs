@@ -169,7 +169,7 @@ export function cleanPageHtml(originalHtml, filename) {
     /<li\b[^>]*class="breakdance-dropdown-item[^"]*"[^>]*>\s*<a\b[^>]*href="\/pricing\/"[^>]*>[\s\S]*?<\/a>\s*<\/li>/gi, ''));
   const pricingEntry = '<li class="breakdance-dropdown-item prunus-pricing-dropdown-item">' +
     '<a class="breakdance-link breakdance-dropdown-link" href="/pricing/" target="_self" data-type="url">' +
-    '<span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">Pricing</span></span></a></li>';
+    '<span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">Pricing</span></span></a></li>' + '<li class="breakdance-dropdown-item"><a class="breakdance-link breakdance-dropdown-link" href="/buy-now/?brand=prunus" target="_self" data-type="url"><span class="breakdance-dropdown-link__label"><span class="breakdance-dropdown-link__text">Buy Now</span></span></a></li>';
   for (const number of ['148', '149', '153', '152']) {
     const pattern = new RegExp('(<li class="bde-menu-dropdown-27-' + number +
       '\\b[\\s\\S]*?<ul class="breakdance-dropdown-links">)', 'i');
@@ -454,7 +454,7 @@ export function cleanPageHtml(originalHtml, filename) {
       '<p class="pm-home-pricing__eyebrow">Clear prices · Built for growth</p>' +
       '<p class="pm-home-pricing__headline">Your next website starts here.</p>' +
       '<p class="pm-home-pricing__detail">Websites from £995 · One hosting rate of £99/month · SEO £195/month with hosting included</p>' +
-      '</div><a href="/pricing/">Explore our pricing <span aria-hidden="true">→</span></a></div></aside>';
+      '</div><a href="/pricing/">Explore our pricing</a> <a href="/buy-now/?brand=prunus">Buy Now</a></div></aside>';
     const heroEnd = /(<section class="bde-section-35-253\b[\s\S]*?<\/section>)/i;
     if (!heroEnd.test(html)) throw new Error('Cannot locate approved homepage hero for pricing link');
     html = html.replace(heroEnd, match => match + pricingTeaser);
@@ -485,7 +485,7 @@ export function cleanPageHtml(originalHtml, filename) {
     'seo-agency-uk/index.html': {
       eyebrow:'Ongoing SEO & growth',
       heading:'Real, ongoing SEO. £195/month.',
-      copy:'Five keywords tracked, up to five priority pages optimised a month, a researched weekly blog, eligible Google Business Profile support and monthly reporting. Your website hosting is included while SEO is active. Three-month minimum.'
+      copy:'Five agreed target keywords researched and tracked, two researched blogs each week, monthly website improvements and reporting, eligible Google Business Profile support and SEO-led service or location pages where appropriate. Additional keyword tracking available by arrangement. Hosting included while SEO is active; new website builds priced separately. Six-month minimum.'
     },
     'social-media-marketing-uk/index.html': {
       eyebrow:'Flexible marketing services',

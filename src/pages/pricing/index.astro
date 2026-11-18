@@ -7,7 +7,7 @@ const builds = [
     points:['Up to 15 planned pages','Custom responsive design','Service-focused site structure','Technical SEO at launch','Page titles, descriptions and internal links','Enquiry forms and conversion-ready calls to action','Analytics and Search Console setup']
   },
   {
-    id:'build-15-20', eyebrow:'Growth / Most popular', name:'15–20 page website', price:'£1,795',
+    id:'build-16-20', eyebrow:'Growth / Most popular', name:'16–20 page website', price:'£1,795',
     summary:'For established businesses ready to cover more services, customer questions and locations.',
     points:['Up to 20 structured pages','More detailed service and location coverage','Keyword and competitor research','Technical SEO and structured data','Conversion-led page layouts','Performance and accessibility checks','Analytics, Search Console and launch testing']
   },
@@ -25,7 +25,7 @@ const addons=[
 ---
 <EditorialLayout
   title="Website Design & SEO Pricing UK"
-  description="Clear website design pricing for UK businesses: 10–15 page builds from £995, £99/month hosting and a website of up to 15 pages with ongoing SEO and hosting for £195/month."
+  description="Clear website design pricing for UK businesses: 10–15 page builds from £995, £99/month hosting and ongoing SEO and hosting for £195/month, with website builds priced separately."
   pathname="/pricing/"
   stylesheet="/assets/prunus-styles/pricing.css"
 >
@@ -35,9 +35,9 @@ const addons=[
       <h1>Built properly. <em>Priced clearly.</em></h1>
       <p class="pm-editorial__intro">A website should be the start of something useful, not another bill with no clear purpose. We build substantial, search-led websites for businesses that want to be found, trusted and chosen.</p>
       <div class="pm-pricing__hero-points">
-        <span>One-off build cost</span><span>£99/month standalone hosting</span><span>Website + SEO £195/month</span>
+        <span>One-off build cost</span><span>£99/month standalone hosting</span><span>Ongoing SEO + hosting £195/month</span>
       </div>
-      <a class="pm-pricing__link" href="/our-work/">See the websites we've built</a>
+      <a class="pm-pricing__link" href="/buy-now/?brand=prunus">Choose your website package</a>
     </header>
 
     <section aria-labelledby="builds-heading" class="pm-pricing__section">
@@ -55,10 +55,10 @@ const addons=[
           <p class="pm-pricing__cost">{build.price}</p>
           <p class="pm-pricing__summary">{build.summary}</p>
           <ul>{build.points.map(point=><li>{point}</li>)}</ul>
-          <a class="pm-pricing__button" href={'/contact/#interest='+build.id}>Talk to us about this build <span aria-hidden="true">→</span></a>
+          <a class="pm-pricing__button" href={'/buy-now/?brand=prunus&plan='+(['pm-launch','pm-growth','pm-custom'][index])}>Choose this build</a>
         </article>)}
       </div>
-      <p class="pm-pricing__fine-print">These are the established Prunus build starting prices, not fixed quotes. Content production, complex integrations and unusual migrations are scoped before work begins. New hosted website packages have a 12-month hosting term; the £195/month website + SEO package has a six-month minimum. Hosting is included during active SEO months and is £99/month when SEO is inactive.</p>
+      <p class="pm-pricing__fine-print">These are the established Prunus build starting prices, not fixed quotes. Content production, complex integrations and unusual migrations are scoped before work begins. New hosted website packages have a 12-month hosting term; the £195/month SEO service has a six-month minimum. Initial build costs are separate; discretionary build discounts may be agreed in writing. Hosting is included while SEO is active and returns to the customer's agreed hosting rate when SEO ends (normally £99/month).</p>
     </section>
 
     <section class="pm-pricing__rebuild" aria-labelledby="rebuild-heading">
@@ -109,23 +109,23 @@ const addons=[
         <h2 id="seo-heading">A website that keeps earning its place.</h2>
         <p class="pm-pricing__seo-lede">We want your business to grow because that gives you a reason to keep working with us. We're here to be a practical supporter of your business, improving what people find, what they read and how easily they can enquire.</p>
         <p>Search engine optimisation isn't a one-off switch. It means consistent improvements, useful content, monitoring and adapting when the evidence changes.</p>
-        <p class="pm-pricing__seo-note">The website + SEO package includes a full website of up to 15 pages with no upfront build fee and a <strong>six-month minimum</strong>. There are no guaranteed rankings or enquiry numbers.</p>
+        <p class="pm-pricing__seo-note">Our ongoing SEO service has a <strong>six-month minimum</strong>. A new website build is priced separately, unless a special build offer is agreed. We can expand your website with relevant service and location pages as part of ongoing SEO, without increasing your agreed hosting rate. There are no guaranteed rankings or enquiry numbers.</p>
       </div>
       <div class="pm-pricing__seo-card">
-        <p class="pm-pricing__eyebrow">Website + SEO</p>
+        <p class="pm-pricing__eyebrow">Ongoing SEO + hosting</p>
         <p class="pm-pricing__seo-price">£195 <small>/month</small></p>
-        <p class="pm-pricing__seo-hosting">Full website of up to 15 pages and hosting included</p>
+        <p class="pm-pricing__seo-hosting">Managed hosting included; new website build priced separately</p>
         <ul>
-          <li>Five priority keywords tracked</li>
-          <li>Up to five priority pages reviewed and optimised each month</li>
-          <li>One researched, relevant blog post each week</li>
+          <li>Five agreed target keywords researched and tracked; additional keyword tracking available by arrangement</li>
+          <li>Monthly content and technical website improvements, with new SEO-led pages where appropriate</li>
+          <li>Two researched, relevant blog posts each week</li>
           <li>Google Business Profile setup or optimisation, where eligible</li>
           <li>Search Console monitoring and technical SEO checks</li>
           <li>Internal linking and content improvements</li>
           <li>Monthly results report and next priorities</li>
         </ul>
-        <a class="pm-pricing__button" href="/contact/#interest=seo">Talk about growing my business <span aria-hidden="true">→</span></a>
-        <p class="pm-pricing__fine-print">If SEO ends, hosting returns to the standard £99/month where we continue to host your website. The blog schedule is subject to necessary business input and approval.</p>
+        <a class="pm-pricing__button" href="/buy-now/?brand=prunus&plan=pm-seo">Choose ongoing SEO</a>
+        <p class="pm-pricing__fine-print">If SEO ends, hosting returns to your agreed hosting rate (normally £99/month for Prunus). The blog schedule is subject to necessary business input and approval.</p>
       </div>
     </section>
 
@@ -133,7 +133,7 @@ const addons=[
       <div>
         <p class="pm-pricing__eyebrow">One straightforward rate</p>
         <h2 id="hosting-heading">Hosting &amp; technical upkeep</h2>
-        <p>Managed hosting, SSL, basic security and technical upkeep for your Prunus website. New hosted website builds have a 12-month minimum hosting term. Content edits and additional development are separately agreed.</p>
+        <p>Managed hosting, SSL and technical upkeep, regular website health, broken link and enquiry form checks, checks of existing target keywords and Google visibility, and a report every three months with improvement recommendations. New hosted website builds have a 12-month minimum hosting term. Content edits and additional development are separately agreed.</p>
       </div>
       <div class="pm-pricing__hosting-cost">
         <strong>£99 <small>/month</small></strong>
