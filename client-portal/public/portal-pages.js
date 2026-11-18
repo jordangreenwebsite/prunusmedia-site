@@ -213,7 +213,7 @@ function portalRender(){
   const picks=agency?['dashboard','businesses','ai']:admin?['overview','calendar','editorial','keywords']:['overview','calendar','submissions','keywords'];
   for(const item of tabs)item.hidden=!picks.includes(item.dataset.portalRoute);
   $('sidebar-context').textContent=agency?'Agency workspace':(state.dashboard?.client?.name||'Your business');
-  const names={dashboard:'Your businesses',businesses:'All businesses',ai:'AI & MCP',team:'Team and alerts',
+  const names={dashboard:'Your businesses',businesses:'All businesses',ai:'AI & MCP',team:'Team and alerts',audits:'Website audits',
     overview:'Overview',calendar:'Calendar',editorial:'Blog planner',content:'Content request',
     change:'Request a change',submissions:'Submissions',enquiries:'Enquiries',customers:'Customers',files:'Photos and documents',
     keywords:'Keywords & SEO progress',insights:'SEO command centre',settings:'Business settings'};
