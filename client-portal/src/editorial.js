@@ -307,7 +307,8 @@ async function overview(env,user) {
     for(const client of clients){
       const additions=mirrorPosts(mirror,client,native.filter(p=>p.client_id===client.id));
       client.blog_published+=additions.filter(p=>p.status==='published').length;
-      client.blog_planned+=additions.filter(p=>p.status==='scheduled').length;
+      client.blog_planned+=additions.filter(p=>p.mirror_status==='planned').length;
+      client.blog_awaiting=additions.filter(p=>p.mirror_status==='awaiting').length;
       client.blog_open+=additions.filter(p=>p.status==='scheduled').length;
     }
   }
