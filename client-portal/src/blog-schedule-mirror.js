@@ -41,8 +41,8 @@ export function mirrorPosts(mirror,client,native=[]){
   return b.articles.filter(a=>!existing.has(titleKey(a.title))).map(a=>({
     id:'mirror-'+a.id,client_id:client.id,title:a.title,
     status:a.status==='published'?'published':'scheduled',
-    mirror_status:a.status,read_only:true,scheduled_at:a.date+'T09:00:00',published_url:a.status==='published'?a.url:'',
-    suggested_by:'Master blog schedule',created_at:a.date,day:a.date,occurs_at:a.date+'T09:00:00',
+    mirror_status:a.status,read_only:true,scheduled_at:a.date,published_url:a.status==='published'?a.url:'',
+    suggested_by:'Master blog schedule',created_at:a.date,day:a.date,occurs_at:a.date,
     client_name:client.name
   }));
 }
