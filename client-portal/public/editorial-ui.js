@@ -41,12 +41,22 @@ function renderEditorial(posts) {
   const displayPosts=state.session?.admin?posts:posts.filter(p=>['client-review','approved','scheduled','published'].includes(p.status));
   const visible=filtered==='all'?displayPosts:displayPosts.filter(p=>p.status===filtered);
   const root=$('editorial-list');root.replaceChildren();
+  const sync=editorialData.schedule_sync;
+  if(state.session?.admin&&sync&&sync.status!=='connected'){
+    const note=sync.status==='not-configured'?'Master blog schedule connection not configured.':sync.status==='stale'?'Showing last retrieved master schedule. Refresh unavailable.':'Master blog schedule could not be retrieved.';
+    add(root,'p',note,'subtle');
+  }
   if(!visible.length){add(root,'p',posts.length?'Nothing in this stage yet.':'No blog ideas yet. Add the first useful customer question above.','empty');return;}
   for(const post of visible) {
     const box=add(root,'article',null,'item blog-item');
     const header=add(box,'div',null,'row');
     add(header,'strong',post.title);
-    add(header,'span',stageName(post.status),'tag');
+    add(header,'span',post.mirror_status==='awaiting'?'Awaiting live verification':stageName(post.status),'tag');
+    if(post.read_only){
+      add(box,'div','Master blog schedule · '+post.day,'meta');
+      if(post.published_url)aLink(box,'Read published article',post.published_url);
+      continue;
+    }
     add(box,'p',post.audience_question||'','blog-question');
     add(box,'div','Added '+date(post.created_at)+' · Suggested by '+post.suggested_by,'meta');
     if(post.scheduled_at)add(box,'p','Planned: '+date(post.scheduled_at),'meta');
