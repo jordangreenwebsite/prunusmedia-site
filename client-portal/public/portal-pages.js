@@ -208,6 +208,11 @@ function portalRender(){
     else item.removeAttribute('aria-current');
   }
   document.querySelectorAll('[data-back-businesses]').forEach(a=>{a.hidden=!admin||agency;});
+  // External admin dashboard: normal same-tab navigation, never routed through the SPA.
+  document.querySelectorAll('[data-private-audit-link]').forEach(a=>{
+    const inSidebar=a.closest('#workspace-sidebar');
+    a.hidden=!admin||!!(inSidebar&&((a.dataset.auditContext==='business')===agency));
+  });
   // Use a four-icon bottom navigation plus More, not a scrolled menu.
   const tabs=Array.from(document.querySelectorAll('#workspace-mobile-nav a[data-portal-route]'));
   const picks=agency?['dashboard','businesses','ai']:admin?['overview','calendar','editorial','settings']:['overview','calendar','content','submissions'];
