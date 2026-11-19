@@ -169,7 +169,7 @@ else {
     if(!pricing.includes(offer)) failures.push('Pricing page missing '+offer);
   }
   if(!pricing.includes('rel="canonical" href="https://prunusmedia.com/pricing/"')) failures.push('Pricing canonical missing');
-  if(!pricing.includes('href="/contact/#interest=seo"')) failures.push('SEO contact CTA missing');
+  if(!/href="\/buy-now\/\?brand=prunus(?:&amp;|&)plan=pm-seo"/.test(pricing)) failures.push('SEO checkout CTA missing');
 }
 if(pages.some(page=>page.name==='/website-design/packages/')) failures.push('Obsolete packages page is still being crawled');
 const redirects=readFileSync(path.join(root,'_redirects'),'utf8');
