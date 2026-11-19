@@ -14,7 +14,7 @@ draft: false
 
 If you have just launched a website, checking your position on Google every morning can quickly become frustrating. Being discovered by search engines, appearing for suitable searches and gaining enquiries are three different things. They rarely happen together.
 
-Google's [guidance on hiring an SEO](https://developers.google.com/search/docs/fundamentals/do-i-need-seo) gives a broad timeframe of four months to a year to begin seeing potential benefits from SEO work. That is not a guarantee or a minimum waiting period. Your starting point and competition matter.
+Google's [guidance on hiring an SEO](https://developers.google.com/search/docs/fundamentals/do-i-need-seo) recommends asking for realistic estimates and a clear way to measure success. Expect to review progress over months rather than days, but your starting point and competition matter. No fixed waiting period or ranking deadline applies to every business.
 
 ## What to expect during the first six months
 
