@@ -7,7 +7,7 @@ Publishing is managed by ChatGPT scheduled automation, not GitHub cron. Publish 
 | # | Date (UK) | Sector | Working title | Status |
 |---:|---|---|---|---|
 | 1 | 2026-11-16 | Website strategy | How Much Does a Small Business Website Cost in the UK? | attempted, GitHub commit bdcb09595db158f34b51b04007dbce91d00fec9a; live verification pending |
-| 11 | 2026-11-19 | SEO fundamentals | How Long Does SEO Take for a Small UK Business? | planned |
+| 11 | 2026-11-19 | SEO fundamentals | How Long Does SEO Take for a Small UK Business? | attempted, GitHub commit e20caaa00c11e9a087e94cbedcee019e6cd53afb; live verification pending |
 | 21 | 2026-11-23 | Trades and home services | Website Design for Roofers: Pages That Help Customers Choose | planned |
 | 31 | 2026-11-26 | Professional services | Accountant Website Design: What Prospective Clients Need to Know | planned |
 | 41 | 2026-11-30 | Healthcare and wellbeing | Physiotherapy Website Design: Helping Patients Find the Right Treatment | planned |
