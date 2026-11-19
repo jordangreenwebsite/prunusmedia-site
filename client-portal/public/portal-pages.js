@@ -305,13 +305,13 @@ function renderBusinessHome(){
   businessShortcut(links,'submissions','Submissions','Follow the progress of requests');
   businessShortcut(links,admin?'settings':'change',admin?'Business settings':'Request a change',admin?'Website and Google connections':'Ask for a website update');
   const next=$('business-next-items');next.replaceChildren();
-  const items=(calendarState.posts||[]).filter(x=>x.client_id===state.clientId&&x.day>=new Date().toISOString().slice(0,10))
+  const items=(calendarState.posts||[]).filter(x=>x.client_id===state.clientId&&x.status!=='published'&&x.day>=new Date().toISOString().slice(0,10))
     .sort((a,b)=>a.day.localeCompare(b.day)).slice(0,5);
   if(!items.length)add(next,'p','Nothing dated yet. Planned blogs will appear here once scheduled.','empty');
   for(const item of items){
     const row=add(next,'div',null,'portal-next-row');
     add(row,'strong',item.title);
-    add(row,'span',item.day+' · '+item.status.replaceAll('-',' '),'meta');
+    add(row,'span',item.day+' · '+(item.mirror_status==='awaiting'?'awaiting live verification':item.status.replaceAll('-',' ')),'meta');
     row.addEventListener('click',()=>portalNavigate('calendar'));
   }
 }
