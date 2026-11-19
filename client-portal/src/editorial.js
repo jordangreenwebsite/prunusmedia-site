@@ -1,5 +1,6 @@
 // Shared, tenant-scoped editorial and private upload API.
 import { validProperty } from './gsc.js';
+import {loadBlogMirror,mirrorPosts,mirrorInfo} from './blog-schedule-mirror.js';
 // This Worker is an editorial queue, not an automated publisher.
 const json = (value, status = 200) => new Response(JSON.stringify({ok:true,...value}), {
   status, headers: {'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}
@@ -74,7 +75,16 @@ async function getEditorial(env,user,clientId) {
       }
     }
   }
-  return json({config,posts});
+  const mirror=await loadBlogMirror(env);
+  let schedule_sync={status:mirror.status,registered:false,as_of:mirror.as_of||null};
+  if(mirror.businesses.length){
+    const client=await env.DB.prepare('SELECT id,name,domain FROM clients WHERE id=? AND active=1').bind(clientId).first();
+    if(client){
+      posts.push(...mirrorPosts(mirror,client,posts));
+      schedule_sync=mirrorInfo(mirror,client.domain);
+    }
+  }
+  return json({config,posts,schedule_sync});
 }
 async function addEditorial(request,env,user) {
   let d;try{d=await bodyJson(request,40000);}catch{return bad('Invalid idea or draft.');}
@@ -291,7 +301,17 @@ async function overview(env,user) {
     e.count++;summary.set(key,e);
   }
   const queued=(await env.DB.prepare("SELECT j.id,j.client_id,c.name AS client_name,j.week_start,j.status,j.research_note,j.discovery_query,j.candidate_sources_json,j.discovered_at FROM research_jobs j JOIN clients c ON c.id=j.client_id WHERE j.status IN ('queued','working','failed') ORDER BY j.week_start DESC,c.name LIMIT 200").all()).results;
-  return json({clients,lead_areas:[...summary.values()],research_queue:queued});
+  const mirror=await loadBlogMirror(env);
+  if(mirror.businesses.length){
+    const native=(await env.DB.prepare('SELECT client_id,title FROM editorial_posts').all()).results;
+    for(const client of clients){
+      const additions=mirrorPosts(mirror,client,native.filter(p=>p.client_id===client.id));
+      client.blog_published+=additions.filter(p=>p.status==='published').length;
+      client.blog_planned+=additions.filter(p=>p.status==='scheduled').length;
+      client.blog_open+=additions.filter(p=>p.status==='scheduled').length;
+    }
+  }
+  return json({clients,lead_areas:[...summary.values()],research_queue:queued,blog_schedule_sync:{status:mirror.status,as_of:mirror.as_of||null}});
 }
 // One compact monthly view. Admin sees titles and research tasks across connected
 // businesses; customers can only see the planned articles for their own membership.
@@ -323,6 +343,16 @@ async function getCompactCalendar(env,user,url) {
       "AND j.status IN ('queued','working','failed')"+rScope+
       " ORDER BY j.week_start,c.name LIMIT 250"
     ).bind(...bindings).all()).results;
+  }
+  const mirror=await loadBlogMirror(env);
+  if(mirror.businesses.length){
+    // Scope before reading/merging the private mirror; never emit another tenant's titles.
+    const scoped=clientId?(await env.DB.prepare('SELECT id,name,domain FROM clients WHERE active=1 AND id=?').bind(clientId).all()).results:(await env.DB.prepare('SELECT id,name,domain FROM clients WHERE active=1').all()).results;
+    for(const client of scoped){
+      const native=(await env.DB.prepare('SELECT title FROM editorial_posts WHERE client_id=?').bind(client.id).all()).results;
+      posts.push(...mirrorPosts(mirror,client,native).filter(p=>p.day>=start&&p.day<end));
+    }
+    posts.sort((a,b)=>a.day.localeCompare(b.day)||a.title.localeCompare(b.title));
   }
   return json({month,posts,research});
 }
