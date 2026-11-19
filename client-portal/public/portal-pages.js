@@ -255,6 +255,7 @@ function agencyCard(client){
   const meta=add(card,'span',null,'portal-business-card-stats');
   add(meta,'span',(client.blog_published||0)+' published');
   add(meta,'span',(client.blog_planned||0)+' planned');
+  if(client.blog_awaiting)add(meta,'span',client.blog_awaiting+' awaiting verification');
   add(meta,'span',(client.lead_last30||0)+' enquiries (30 days)');
   card.addEventListener('click',()=>portalNavigate('overview',client.id));
   return card;
@@ -265,7 +266,8 @@ function renderAgencyHome(){
   const metrics=$('agency-stat-cards');metrics.replaceChildren();
   stat(metrics,'Active businesses',clients.length,'Your managed websites');
   stat(metrics,'Blogs published',clients.reduce((n,c)=>n+(c.blog_published||0),0),'Across client content calendars');
-  stat(metrics,'Blogs planned',clients.reduce((n,c)=>n+(c.blog_planned||0),0),'With a target publication date');
+  const sync=agencyData.blog_schedule_sync;
+  stat(metrics,'Blogs planned',clients.reduce((n,c)=>n+(c.blog_planned||0),0),sync&&sync.status!=='connected'?'Master schedule '+(sync.status==='not-configured'?'not connected':sync.status==='stale'?'last retrieved':'unavailable'):'With a target publication date');
   stat(metrics,'In progress',clients.reduce((n,c)=>n+(c.blog_open||0),0),'Ideas, drafts and reviews');
   for(const id of ['agency-dashboard-cards','agency-business-list']){
     const wrap=$(id);wrap.replaceChildren();
@@ -289,7 +291,7 @@ function renderBusinessHome(){
   const stats=$('business-stat-cards');stats.replaceChildren();
   const current=(agencyData.clients||[]).find(x=>x.id===state.clientId);
   stat(stats,'Blogs published',posts.filter(p=>p.status==='published').length,'Confirmed live articles');
-  stat(stats,'Blog plans',posts.filter(p=>!!p.scheduled_at&&p.status!=='published'&&p.status!=='rejected').length,'With a date in the calendar');
+  stat(stats,'Blog plans',posts.filter(p=>!!p.scheduled_at&&p.status!=='published'&&p.status!=='rejected'&&p.mirror_status!=='awaiting').length,posts.some(p=>p.mirror_status==='awaiting')?posts.filter(p=>p.mirror_status==='awaiting').length+' awaiting live verification':'With a date in the calendar');
   stat(stats,'Open requests',requests.filter(r=>r.status!=='complete').length,'Content and website changes');
   stat(stats,admin?'Enquiries (30 days)':'New enquiries',admin?current?.lead_last30||0:(state.dashboard.leads||[]).filter(l=>l.status==='new').length,'From connected forms');
   if(Array.isArray(state.dashboard.calculator_activity)){
