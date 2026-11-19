@@ -7,6 +7,8 @@ tags:
   - website design
   - small business
   - website pricing
+image: "/images/blog/website-planning-maxim-ilyahov.jpg"
+imageAlt: "A person using a smartphone beside an open laptop"
 draft: false
 ---
 

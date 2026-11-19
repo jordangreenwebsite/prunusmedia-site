@@ -7,8 +7,8 @@ tags:
   - SEO
   - small business
   - local SEO
-image: "/images/website-previews/easy-cloud-accounting.jpg"
-imageAlt: "Prunus Media website design preview for Easy Cloud Accounting"
+image: "/images/blog/seo-planning-charlesdeluvio.jpg"
+imageAlt: "Two people discussing work with laptops at a table"
 draft: false
 ---
 
