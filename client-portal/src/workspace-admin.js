@@ -71,9 +71,60 @@ async function publishing(request,env,user,id){
     .bind(crypto.randomUUID(),user.email,'client.publishing_settings_changed',id,id).run();
   return json({message:'Business connection preferences saved. Publishing stays review-only until a repository is individually authorised.'});
 }
+// Changing a client's login email changes membership only, not contact/form addresses.
+const memberEmail=(v)=>typeof v==='string'&&v.length<=254&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
+  ? v.trim().toLowerCase() : '';
+async function clientSignInMembers(request,env,user,clientId,memberId){
+  if(!user.admin)return json({error:'Forbidden.'},403);
+  const client=await env.DB.prepare('SELECT id FROM clients WHERE id=? AND active=1').bind(clientId).first();
+  if(!client)return json({error:'Client not found.'},404);
+  if(request.method==='GET'){
+    const members=(await env.DB.prepare("SELECT id,email,role FROM client_members WHERE client_id=? AND active=1 ORDER BY CASE WHEN role='owner' THEN 0 ELSE 1 END,email").bind(clientId).all()).results;
+    return json({members});
+  }
+  const current=await env.DB.prepare('SELECT id,email,role FROM client_members WHERE id=? AND client_id=? AND active=1')
+    .bind(memberId,clientId).first();
+  if(!current)return json({error:'Client sign-in account not found.'},404);
+  // Agency admin email privileges come from ADMIN_EMAILS, not client membership.
+  // Never imply that changing a client's membership changes those credentials.
+  if(String(env.ADMIN_EMAILS||'').split(',').map(memberEmail).includes(current.email))
+    return json({error:'This is also an agency administrator email. Change the protected ADMIN_EMAILS setting separately.'},409);
+  let data;
+  try{
+    const body=await request.text();
+    if(new TextEncoder().encode(body).byteLength>1024)throw Error('size');
+    data=JSON.parse(body);
+  }catch{return json({error:'Enter a valid new sign-in email.'},400);}
+  const email=data&&typeof data==='object'&&!Array.isArray(data)?memberEmail(data.email):'';
+  if(!email)return json({error:'Enter a valid new sign-in email.'},400);
+  if(email===current.email)return json({message:'This is already the sign-in email.',member:{...current}});
+  const conflict=await env.DB.prepare('SELECT id FROM client_members WHERE client_id=? AND email=?')
+    .bind(clientId,email).first();
+  if(conflict)return json({error:'That email already has an account for this business. Edit that account instead.'},409);
+  // D1 batch is atomic: the old login and any unused codes are invalidated as
+  // the membership moves. Client data and permissions remain on the same ID.
+  try{
+    await env.DB.batch([
+      env.DB.prepare('UPDATE client_members SET email=? WHERE id=? AND client_id=? AND email=? AND active=1')
+        .bind(email,memberId,clientId,current.email),
+      env.DB.prepare('DELETE FROM sessions WHERE email=?').bind(current.email),
+      env.DB.prepare('DELETE FROM login_codes WHERE email=?').bind(current.email),
+      env.DB.prepare('INSERT INTO audit_log (id,actor_email,event,client_id,resource_id) VALUES (?,?,?,?,?)')
+        .bind(crypto.randomUUID(),user.email,'member.signin_email_changed',clientId,memberId+'|'+current.email+'|'+email)
+    ]);
+  }catch(e){
+    if(String(e?.message||'').includes('UNIQUE'))return json({error:'That email already has an account for this business.'},409);
+    throw e;
+  }
+  return json({message:'Sign-in email updated. Previous sessions and codes were cancelled. The client can request a new code using '+email+'.',
+    member:{...current,email}});
+}
 export async function workspaceAdminRoutes(request,env,user,url){
   const path=url.pathname,method=request.method;
   if(path==='/api/admin/ai-settings'&&['GET','PATCH'].includes(method))return aiSettings(request,env,user);
+  const signin=path.match(/^\/api\/admin\/clients\/([a-f0-9-]{36})\/members(?:\/([a-f0-9-]{36}))?$/);
+  if(signin&&((method==='GET'&&!signin[2])||(method==='PATCH'&&!!signin[2])))
+    return clientSignInMembers(request,env,user,signin[1],signin[2]);
   const m=path.match(/^\/api\/admin\/clients\/([a-f0-9-]{36})\/publishing$/);
   if(m&&['GET','PATCH'].includes(method))return publishing(request,env,user,m[1]);
   return null;
