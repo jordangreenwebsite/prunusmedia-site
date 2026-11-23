@@ -422,6 +422,17 @@
 #calendar-new-post .form-stack{max-width:650px}
 .portal-request-attachment{display:inline-block;margin:5px 12px 5px 0;padding:6px 10px;border:1px solid #dcc9c0;border-radius:7px;background:#fff6ef}
 #business-settings-slot .admin-preferences{display:block;padding:0;border:0}
+
+.portal-member-list{display:grid;gap:13px;margin-top:20px;min-width:0}
+.portal-member-account{padding:18px;border:1px solid #e4d4c7;border-radius:9px;background:#fffaf4;min-width:0}
+.portal-member-account-heading{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 18px;margin-bottom:16px;overflow-wrap:anywhere}
+.portal-member-account-heading strong{font-size:14px;color:#4c413b}
+.portal-member-account-heading span{font-size:12px}
+.portal-member-account label{display:block;font-size:12px;font-weight:600;color:#63554f}
+.portal-member-account input[type=email]{display:block;margin-top:7px;width:100%;max-width:540px;min-width:0;min-height:43px;padding:10px 12px;border:1px solid #d6c5ba;border-radius:6px;background:#fff;color:#453c37;font:14px Arial,Helvetica,sans-serif}
+.portal-member-account input[type=email]:focus-visible{outline:2px solid #9b6670;outline-offset:2px}
+.portal-member-account .portal-actions{margin-top:14px}
+@media(max-width:480px){.portal-member-account{padding:14px}.portal-member-account-heading{display:block}.portal-member-account-heading span{display:block;margin-top:5px}}
 #screen-settings .panel,#screen-ai .panel,#screen-team .panel{margin-bottom:22px}
 #gbp-location-controls{margin-top:18px}
 #gbp-location-controls select{max-width:100%;padding:12px;border:1px solid #d8cabe;border-radius:7px;background:#fff}
