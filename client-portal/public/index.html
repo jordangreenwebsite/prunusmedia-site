@@ -264,6 +264,12 @@
         <p class="eyebrow">AGENCY / BUSINESS</p><h1>Business settings</h1>
         <p class="subtle">Only the agency can manage publishing destinations and external connections. A saved repository is not automatically authorised for uploads.</p>
         <div id="business-settings-slot"></div>
+        <section class="panel" aria-labelledby="client-signin-heading">
+          <h2 id="client-signin-heading">Client sign-in emails</h2>
+          <p class="subtle">Edit the address a client uses to receive their secure sign-in code. Their website, requests and account permissions stay in place. This does not change the business contact address or website enquiry emails.</p>
+          <div id="client-signin-members" class="portal-member-list" aria-live="polite"></div>
+          <p id="client-signin-message" class="message" role="status" aria-live="polite"></p>
+        </section>
         <section class="panel"><h2>Publishing destination</h2><p class="subtle">Save where reviewed articles should go. Only the confirmed live Prunus Media repository currently has a prepared GitHub PR writer; client repositories require separate approval and scoped credentials.</p>
           <form id="publishing-settings-form" class="form-stack">
             <label>GitHub repository (owner/repo)<input name="repo" placeholder="example-company/example-website" maxlength="170"></label>
