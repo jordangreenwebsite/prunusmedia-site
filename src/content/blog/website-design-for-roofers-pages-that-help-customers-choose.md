@@ -7,8 +7,8 @@ tags:
   - roofing websites
   - website design
   - local SEO
-image: "/images/blog/website-planning-maxim-ilyahov.jpg"
-imageAlt: "A person checking a smartphone beside an open laptop while planning a website"
+image: "/images/blog/roofing-project-scaffold.webp"
+imageAlt: "Aerial view of a residential roof renovation with scaffolding and workers on the roof"
 draft: false
 ---
 
