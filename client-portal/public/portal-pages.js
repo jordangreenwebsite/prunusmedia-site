@@ -8,7 +8,7 @@
 const agencyViews=new Set(['dashboard','businesses','ai','team','sales']);
 const businessViews=new Set(['overview','calendar','editorial','content','change','submissions','enquiries','customers','files','insights','settings']);
 const clientViews=new Set(['overview','calendar','content','change','submissions','enquiries','customers','files']);
-let portalMounted=false,portalBusy=false,portalAiLoaded=false,portalGbpClient='',portalPublishingClient='';
+let portalMounted=false,portalBusy=false,portalAiLoaded=false,portalGbpClient='',portalPublishingClient='',portalSigninClient='';
 const portalView=()=>new URL(location.href).searchParams.get('view')||'';
 const portalId=()=>new URL(location.href).searchParams.get('client')||'';
 function mountPortal(){
@@ -227,6 +227,7 @@ function portalRender(){
   if(businessViews.has(view))renderBusinessHome();
   if(admin&&view==='ai'&&!portalAiLoaded)loadAiSettings();
   if(admin&&view==='settings'&&portalPublishingClient!==state.clientId)loadPublishingSettings();
+  if(admin&&view==='settings'&&portalSigninClient!==state.clientId)loadClientSigninMembers();
   if(admin&&view==='team')renderTeamOptions();
   if(view==='calendar'&&admin){
     fillCalendarBusinessOptions();
@@ -411,6 +412,66 @@ async function saveAiSettings(event){
     showMessage('ai-settings-message',r.message);
   }catch(err){showMessage('ai-settings-message',err.message,true);}
   finally{button.disabled=false;}
+}
+async function loadClientSigninMembers(){
+  if(!state.session?.admin||!state.clientId)return;
+  const clientId=state.clientId;
+  portalSigninClient=clientId;
+  const list=$('client-signin-members');
+  list.replaceChildren();
+  showMessage('client-signin-message','');
+  add(list,'p','Loading sign-in accounts…','subtle');
+  try{
+    const data=await api('/api/admin/clients/'+encodeURIComponent(clientId)+'/members');
+    if(state.clientId!==clientId)return;
+    list.replaceChildren();
+    if(!data.members.length){
+      add(list,'p','No active sign-in accounts found for this business.','subtle');
+      return;
+    }
+    for(const member of data.members){
+      const form=add(list,'form',null,'portal-member-account');
+      const heading=add(form,'div',null,'portal-member-account-heading');
+      add(heading,'strong',member.role==='owner'?'Business owner':'Team member');
+      add(heading,'span','Current: '+member.email,'subtle');
+      const label=add(form,'label','Sign-in email');
+      const input=add(label,'input');
+      input.name='email';
+      input.type='email';
+      input.autocomplete='off';
+      input.maxLength=254;
+      input.required=true;
+      input.value=member.email;
+      input.setAttribute('aria-label','Sign-in email for '+(member.role==='owner'?'business owner':'team member'));
+      const actions=add(form,'div',null,'portal-actions');
+      const button=add(actions,'button','Save sign-in email','secondary');
+      button.type='submit';
+      form.addEventListener('submit',async event=>{
+        event.preventDefault();
+        if(!state.session?.admin||state.clientId!==clientId)return;
+        const address=input.value.trim().toLowerCase();
+        if(address===member.email){showMessage('client-signin-message','No changes to save.');return;}
+        if(!input.checkValidity()){input.reportValidity();return;}
+        if(!confirm('Change this '+(member.role==='owner'?'owner':'team member')+' sign-in from '+member.email+' to '+address+'? The old login will be signed out. The new address will need an email sign-in code.'))return;
+        button.disabled=true;
+        try{
+          const result=await jsonPost('/api/admin/clients/'+encodeURIComponent(clientId)+'/members/'+encodeURIComponent(member.id),{email:address},'PATCH');
+          await loadClientSigninMembers();
+          if(state.clientId===clientId)showMessage('client-signin-message',result.message);
+        }catch(err){
+          if(state.clientId===clientId)showMessage('client-signin-message',err.message,true);
+        }finally{button.disabled=false;}
+      });
+    }
+  }catch(err){
+    if(state.clientId!==clientId)return;
+    portalSigninClient='';
+    list.replaceChildren();
+    const retry=add(list,'button','Try loading accounts again','secondary');
+    retry.type='button';
+    retry.addEventListener('click',loadClientSigninMembers);
+    showMessage('client-signin-message',err.message,true);
+  }
 }
 async function loadPublishingSettings(){
   if(!state.session?.admin||!state.clientId)return;
