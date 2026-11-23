@@ -245,3 +245,73 @@ test('admin can create PP Power Detailing from a complete URL without touching a
   assert.match(invalid.json.error,/homepage address only/i);
   await Promise.all(h.pending);
 });
+
+test('agency owner can safely correct a client sign-in email without moving the workspace',async()=>{
+  const env=environment(),h=harness(env);
+  const admin=await h.login('admin@prunusmedia.com');
+  const a=(await h.call('/api/admin/clients',{method:'POST',cookie:admin.cookie,
+    data:{name:'Art Studio',slug:'art-studio',domain:'art.example.com',owner_email:'artist@old.example.com'}})).json.client_id;
+  const b=(await h.call('/api/admin/clients',{method:'POST',cookie:admin.cookie,
+    data:{name:'Other Studio',slug:'other-studio',domain:'other.example.com',owner_email:'other@example.com'}})).json.client_id;
+  const previous=await h.login('artist@old.example.com');
+  const other=await h.login('other@example.com');
+  let r=await h.call('/api/admin/clients/'+a+'/members',{cookie:admin.cookie});
+  assert.equal(r.res.status,200);
+  assert.deepEqual(r.json.members.map(m=>m.email),['artist@old.example.com']);
+  const member=r.json.members[0];
+  assert.equal(member.role,'owner');
+
+  // A normal client can neither enumerate accounts nor edit any sign-in identity.
+  r=await h.call('/api/admin/clients/'+a+'/members',{cookie:previous.cookie});
+  assert.equal(r.res.status,403);
+  r=await h.call('/api/admin/clients/'+a+'/members/'+member.id,{
+    method:'PATCH',cookie:other.cookie,data:{email:'attacker@example.com'}});
+  assert.equal(r.res.status,403);
+  r=await h.call('/api/admin/clients/'+a+'/members/'+member.id,{
+    method:'PATCH',cookie:admin.cookie,origin:'https://attacker.example.com',data:{email:'attacker@example.com'}});
+  assert.equal(r.res.status,403);
+  r=await h.call('/api/admin/clients/'+a+'/members/'+member.id,{
+    method:'PATCH',cookie:admin.cookie,data:{email:'invalid'}});
+  assert.equal(r.res.status,400);
+
+  // Existing team membership cannot be silently merged or overwritten.
+  r=await h.call('/api/admin/members',{method:'POST',cookie:admin.cookie,
+    data:{client_id:a,email:'editor@example.com'}});
+  assert.equal(r.res.status,200);
+  r=await h.call('/api/admin/clients/'+a+'/members/'+member.id,{
+    method:'PATCH',cookie:admin.cookie,data:{email:'editor@example.com'}});
+  assert.equal(r.res.status,409);
+
+  // A code issued before the change must not be usable afterwards.
+  r=await h.call('/api/auth/request-code',{method:'POST',data:{email:'artist@old.example.com'}});
+  assert.equal(r.res.status,200);
+  const oldCode=h.outbound.at(-1).text.match(/\b(\d{6})\b/)[1];
+
+  r=await h.call('/api/admin/clients/'+a+'/members/'+member.id,{
+    method:'PATCH',cookie:admin.cookie,data:{email:'Artist@NEW.example.com'}});
+  assert.equal(r.res.status,200,JSON.stringify(r.json));
+  assert.equal(r.json.member.email,'artist@new.example.com');
+  r=await h.call('/api/dashboard?client='+a,{cookie:previous.cookie});
+  assert.equal(r.res.status,401,'Existing login session at old email is revoked');
+  r=await h.call('/api/auth/verify',{method:'POST',data:{email:'artist@old.example.com',code:oldCode}});
+  assert.equal(r.res.status,401,'Unspent codes for previous email are revoked');
+  const before=h.outbound.length;
+  r=await h.call('/api/auth/request-code',{method:'POST',data:{email:'artist@old.example.com'}});
+  assert.equal(r.res.status,200);
+  assert.equal(h.outbound.length,before,'Old address is no longer invited');
+  const newUser=await h.login('artist@new.example.com');
+  r=await h.call('/api/dashboard?client='+a,{cookie:newUser.cookie});
+  assert.equal(r.res.status,200);
+  assert.equal(r.json.client.contact_email,'artist@old.example.com','Contact address is independent of login');
+  r=await h.call('/api/dashboard?client='+b,{cookie:newUser.cookie});
+  assert.equal(r.res.status,404,'Renamed member gains no other tenant');
+  r=await h.call('/api/dashboard?client='+b,{cookie:other.cookie});
+  assert.equal(r.res.status,200,'Another tenant remains accessible');
+
+  // Admin audit identifies who changed the account and the old/new addresses.
+  r=await h.call('/api/admin/clients/'+a+'/members',{cookie:admin.cookie});
+  assert.deepEqual(r.json.members.map(m=>m.email),['artist@new.example.com','editor@example.com']);
+  const audit=await env.DB.prepare("SELECT * FROM audit_log WHERE event='member.signin_email_changed' AND client_id=?").bind(a).first();
+  assert.equal(audit.actor_email,'admin@prunusmedia.com');
+  assert.match(audit.resource_id,/artist@old.example.com\|artist@new.example.com/);
+});
