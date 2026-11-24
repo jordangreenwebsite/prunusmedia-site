@@ -18,7 +18,7 @@ try{
  // Ensure the actual customer page is available, not an old 404/marketing page.
  let ready=false;
  for(let i=0;i<24;i++){
-  try{const r=await fetch('https://prunusmedia.com/buy-now/?launch='+Date.now(),{cache:'no-store'});const h=await r.text();if(r.ok&&/Choose your website package/.test(h)&&/name="robots" content="noindex,nofollow,noarchive"/.test(h)&&h.includes('Continue to secure payment')&&h.includes('data-terms-version="website-packages-2026-11-17-v2"')){ready=true;break;}}catch{}
+  try{const r=await fetch('https://prunusmedia.com/buy-now/?launch='+Date.now(),{cache:'no-store'});const h=await r.text();if(r.ok&&/Choose your website package/.test(h)&&/name="robots" content="noindex,nofollow,noarchive"/.test(h)&&h.includes('Continue to secure payment')&&h.includes('data-terms-version="website-packages-2026-11-18-v3"')){ready=true;break;}}catch{}
   await wait(5000);
  }
  if(!ready)throw Error('Production Buy Now page has not been verified; checkout remains disabled.');

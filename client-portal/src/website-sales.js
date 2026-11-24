@@ -88,7 +88,29 @@ async function body(request){
 function previewUrl(value){
  try{const u=new URL(value);if(u.origin!=='https://uktradewebsites.co.uk'&&u.origin!==MARKETING)return null;if(!/^\/concept-websites\/[a-z0-9-]+\/$/.test(u.pathname)||u.search||u.hash||u.username||u.password)return null;return u.href;}catch{return null;}
 }
-async function prospect(env,token,slug){if(TOKEN.test(token||''))return await q(env,'SELECT * FROM website_sales_prospects WHERE token=? AND active=1',token).first();if(/^[a-z0-9][a-z0-9-]{0,100}$/.test(slug||''))return await q(env,'SELECT * FROM website_sales_prospects WHERE preview_url=? AND active=1',slug==='jemoba'?'https://uktradewebsites.co.uk/demos/jemoba/':'https://uktradewebsites.co.uk/concept-websites/'+slug+'/').first();return null;}
+async function prospect(env,token,slug){if(TOKEN.test(token||''))return await q(env,'SELECT * FROM website_sales_prospects WHERE token=? AND active=1 AND preview_url NOT LIKE ?',token,MARKETING+'/buy-now/#public-%').first();if(/^[a-z0-9][a-z0-9-]{0,100}$/.test(slug||''))return await q(env,'SELECT * FROM website_sales_prospects WHERE preview_url=? AND active=1',slug==='jemoba'?'https://uktradewebsites.co.uk/demos/jemoba/':'https://uktradewebsites.co.uk/concept-websites/'+slug+'/').first();return null;}
+function publicRequest(token,concept){return !token&&!concept;}
+async function publicProspect(env,attempt,addr,quote){
+ const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(attempt+'|'+addr+'|'+quote.plan))),n=>n.toString(16).padStart(2,'0')).join('');
+ const preview=MARKETING+'/buy-now/#public-'+digest;
+ await q(env,'INSERT INTO website_sales_prospects(token,name,brand,preview_url,created_ms) VALUES(?,?,?,?,?) ON CONFLICT(preview_url) DO NOTHING',newToken(),'Public website purchase',quote.brand,preview,Date.now()).run();
+ return q(env,'SELECT * FROM website_sales_prospects WHERE preview_url=? AND active=1',preview).first();
+}
+const COUNTRY_CURRENCY={US:'USD',CA:'CAD',AU:'AUD',NZ:'NZD',TH:'THB',SG:'SGD',MY:'MYR',IN:'INR',JP:'JPY',CH:'CHF',NO:'NOK',SE:'SEK',DK:'DKK',PL:'PLN',CZ:'CZK',HU:'HUF',RO:'RON',ZA:'ZAR',MX:'MXN',BR:'BRL',HK:'HKD',KR:'KRW',PH:'PHP',ID:'IDR',CN:'CNY',TR:'TRY',AE:'AED',SA:'SAR',IL:'ILS'};
+const EURO_COUNTRIES=new Set('AT BE HR CY EE FI FR DE GR IE IT LV LT LU MT NL PT SK SI ES BG'.split(' '));
+const SUPPORTED_CURRENCIES=new Set(['GBP','EUR',...Object.values(COUNTRY_CURRENCY)]);
+async function currencyEstimate(request,url){
+ const country=request.cf?.country||'';
+ const requested=url.searchParams.get('currency');
+ const currency=SUPPORTED_CURRENCIES.has(requested)?requested:(EURO_COUNTRIES.has(country)?'EUR':COUNTRY_CURRENCY[country]||'GBP');
+ if(currency==='GBP')return json({ok:true,currency:'GBP',rate:1},200,true);
+ try{
+  const response=await fetch('https://api.frankfurter.dev/v2/rate/GBP/'+currency,{signal:AbortSignal.timeout(4000),cf:{cacheTtl:3600,cacheEverything:true}});
+  const data=await response.json();
+  if(!response.ok||data.base!=='GBP'||data.quote!==currency||!Number.isFinite(data.rate)||data.rate<=0)throw Error('Rate unavailable');
+  return json({ok:true,currency,rate:data.rate,date:data.date},200,true);
+ }catch{return json({ok:true,currency:'GBP',rate:1},200,true);}
+}
 async function offers(env,p,now=Date.now()){
  const records=(await q(env,"SELECT * FROM website_sales_offers WHERE active=1 AND start_ms<=? AND end_ms>? ORDER BY created_ms DESC, id DESC",now,now).all()).results;
  return planIds().map(plan=>{
@@ -104,14 +126,17 @@ function metadata(params,prefix,orderId){
 async function checkout(request,env){
  if(!(await configured(env)))return fail('Online payment is not available yet. Please call or WhatsApp us.',503,true);
  let d;try{d=await body(request);}catch{return fail('Invalid checkout request.',400,true);}
- const p=await prospect(env,d.token,d.concept),addr=text(d.email,254).toLowerCase();
- if(!p||!(await enabledPlans(env)).includes(d.plan)||!email(addr)||d.agree!==true||d.agreement_version!==PAYMENT_AGREEMENT_VERSION)return fail('Choose a package, supply your email and accept the payment terms.',400,true);
+ const isPublic=publicRequest(d.token,d.concept),addr=text(d.email,254).toLowerCase();
+ let p=isPublic?null:await prospect(env,d.token,d.concept);
+ if((isPublic?!TOKEN.test(d.attempt||''):!p)||!(await enabledPlans(env)).includes(d.plan)||!email(addr)||d.agree!==true||d.agreement_version!==PAYMENT_AGREEMENT_VERSION)return fail('Choose a package, supply your email and accept the payment terms.',400,true);
  const quote=(await offers(env,p)).find(x=>x.plan===d.plan);
  const extras=d.extras?extraPreferences(d.extras,quote.brand,d.plan,await disabledExtras(env)):{};
  if(Object.values(extras).includes('yes'))return fail('Please agree your optional extras with our team before payment.',409,true);
  const referral=SOURCES.includes(d.referral)?d.referral:null;
  // Require the exact server-calculated quote shown at confirmation.
  if(d.today!==quote.today||d.handover!==quote.handover||d.monthly!==quote.monthly||String(d.offer_id||'')!==String(quote.offer?.id||''))return fail('Pricing changed. Refresh the quote and review it again.',409,true);
+ if(isPublic)p=await publicProspect(env,d.attempt,addr,quote);
+ if(!p)return fail('Checkout unavailable. Please contact our team.',409,true);
  const existing=await q(env,"SELECT * FROM website_sales_orders WHERE prospect_token=? AND status NOT IN ('expired','cancelled')",p.token).first();
  if(existing){
   // Never expose a prior customer's checkout session or create a second payable order.
@@ -126,7 +151,7 @@ async function checkout(request,env){
  try{await q(env,'INSERT INTO website_sales_orders(id,prospect_token,plan,quote_json,status,customer_email,created_ms,updated_ms) VALUES(?,?,?,?,?,?,?,?)',order,p.token,d.plan,JSON.stringify({...quote,extras,referral,agreement_version:PAYMENT_AGREEMENT_VERSION,agreement_accepted_ms:now,agreement_text:agreementFor(quote)}),'creating',addr,now,now).run();}
  catch{return fail('A checkout already exists. Please contact us.',409,true);}
  try{
-   const common={mode:isRecurringPlan(d.plan)?'subscription':'payment',customer_email:addr,client_reference_id:order,success_url:MARKETING+'/buy-now/success/',cancel_url:MARKETING+'/buy-now/?ref='+p.token,expires_at:Math.floor(now/1000)+1860,'line_items[0][quantity]':1,'automatic_tax[enabled]':false};
+   const common={mode:isRecurringPlan(d.plan)?'subscription':'payment',customer_email:addr,client_reference_id:order,success_url:MARKETING+'/buy-now/success/',cancel_url:isPublic?MARKETING+'/buy-now/?brand='+quote.brand+'&plan='+quote.plan:MARKETING+'/buy-now/?ref='+p.token,expires_at:Math.floor(now/1000)+1860,'line_items[0][quantity]':1,'automatic_tax[enabled]':false};
    metadata(common,'metadata',order);
    common['metadata[agreement_version]']=PAYMENT_AGREEMENT_VERSION;
    common['custom_text[submit][message]']=isRecurringPlan(d.plan)?'Recurring monthly website services under the agreed payment terms.':'Website deposit only. The agreed handover balance and recurring hosting are payable separately.';
@@ -216,10 +241,12 @@ export async function websiteSalesPublic(request,env,url){
  if(request.headers.get('origin')!==MARKETING)return fail('Origin not permitted',403);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:{'access-control-allow-origin':MARKETING,'access-control-allow-methods':'GET, POST, OPTIONS','access-control-allow-headers':'Content-Type','vary':'Origin'}});
  if(path==='/api/website-sales/extras'&&request.method==='GET')return json({ok:true,disabled:await disabledExtras(env)},200,true);
+ if(path==='/api/website-sales/currency'&&request.method==='GET')return currencyEstimate(request,url);
  if(path==='/api/website-sales/quote'&&request.method==='GET'){
-   const p=await prospect(env,url.searchParams.get('ref'),url.searchParams.get('concept'));if(!p)return fail('This purchase link is not available. Speak to our team.',404,true);
+   const token=url.searchParams.get('ref'),concept=url.searchParams.get('concept'),isPublic=publicRequest(token,concept);
+   const p=isPublic?null:await prospect(env,token,concept);if(!isPublic&&!p)return fail('This purchase link is not available. Speak to our team.',404,true);
    const plans=await enabledPlans(env),enabled=plans.length>0;
-   return json({ok:true,enabled,enabled_plans:plans,agreement_version:PAYMENT_AGREEMENT_VERSION,prospect:{name:p.name,brand:p.brand,preview_url:p.preview_url},plans:await offers(env,p),server_time:Date.now()},200,true);
+   return json({ok:true,enabled,enabled_plans:plans,agreement_version:PAYMENT_AGREEMENT_VERSION,prospect:p?{name:p.name,brand:p.brand,preview_url:p.preview_url}:null,plans:await offers(env,p),server_time:Date.now()},200,true);
  }
  if(path==='/api/website-sales/checkout'&&request.method==='POST')return checkout(request,env);
  return fail('Not found',404,true);
@@ -288,7 +315,7 @@ export async function websiteSalesAdmin(request,env,user,url){
  if(path==='/api/admin/website-sales'&&request.method==='GET'){
    const disabled=await disabledExtras(env);
    const [prospects,offers,orders]=await Promise.all([
-    q(env,'SELECT * FROM website_sales_prospects ORDER BY created_ms DESC LIMIT 250').all(),
+    q(env,'SELECT * FROM website_sales_prospects WHERE preview_url NOT LIKE ? ORDER BY created_ms DESC LIMIT 250',MARKETING+'/buy-now/#public-%').all(),
     q(env,'SELECT * FROM website_sales_offers ORDER BY created_ms DESC LIMIT 100').all(),
     q(env,"SELECT o.id,o.plan,o.status,o.quote_json,o.created_ms,o.updated_ms,o.customer_email,o.invoice_url,o.billing_issue,o.schedule_id,(SELECT COUNT(*) FROM website_sales_paid_invoices i WHERE i.order_id=o.id AND i.billing_reason IN ('subscription_create','subscription_cycle')) AS paid_invoices,p.name,p.brand FROM website_sales_orders o JOIN website_sales_prospects p ON p.token=o.prospect_token ORDER BY o.created_ms DESC LIMIT 250").all()]);
    return json({ok:true,enabled:await configured(env),enabled_plans:await enabledPlans(env),extras:EXTRAS.map(e=>({id:e.id,title:e.short,price:e.price,enabled:!disabled.includes(e.id)})),prospects:prospects.results,offers:offers.results,orders:orders.results});

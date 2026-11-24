@@ -14,3 +14,10 @@ test('owner routes reject non-admin before database access',async()=>{
 test('unregistered token cannot receive quote',async()=>{
  const url=new URL('https://portal.prunusmedia.com/api/website-sales/quote?ref=invalid');const res=await websiteSalesPublic(new Request(url,{headers:{origin:'https://prunusmedia.com'}}),{},url);assert.equal(res.status,404);
 });
+
+test('public quote without concept returns standard prices and retains kill switch',async()=>{
+ const url=new URL('https://portal.prunusmedia.com/api/website-sales/quote');
+ const env={DB:{prepare(sql){return {bind(){return {all:async()=>({results:[]})}}}}}};
+ const res=await websiteSalesPublic(new Request(url,{headers:{origin:'https://prunusmedia.com'}}),env,url);assert.equal(res.status,200);const data=await res.json();assert.equal(data.prospect,null);assert.equal(data.enabled,false);assert.equal(data.plans.find(p=>p.plan==='growth').today,12450);
+});
+test('GBP display is available without external rates',async()=>{const url=new URL('https://portal.prunusmedia.com/api/website-sales/currency?currency=GBP');const r=await websiteSalesPublic(new Request(url,{headers:{origin:'https://prunusmedia.com'}}),{},url);assert.deepEqual(await r.json(),{ok:true,currency:'GBP',rate:1});});
