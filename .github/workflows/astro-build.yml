@@ -31,6 +31,8 @@ jobs:
         run: npm run check:export
       - name: Build Astro
         run: npm run build
+      - name: Verify analytics script only loads with consent
+        run: node scripts/check-analytics-consent.mjs
       - name: Assert original exported HTML is preserved
         run: node scripts/assert-export-parity.mjs
       - name: Verify every original scroll animation and footer/navigation structure
