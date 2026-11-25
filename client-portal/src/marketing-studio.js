@@ -13,7 +13,9 @@ export async function readContent360(env,endpoint,fetcher=fetch){
   const token=String(env.CONTENT360_API_TOKEN||'').trim();
   if(!uuid.test(workspace)||!token)return {ok:false,message:'Connection settings incomplete.'};
   try{
-    const r=await fetcher(root+workspace+'/'+endpoint,{method:'GET',redirect:'error',signal:AbortSignal.timeout(8000),headers:{Authorization:'Bearer '+token,Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});
+    const r=await fetcher(root+workspace+'/'+endpoint,{method:'GET',redirect:'manual',signal:AbortSignal.timeout(8000),headers:{Authorization:'Bearer '+token,Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});
+    // Workers support manual redirects; reject them without forwarding the bearer token.
+    if(r.status>=300&&r.status<400)return {ok:false,message:'Content360 returned a redirect (HTTP '+r.status+'). Request stopped.'};
     if(!r.ok)return {ok:false,message:'Content360 returned HTTP '+r.status+'.'};
     if(!String(r.headers.get('content-type')||'').toLowerCase().includes('application/json'))return {ok:false,message:'Unexpected response format.'};
     const data=await r.json();
@@ -21,7 +23,7 @@ export async function readContent360(env,endpoint,fetcher=fetch){
     const rows=data.data.filter(x=>x&&typeof x==='object');
     const items=rows.slice(0,100).map(x=>endpoint==='accounts'?{name:clean(x.name),provider:clean(x.provider,40),authorized:x.authorized===true}:endpoint==='posts'?{status:clean(x.status,40),created_at:clean(x.created_at,40),scheduled_at:clean(x.scheduled_at,40),published_at:clean(x.published_at,40)}:{type:clean(x.type,40),created_at:clean(x.created_at,40)});
     return {ok:true,items,count:rows.length,truncated:rows.length>100,more:!!data.links?.next};
-  }catch{return {ok:false,message:'Content360 connection unavailable.'};}
+  }catch(e){return {ok:false,message:e?.name==='TimeoutError'||e?.name==='AbortError'?'Content360 request timed out.':e?.name==='TypeError'?'Content360 network or request configuration error.':'Content360 connection unavailable.'};}
 }
 function html(body,status=200){
   const nonce=crypto.randomUUID().replaceAll('-','');
