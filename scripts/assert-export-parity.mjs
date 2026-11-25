@@ -23,6 +23,9 @@ for (const route of routes) {
     /<section class="pm-home-work"[^>]*>[\s\S]*?<\/section>/,
     '<section data-collection-driven-gallery></section>'
   ).replace(
+    /<script defer src="\\/assets\\/prunus-scripts\\/analytics-consent\\.js"><\\/script>\\n?/g,
+    ''
+  ).replace(
     /<style id="pm-roofing-story-css">[\s\S]*?<\/style>\s*<section class="pm-roofing-story[\s\S]*?<\/section>/,
     ''
   ).replace(/(?:[\u{1F300}-\u{1FAFF}\u2600-\u26FF\u2700-\u27BF\u2197\u2196\u2198\u2199\u2934\u2935\u2B05\u2B06\u2B07]\uFE0F?|&#(?:x2197|8599);)/giu, '');
