@@ -22,9 +22,7 @@ for (const route of routes) {
   const normalize = (html) => html.replace(/\r\n/g, '\n').trim().replace(
     /<section class="pm-home-work"[^>]*>[\s\S]*?<\/section>/,
     '<section data-collection-driven-gallery></section>'
-  ).replace(
-    /<script defer src="\\/assets\\/prunus-scripts\\/analytics-consent\\.js"><\\/script>\\n?/g,
-    ''
+  ).replaceAll('<script defer src="/assets/prunus-scripts/analytics-consent.js"></script>\\n', ''
   ).replace(
     /<style id="pm-roofing-story-css">[\s\S]*?<\/style>\s*<section class="pm-roofing-story[\s\S]*?<\/section>/,
     ''
