@@ -1,5 +1,6 @@
 // Intentionally narrow draft-only pilot. No scheduling, uploads, videos or arbitrary account inputs.
 import {marketingOwner,marketingHtml,marketingEscape} from './marketing-studio.js';
+import {loadMarketingQueue} from './marketing-queue.js';
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const root='https://app.content360.io/os/api/';
 const formPath='/marketing-studio/draft';
@@ -58,6 +59,11 @@ async function digestOf(c,text,mediaId=''){
   const bytes=new TextEncoder().encode(JSON.stringify(mediaId?[c.workspace,c.id,text,mediaId]:[c.workspace,c.id,text]));
   return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
 }
+async function preparedItem(env,id,fetcher){
+  if(typeof id!=='string'||!/^[a-z0-9][a-z0-9-]{1,119}$/.test(id))return null;
+  const queue=await loadMarketingQueue(env,fetcher);
+  return queue?.items.find(x=>x.id===id&&x.brand==='prunus-media')||null;
+}
 export async function marketingDraft(request,env,user,fetcher=fetch){
   if(!user)return page('Sign in required','Sign in through the portal.',401);
   if(!marketingOwner(user,env))return page('Access not available','Owner access only.',403);
@@ -65,8 +71,16 @@ export async function marketingDraft(request,env,user,fetcher=fetch){
   const c=config(env);
   if(!c||!env.DB)return page('Draft pilot not configured','The owner must configure the single permitted account ID.',503);
   if(request.method==='GET'){
+    const queueId=new URL(request.url).searchParams.get('item');
+    let item=null;
+    if(queueId!==null){
+      item=await preparedItem(env,queueId,fetcher);
+      if(!item)return page('Prepared item unavailable','Return to the weekly marketing review. No draft was submitted.',409);
+      const previous=await env.DB.prepare('SELECT state FROM marketing_draft_attempts WHERE queue_item_id=?').bind(item.id).first();
+      if(previous)return page('Already attempted','Check the weekly review and Content360. No duplicate draft will be sent.',409);
+    }
     const images=await imageLibrary(c,fetcher);
-    return marketingHtml(back+'<h1>Create a draft</h1><section><h2>Prunus Media · Facebook</h2><p>This saves one unpublished draft with an optional existing image in Content360. It does not schedule or publish.</p><form method="post" action="'+formPath+'"><label for="content">Post copy</label><textarea id="content" name="content" rows="9" maxlength="4000" required></textarea>'+imagePicker(images)+'<label class="confirm"><input type="checkbox" name="confirm" value="draft" required> I have reviewed this copy and approve saving it as an unpublished draft.</label><button type="submit">Save unpublished draft</button></form></section>',200,true);
+    return marketingHtml(back+'<h1>Create a draft</h1><section><h2>Prunus Media · Facebook</h2><p>This saves one unpublished draft with an optional existing image in Content360. It does not schedule or publish.</p><form method="post" action="'+formPath+'">'+(item?'<input type="hidden" name="queue_item" value="'+marketingEscape(item.id)+'"><p><strong>'+marketingEscape(item.title)+'</strong></p><details open><summary>Evidence and creative brief</summary><p>'+marketingEscape(item.evidence)+'</p><p>'+marketingEscape(item.creative)+'</p></details>':'')+'<label for="content">Post copy</label><textarea id="content" name="content" rows="9" maxlength="4000" required>'+marketingEscape(item?.copy||'')+'</textarea>'+imagePicker(images)+'<label class="confirm"><input type="checkbox" name="confirm" value="draft" required> I have reviewed this copy and approve saving it as an unpublished draft.</label><button type="submit">Save unpublished draft</button></form></section>',200,true);
   }
   // Exact same-origin browser form POST only; missing or cross-site Origin fails closed.
   if(request.headers.get('origin')!==new URL(request.url).origin||request.headers.get('sec-fetch-site')==='cross-site')return page('Request blocked','Open the draft form in the portal.',403);
@@ -75,9 +89,11 @@ export async function marketingDraft(request,env,user,fetcher=fetch){
   const raw=await request.text();
   if(raw.length>50000)return page('Draft too large','',413);
   const form=new URLSearchParams(raw);
-  if([...form.keys()].some(k=>!['content','confirm','media_id'].includes(k))||form.getAll('content').length!==1||form.getAll('confirm').length!==1||form.getAll('media_id').length>1||form.get('confirm')!=='draft')return page('Confirmation required','Review the text and tick the approval box.',400);
+  if([...form.keys()].some(k=>!['content','confirm','media_id','queue_item'].includes(k))||form.getAll('content').length!==1||form.getAll('confirm').length!==1||form.getAll('media_id').length>1||form.getAll('queue_item').length>1||form.get('confirm')!=='draft')return page('Confirmation required','Review the text and tick the approval box.',400);
   const text=(form.get('content')||'').replace(/\r\n?/g,'\n').trim();
   if(!text||text.length>4000)return page('Invalid draft','Enter 1 to 4,000 characters.',400);
+  const queueId=form.get('queue_item');
+  if(queueId!==null&&!(await preparedItem(env,queueId,fetcher)))return page('Prepared item unavailable','No draft was submitted. Return to the weekly review.',409);
   if(!(await validTarget(c,fetcher)))return page('Account not verified','No draft was submitted. Check the permitted Facebook account and its authorisation.',409);
   const mediaId=form.get('media_id')||'';
   if(mediaId){
@@ -87,7 +103,7 @@ export async function marketingDraft(request,env,user,fetcher=fetch){
   }
   const digest=await digestOf(c,text,mediaId);
   let reserved;
-  try{reserved=await env.DB.prepare("INSERT INTO marketing_draft_attempts (digest,actor_email,state) VALUES (?,?,'pending') ON CONFLICT(digest) DO NOTHING RETURNING digest").bind(digest,user.email).first();}
+  try{reserved=await env.DB.prepare("INSERT INTO marketing_draft_attempts (digest,actor_email,state,queue_item_id) VALUES (?,?,'pending',?) ON CONFLICT DO NOTHING RETURNING digest").bind(digest,user.email,queueId).first();}
   catch{return page('Draft ledger unavailable','No draft was submitted.',503);}
   if(!reserved)return page('Duplicate or unresolved attempt','An identical draft was already attempted. Check Content360 before taking any further action. No second request was sent.',409);
   let state='uncertain',postId=null;
