@@ -24,7 +24,7 @@ for (const relative of marketing) {
   const html = readFileSync(file, 'utf8');
   assert.equal(html.split(tag).length - 1, 1,
     'Exactly one consent script expected on ' + relative);
-  assert.ok(!/googletagmanager\\.com\\/gtm\\.js/i.test(html),
+  assert.ok(!html.includes('https://www.googletagmanager.com/gtm.js'),
     'GTM must not load directly without consent: ' + relative);
 }
 for (const relative of ['buy-now/index.html', 'client-login/index.html']) {
