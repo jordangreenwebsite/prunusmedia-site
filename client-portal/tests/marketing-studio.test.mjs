@@ -21,7 +21,7 @@ test('no external requests for nonowner, anonymous or non-GET',async()=>{
 test('fixed read-only path and minimised response',async()=>{
   const result=await readContent360(env,'accounts',async(url,opts)=>{
     assert.equal(url,'https://app.content360.io/os/api/'+env.CONTENT360_WORKSPACE_ID+'/accounts');
-    assert.equal(opts.method,'GET');assert.equal(opts.redirect,'error');
+    assert.equal(opts.method,'GET');assert.equal(opts.redirect,'manual');
     assert.equal(opts.headers.Authorization,'Bearer test-secret');
     return json({data:[{name:'Business',provider:'facebook_page',authorized:true,token:'private',id:99}],links:{next:'https://elsewhere.test'}});
   });
@@ -40,4 +40,17 @@ test('owner HTML escapes names and never renders credentials or raw content',asy
   assert.equal(result.status,200);assert.match(body,/&lt;script&gt;bad/);
   assert.doesNotMatch(body,/<script>|test-secret|private body/);
   assert.match(result.headers.get('cache-control'),/no-store/);
+});
+
+test('manual redirect is rejected without a second request or location disclosure',async()=>{
+  let calls=0;
+  const result=await readContent360(env,'accounts',async(url,opts)=>{
+    calls++;assert.equal(opts.redirect,'manual');
+    return new Response(null,{status:302,headers:{location:'https://untrusted.example/?secret=private'}});
+  });
+  assert.equal(calls,1);assert.deepEqual(result,{ok:false,message:'Content360 returned a redirect (HTTP 302). Request stopped.'});
+});
+test('network errors are redacted',async()=>{
+  const r=await readContent360(env,'posts',async()=>{throw new TypeError('private test-secret');});
+  assert.deepEqual(r,{ok:false,message:'Content360 network or request configuration error.'});
 });
