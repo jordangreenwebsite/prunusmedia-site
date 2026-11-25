@@ -65,3 +65,32 @@ function cleanRenderedTypography(folder) {
 }
 cleanRenderedTypography(dist);
 console.log('Preserved exported assets and generated sitemap for ' + urls.length + ' public routes; removed ' + strippedEmoji + ' decorative symbols.');
+
+
+// Install the one shared analytics consent loader across public marketing
+// pages after Astro has rendered both legacy exports and native routes.
+// Checkout and client-login pages are excluded from marketing analytics.
+let analyticsPages = 0;
+function installAnalyticsConsent(folder, segments = []) {
+  for (const entry of readdirSync(folder, { withFileTypes: true })) {
+    if (['wp-content', 'wp-includes', '_astro', 'assets'].includes(entry.name)) continue;
+    const next = path.join(folder, entry.name);
+    if (entry.isDirectory()) {
+      installAnalyticsConsent(next, [...segments, entry.name]);
+    } else if (entry.isFile() && entry.name === 'index.html' &&
+      !['buy-now', 'client-login'].includes(segments[0])) {
+      const original = readFileSync(next, 'utf8');
+      if (!/<\/head>/i.test(original)) throw new Error('Missing head in ' + next);
+      if (original.includes('/assets/prunus-scripts/analytics-consent.js')) {
+        throw new Error('Analytics consent loader already present in ' + next);
+      }
+      const updated = original.replace(/<\/head>/i,
+        '<script defer src="/assets/prunus-scripts/analytics-consent.js"></script>\n</head>');
+      writeFileSync(next, updated);
+      analyticsPages++;
+    }
+  }
+}
+installAnalyticsConsent(dist);
+console.log('Installed consent-first Google Tag Manager loader on ' + analyticsPages +
+  ' public marketing pages; excluded checkout and client login.');
