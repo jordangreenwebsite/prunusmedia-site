@@ -1,3 +1,4 @@
+import { marketingCalendar } from './marketing-calendar.js';
 import { marketingQueue } from './marketing-queue.js';
 import { marketingDraft } from './marketing-drafts.js';
 import { marketingStudio } from './marketing-studio.js';
@@ -375,6 +376,10 @@ export default {
   async fetch(request,env,context) {
     const url=new URL(request.url), path=url.pathname;
     if (path==='/mcp') return mcpHandler(request,env);
+    if (path==='/marketing-studio/calendar') {
+      try { return await marketingCalendar(request,env,await actor(request,env)); }
+      catch { return error('Marketing calendar unavailable.',500); }
+    }
     if (path==='/marketing-studio/review') {
       if (!env.DB || !env.AUTH_PEPPER) return error('Portal backend is not configured.',503);
       try { return await marketingQueue(request,env,await actor(request,env)); }
