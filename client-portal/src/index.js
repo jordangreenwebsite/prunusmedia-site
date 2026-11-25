@@ -1,3 +1,4 @@
+import { marketingSchedule } from './marketing-schedule.js';
 import { marketingCalendar } from './marketing-calendar.js';
 import { marketingQueue } from './marketing-queue.js';
 import { marketingDraft } from './marketing-drafts.js';
@@ -376,6 +377,10 @@ export default {
   async fetch(request,env,context) {
     const url=new URL(request.url), path=url.pathname;
     if (path==='/mcp') return mcpHandler(request,env);
+    if (path==='/marketing-studio/schedule') {
+      try { return await marketingSchedule(request,env,await actor(request,env)); }
+      catch { return error('Scheduling unavailable. If a request was attempted, check Content360 before proceeding.',500); }
+    }
     if (path==='/marketing-studio/calendar') {
       try { return await marketingCalendar(request,env,await actor(request,env)); }
       catch { return error('Marketing calendar unavailable.',500); }
