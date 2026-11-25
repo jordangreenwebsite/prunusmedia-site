@@ -10,7 +10,7 @@ export function validateMarketingQueue(q){
  if(start.getUTCDay()!==1)throw Error('Invalid week');
  const end=new Date(start.getTime()+6*86400000).toISOString().slice(0,10),seen=new Set();
  const items=q.items.map(x=>{
-  if(!x||!idPattern.test(x.id)||seen.has(x.id)||!['prunus-media','prunus-certificates'].includes(x.brand)||!iso(x.planned_date)||x.planned_date<q.week_of||x.planned_date>end||x.status!=='needs-review'||!bounded(x.title,200)||!bounded(x.copy,4000)||!bounded(x.evidence,2000)||!bounded(x.creative,1000)||!bounded(x.source_key,200))throw Error('Invalid queue item');
+  if(!x||typeof x.id!=='string'||!idPattern.test(x.id)||seen.has(x.id)||!['prunus-media','prunus-certificates'].includes(x.brand)||!iso(x.planned_date)||x.planned_date<q.week_of||x.planned_date>end||x.status!=='needs-review'||!bounded(x.title,200)||!bounded(x.copy,4000)||!bounded(x.evidence,2000)||!bounded(x.creative,1000)||!bounded(x.source_key,200))throw Error('Invalid queue item');
   seen.add(x.id);
   return {id:x.id,brand:x.brand,planned_date:x.planned_date,title:x.title,copy:x.copy,evidence:x.evidence,creative:x.creative,source_key:x.source_key};
  });
@@ -40,7 +40,7 @@ export async function marketingQueue(request,env,user,fetcher=fetch){
   const state=states[i]?.state;
   const brand=x.brand==='prunus-media'?'Prunus Media':'Prunus Certificates';
   const action=state==='confirmed'?'<p><strong>Draft created in Content360</strong> (not published).</p>':state?'<p><strong>Attempt requires reconciliation.</strong> Check Content360; do not retry.</p>':x.brand==='prunus-media'?'<p><a href="/marketing-studio/draft?item='+encodeURIComponent(x.id)+'">Review and create draft</a></p>':'<p><strong>Review only:</strong> no approved Certificates publishing account.</p>';
-  return '<section><p class="meta">'+e(brand)+' · Proposed '+e(x.planned_date)+'</p><h2>'+e(x.title)+'</h2><p style="white-space:pre-wrap">'+e(x.copy).replace(/\n/g,'<br>')+'</p><details><summary>Evidence and creative brief</summary><p>'+e(x.evidence)+'</p><p>'+e(x.creative)+'</p></details>'+action+'</section>';
+  return '<section><p class="meta">'+e(brand)+' · Proposed '+e(x.planned_date)+'</p><h2>'+e(x.title)+'</h2><p>'+e(x.copy).replace(/\n/g,'<br>')+'</p><details><summary>Evidence and creative brief</summary><p>'+e(x.evidence)+'</p><p>'+e(x.creative)+'</p></details>'+action+'</section>';
  }).join('');
  return marketingHtml(back+'<p>Week commencing '+e(q.week_of)+' · Prepared '+e(q.prepared_on)+'. Dates are suggestions, not scheduled posts.</p>'+cards+'<p class="meta">Content360 is the delivery engine. Review evidence, copy and permission before approval.</p>');
 }
