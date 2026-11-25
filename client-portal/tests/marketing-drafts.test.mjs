@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {marketingDraft,draftPayload} from '../src/marketing-drafts.js';
+import {marketingQueue,validateMarketingQueue} from '../src/marketing-queue.js';
 const origin='https://portal.example.test',url=origin+'/marketing-studio/draft';
 const owner={admin:true,email:'owner@example.test'};
 const settings={CONTENT360_OWNER_EMAIL:owner.email,CONTENT360_API_TOKEN:'test-secret',CONTENT360_WORKSPACE_ID:'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',CONTENT360_DRAFT_ACCOUNT_ID:'123'};
 function setup(){
  const db=new DatabaseSync(':memory:');
  db.exec(readFileSync(new URL('../migrations/0011_marketing_studio_drafts.sql',import.meta.url),'utf8'));
+ db.exec(readFileSync(new URL('../migrations/0012_marketing_queue_review.sql',import.meta.url),'utf8'));
  const DB={prepare(sql){return {bind(...args){return {first:async()=>db.prepare(sql).get(...args),run:async()=>db.prepare(sql).run(...args)}}}}};
  return {db,env:{...settings,DB}};
 }
@@ -86,4 +88,36 @@ test('reject unknown, video or arbitrary URL media without write',async()=>{
  assert.equal((await marketingDraft(form('Test',{media_id:'457'}),env,owner,f)).status,409);
  assert.equal((await marketingDraft(form('Test',{media_id:'https://other.example/image.jpg'}),env,owner,f)).status,400);
  assert.equal(writes,0);assert.equal(db.prepare('SELECT COUNT(*) n FROM marketing_draft_attempts').get().n,0);
+});
+
+const queued={id:'2026-11-30-prunus-one',brand:'prunus-media',planned_date:'2026-12-01',title:'Useful marketing',copy:'Prepared & reviewed',evidence:'Dated source',creative:'Use a genuine image',source_key:'source-1',status:'needs-review'};
+const q={version:1,week_of:'2026-11-30',prepared_on:'2026-11-25',items:[queued,{...queued,id:'certificates-one',brand:'prunus-certificates'}]};
+test('weekly review reads fixed private source and only owner can see it',async()=>{
+ const {env}=setup();env.BLOG_SCHEDULE_READ_TOKEN='private-read';
+ let calls=0;
+ const f=async(u,o)=>{calls++;assert.match(u,/github\.com\/repos\/jordangreenwebsite\/business-os\/contents\/growth\/marketing-queue\.json/);assert.equal(o.redirect,'manual');return json(q);};
+ const req=new Request(origin+'/marketing-studio/review');
+ assert.equal((await marketingQueue(req,env,null,f)).status,401);
+ assert.equal((await marketingQueue(req,env,{...owner,admin:false},f)).status,403);
+ assert.equal(calls,0);
+ const r=await marketingQueue(req,env,owner,f);assert.equal(r.status,200);
+ const html=await r.text();assert.match(html,/Prepared &amp; reviewed/);assert.match(html,/draft\?item=2026-11-30-prunus-one/);assert.doesNotMatch(html,/draft\?item=certificates-one|private-read/);
+ assert.throws(()=>validateMarketingQueue({...q,items:[queued,queued]}));
+ assert.throws(()=>validateMarketingQueue({...q,items:[{...queued,planned_date:'2026-12-09'}]}));
+});
+test('prepared copy prefills, owner can edit and queue item is sent only once',async()=>{
+ const {env,db}=setup();env.BLOG_SCHEDULE_READ_TOKEN='private-read';let writes=0;
+ const f=async(u,o)=>{
+  if(u.startsWith('https://api.github.com/'))return json(q);
+  if(o.method==='GET')return u.endsWith('/accounts')?accounts():mediaList();
+  writes++;const p=JSON.parse(o.body);assert.equal(p.status,'draft');return json({id:201,status:'draft',scheduled_at:null,published_at:null});
+ };
+ const r=await marketingDraft(new Request(url+'?item='+queued.id),env,owner,f);assert.equal(r.status,200);const html=await r.text();
+ assert.match(html,/Prepared &amp; reviewed<\/textarea>/);assert.match(html,/name="queue_item"/);
+ assert.equal((await marketingDraft(form('Approved copy',{queue_item:queued.id}),env,owner,f)).status,200);
+ assert.equal((await marketingDraft(form('Changed copy',{queue_item:queued.id}),env,owner,f)).status,409);
+ assert.equal((await marketingDraft(form('Other brand',{queue_item:'certificates-one'}),env,owner,f)).status,409);
+ assert.equal(writes,1);assert.equal(db.prepare('SELECT queue_item_id FROM marketing_draft_attempts').get().queue_item_id,queued.id);
+ const view=await marketingQueue(new Request(origin+'/marketing-studio/review'),env,owner,f);
+ assert.match(await view.text(),/Draft created in Content360/);
 });
