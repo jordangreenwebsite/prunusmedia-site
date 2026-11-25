@@ -1,3 +1,4 @@
+import { marketingStudio } from './marketing-studio.js';
 import { extraRoutes, enqueueWeeklyResearch } from './editorial.js';
 import { gscRoute } from './gsc.js';
 import { researchDiscoveryRoute, runAutomaticDiscovery } from './research.js';
@@ -372,6 +373,11 @@ export default {
   async fetch(request,env,context) {
     const url=new URL(request.url), path=url.pathname;
     if (path==='/mcp') return mcpHandler(request,env);
+    if (path==='/marketing-studio') {
+      if (!env.DB || !env.AUTH_PEPPER) return error('Portal backend is not configured.',503);
+      try { return await marketingStudio(request,env,await actor(request,env)); }
+      catch { return error('Marketing Studio unavailable.',500); }
+    }
     if (!path.startsWith('/api/')) {
       if (!env.ASSETS) return error('Portal assets not configured.',503);
       const asset = await env.ASSETS.fetch(request);
