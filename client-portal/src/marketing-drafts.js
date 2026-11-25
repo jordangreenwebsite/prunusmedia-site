@@ -6,17 +6,17 @@ const root='https://app.content360.io/os/api/';
 const formPath='/marketing-studio/draft';
 const back='<p><a href="/marketing-studio">Back to Marketing Studio</a></p>';
 const page=(title,message,status=200)=>marketingHtml(back+'<h1>'+marketingEscape(title)+'</h1><p>'+marketingEscape(message)+'</p>',status);
-function config(env){
+export function config(env){
   const workspace=String(env.CONTENT360_WORKSPACE_ID||'').trim(),token=String(env.CONTENT360_API_TOKEN||'').trim(),id=String(env.CONTENT360_DRAFT_ACCOUNT_ID||'').trim();
   if(!uuid.test(workspace)||!token||!/^\d{1,12}$/.test(id)||!Number.isSafeInteger(Number(id))||Number(id)<=0)return null;
   return {workspace,token,id,base:root+workspace};
 }
-async function provider(c,endpoint,method,fetcher,body){
+export async function provider(c,endpoint,method,fetcher,body){
   const headers={Authorization:'Bearer '+c.token,Accept:'application/json','X-Requested-With':'XMLHttpRequest'};
   if(body)headers['Content-Type']='application/json';
   return fetcher(c.base+'/'+endpoint,{method,redirect:'manual',signal:AbortSignal.timeout(10000),headers,...(body?{body:JSON.stringify(body)}:{})});
 }
-async function validTarget(c,fetcher){
+export async function validTarget(c,fetcher){
   try{
     const r=await provider(c,'accounts','GET',fetcher);
     if(!r.ok||!r.headers.get('content-type')?.includes('application/json'))return false;
@@ -106,15 +106,15 @@ export async function marketingDraft(request,env,user,fetcher=fetch){
   try{reserved=await env.DB.prepare("INSERT INTO marketing_draft_attempts (digest,actor_email,state,queue_item_id) VALUES (?,?,'pending',?) ON CONFLICT DO NOTHING RETURNING digest").bind(digest,user.email,queueId).first();}
   catch{return page('Draft ledger unavailable','No draft was submitted.',503);}
   if(!reserved)return page('Duplicate or unresolved attempt','An identical draft was already attempted. Check Content360 before taking any further action. No second request was sent.',409);
-  let state='uncertain',postId=null;
+  let state='uncertain',postId=null,postUuid=null;
   try{
     const r=await provider(c,'posts','POST',fetcher,draftPayload(c.id,text,mediaId));
     if(r.ok&&r.headers.get('content-type')?.includes('application/json')){
       const result=await r.json(),d=result?.data??result;
-      if(d&&d.status==='draft'&&/^\d+$/.test(String(d.id))&&!d.scheduled_at&&!d.published_at){state='confirmed';postId=String(d.id);}
+      if(d&&d.status==='draft'&&/^\d+$/.test(String(d.id))&&!d.scheduled_at&&!d.published_at){state='confirmed';postId=String(d.id);if(!mediaId&&typeof d.uuid==='string'&&uuid.test(d.uuid))postUuid=d.uuid;}
     }
   }catch{/* A request may have reached the provider. Never retry automatically. */}
-  try{await env.DB.prepare("UPDATE marketing_draft_attempts SET state=?,provider_post_id=?,updated_at=datetime('now') WHERE digest=?").bind(state,postId,digest).run();}
+  try{await env.DB.prepare("UPDATE marketing_draft_attempts SET state=?,provider_post_id=?,provider_post_uuid=?,updated_at=datetime('now') WHERE digest=?").bind(state,postId,postUuid,digest).run();}
   catch{return page('Check Content360','A draft request was attempted but the local result could not be recorded. Do not resubmit.',502);}
   return state==='confirmed'?page('Draft saved','Content360 returned draft status. Open Content360 to verify the copy, destination and any selected image. Nothing was scheduled or requested for publication.'):page('Draft outcome needs verification','Check Content360 drafts and publishing history. The provider did not return a confirmed draft result. Do not retry this content.',502);
 }
