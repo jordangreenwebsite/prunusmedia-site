@@ -11,6 +11,7 @@ function setup(){
  const db=new DatabaseSync(':memory:');
  db.exec(readFileSync(new URL('../migrations/0011_marketing_studio_drafts.sql',import.meta.url),'utf8'));
  db.exec(readFileSync(new URL('../migrations/0012_marketing_queue_review.sql',import.meta.url),'utf8'));
+ db.exec(readFileSync(new URL('../migrations/0013_marketing_schedule.sql',import.meta.url),'utf8'));
  const DB={prepare(sql){return {bind(...args){return {first:async()=>db.prepare(sql).get(...args),run:async()=>db.prepare(sql).run(...args)}}}}};
  return {db,env:{...settings,DB}};
 }
