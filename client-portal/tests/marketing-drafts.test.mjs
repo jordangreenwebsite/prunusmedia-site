@@ -57,3 +57,33 @@ test('ambiguous outcome blocks retry and records uncertainty',async()=>{
  assert.equal((await marketingDraft(form(),env,owner,f)).status,409);
  assert.equal(writes,1);assert.equal(db.prepare('SELECT state FROM marketing_draft_attempts').get().state,'uncertain');
 });
+
+const imageRow={id:'456',name:'Roofing <image>',type:'image',mime_type:'image/jpeg',is_video:false,thumb_url:'https://cdn.content360.io/'+settings.CONTENT360_WORKSPACE_ID+'/uploads/test-thumb.jpg'};
+const mediaList=()=>json({data:[imageRow,{...imageRow,id:'457',type:'video',is_video:true},{...imageRow,id:'458',thumb_url:'https://untrusted.example/thumb.jpg'}]});
+test('image picker displays supported images and only trusted thumbnail URLs',async()=>{
+ const {env}=setup();
+ const r=await marketingDraft(new Request(url),env,owner,async(u,o)=>{assert.equal(o.method,'GET');assert.match(u,/\/media$/);return mediaList();});
+ const html=await r.text();
+ assert.match(html,/name="media_id" value="456"/);assert.match(html,/Roofing &lt;image&gt;/);
+ assert.match(html,/https:\/\/cdn\.content360\.io\//);assert.doesNotMatch(html,/untrusted\.example|value="457"/);
+ assert.match(r.headers.get('content-security-policy'),/img-src https:\/\/cdn\.content360\.io/);
+});
+test('selected library image sends ID only; direct top-level response recognised and duplicate blocked',async()=>{
+ const {env,db}=setup();let writes=0;
+ const f=async(u,o)=>{
+  if(o.method==='GET')return u.endsWith('/accounts')?accounts():mediaList();
+  writes++;const p=JSON.parse(o.body);assert.deepEqual(p.versions[0].content[0].media,['456']);assert.equal(p.status,'draft');
+  assert.equal(p.scheduled_at,undefined);return json({id:100,status:'draft',scheduled_at:null,published_at:null});
+ };
+ assert.equal((await marketingDraft(form('Image copy',{media_id:'456'}),env,owner,f)).status,200);
+ assert.equal((await marketingDraft(form('Image copy',{media_id:'456'}),env,owner,f)).status,409);
+ assert.equal(writes,1);assert.equal(db.prepare('SELECT state FROM marketing_draft_attempts').get().state,'confirmed');
+});
+test('reject unknown, video or arbitrary URL media without write',async()=>{
+ const {env,db}=setup();let writes=0;
+ const f=async(u,o)=>{if(o.method==='GET')return u.endsWith('/accounts')?accounts():mediaList();writes++;throw Error('unexpected write')};
+ assert.equal((await marketingDraft(form('Test',{media_id:'999'}),env,owner,f)).status,409);
+ assert.equal((await marketingDraft(form('Test',{media_id:'457'}),env,owner,f)).status,409);
+ assert.equal((await marketingDraft(form('Test',{media_id:'https://other.example/image.jpg'}),env,owner,f)).status,400);
+ assert.equal(writes,0);assert.equal(db.prepare('SELECT COUNT(*) n FROM marketing_draft_attempts').get().n,0);
+});
