@@ -275,6 +275,10 @@ function renderAgencyHome(){
   const sync=agencyData.blog_schedule_sync;
   stat(metrics,'Blogs planned',clients.reduce((n,c)=>n+(c.blog_planned||0),0),sync&&sync.status!=='connected'?'Master schedule '+(sync.status==='not-configured'?'not connected':sync.status==='stale'?'last retrieved':'unavailable'):'With a target publication date');
   stat(metrics,'In progress',clients.reduce((n,c)=>n+(c.blog_open||0),0),'Ideas, drafts and reviews');
+  const studio=add(metrics,'a',null,'portal-stat');
+  studio.href='/marketing-studio';
+  add(studio,'strong','Marketing Studio','portal-stat-number');
+  add(studio,'small','Content360 connection and publishing history (owner access)');
   for(const id of ['agency-dashboard-cards','agency-business-list']){
     const wrap=$(id);wrap.replaceChildren();
     if(!clients.length){
