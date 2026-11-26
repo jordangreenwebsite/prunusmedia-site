@@ -77,8 +77,8 @@ try {
       if (await analyticsPrompt.count() !== 1 || !await analyticsPrompt.isVisible()) {
         failures.push(test.label + ': analytics consent prompt missing on first visit');
       } else {
-        if (await page.locator('script[data-prunus-gtm]').count() !== 0) {
-          failures.push(test.label + ': GTM loaded before opt-in');
+        if (await page.locator('script[data-prunus-ga4]').count() !== 0) {
+          failures.push(test.label + ': GA4 loaded before opt-in');
         }
         await analyticsPrompt.locator('button[data-choice="rejected"]').click();
         if (await analyticsPrompt.isVisible()) failures.push(test.label + ': reject did not close consent');
