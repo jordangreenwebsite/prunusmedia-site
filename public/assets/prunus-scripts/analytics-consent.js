@@ -1,19 +1,19 @@
 /**
- * Consent-first Google Tag Manager for the Prunus Media public website.
- * Only load GTM after the visitor opts in to analytics.
- * This container should be configured for GA4 analytics only.
+ * Consent-first Google Analytics 4 for the Prunus Media public website.
+ * Load the direct Google tag only after the visitor opts in to analytics.
+ * This avoids requiring a separate Google Tag Manager account.
  */
 (() => {
   'use strict';
 
-  const containerId = 'GTM-TC6Z5DG3';
+  const measurementId = 'G-QGL84J7V81';
   const storageKey = 'prunus_analytics_consent_v1';
   const allowedValues = new Set(['accepted', 'rejected']);
   const dataLayer = window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { dataLayer.push(arguments); };
 
-  // Give Google tags a denied default even if additional tags are configured
-  // in the container later. No GTM script is requested before opt-in.
+  // Deny Google analytics/ad storage by default. No Google tag is requested
+  // and no page_view is sent before visitors opt in.
   window.gtag('consent', 'default', {
     analytics_storage: 'denied',
     ad_storage: 'denied',
@@ -39,15 +39,18 @@
     }
   }
 
-  let containerLoaded = false;
-  function loadContainer() {
-    if (containerLoaded) return;
-    containerLoaded = true;
-    dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
+  let analyticsLoaded = false;
+  function loadAnalytics() {
+    if (analyticsLoaded) return;
+    analyticsLoaded = true;
+    // The queued commands are processed in order after gtag.js loads.
+    // Exactly one config call sends the initial GA4 page_view.
+    window.gtag('js', new Date());
+    window.gtag('config', measurementId);
     const script = document.createElement('script');
     script.async = true;
-    script.src = 'https://www.googletagmanager.com/gtm.js?id=' + encodeURIComponent(containerId);
-    script.dataset.prunusGtm = containerId;
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(measurementId);
+    script.dataset.prunusGa4 = measurementId;
     document.head.appendChild(script);
   }
 
@@ -128,12 +131,12 @@
     storeChoice(next);
     if (next === 'accepted') {
       window.gtag('consent', 'update', { analytics_storage: 'granted' });
-      loadContainer();
+      loadAnalytics();
     } else {
       window.gtag('consent', 'update', { analytics_storage: 'denied' });
       removeAnalyticsCookies();
-      // Stop any already loaded GTM tags without affecting normal page use.
-      if (previous === 'accepted' || containerLoaded) location.reload();
+      // Reload if GA4 was already loaded to stop tracking after revocation.
+      if (previous === 'accepted' || analyticsLoaded) location.reload();
     }
     hideBanner();
   }
@@ -159,7 +162,7 @@
   const previousChoice = readChoice();
   if (previousChoice === 'accepted') {
     window.gtag('consent', 'update', { analytics_storage: 'granted' });
-    loadContainer();
+    loadAnalytics();
   } else if (!previousChoice) {
     showBanner();
   }
