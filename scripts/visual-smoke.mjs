@@ -37,6 +37,63 @@ let failures = [];
 try {
   await waitForServer();
   browser = await chromium.launch({ headless: true });
+
+  // Positive GA4 consent test: verify the visitor's click results in a
+  // real gtag.js request and the correct ordered GA4 commands. Stub Google's
+  // remote response so CI does not create synthetic visits in production.
+  {
+    const consentContext = await browser.newContext({ viewport: { width: 1200, height: 800 } });
+    const consentPage = await consentContext.newPage();
+    let ga4Requests = 0;
+    await consentPage.route(/^https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-QGL84J7V81$/, async route => {
+      ga4Requests++;
+      await route.fulfill({ status: 200, contentType: 'application/javascript', body: '/* Test-only stub, no analytics event sent */' });
+    });
+    await consentPage.goto(local + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    const consentBanner = consentPage.locator('#pm-analytics-consent');
+    await consentBanner.waitFor({ state: 'visible', timeout: 5000 });
+    if (await consentPage.locator('script[data-prunus-ga4]').count()) {
+      failures.push('GA4 positive test: Google tag loaded before consent');
+    }
+    await consentBanner.locator('button[data-choice="accepted"]').click();
+    await consentPage.waitForFunction(() => !!document.querySelector('script[data-prunus-ga4]'), { timeout: 5000 });
+    const ga4State = await consentPage.evaluate(() => {
+      const commands = Array.from(window.dataLayer || [], args => Array.from(args));
+      const checks = {
+        defaultDenied: commands.findIndex(args =>
+          args[0] === 'consent' && args[1] === 'default' && args[2]?.analytics_storage === 'denied'),
+        granted: commands.findIndex(args =>
+          args[0] === 'consent' && args[1] === 'update' && args[2]?.analytics_storage === 'granted'),
+        config: commands.findIndex(args =>
+          args[0] === 'config' && args[1] === 'G-QGL84J7V81')
+      };
+      return {
+        checks, configCount: commands.filter(args =>
+          args[0] === 'config' && args[1] === 'G-QGL84J7V81').length,
+        scriptSrc: document.querySelector('script[data-prunus-ga4]')?.src,
+        savedConsent: localStorage.getItem('prunus_analytics_consent_v1'),
+        bannerHidden: document.querySelector('#pm-analytics-consent')?.hidden
+      };
+    });
+    if (ga4Requests !== 1) failures.push('GA4 positive test: expected one gtag.js request, got ' + ga4Requests);
+    if (ga4State.configCount !== 1 || !ga4State.scriptSrc?.endsWith('/gtag/js?id=G-QGL84J7V81')) {
+      failures.push('GA4 positive test: incorrect or duplicate config: ' + JSON.stringify(ga4State));
+    }
+    if (!(ga4State.checks.defaultDenied >= 0 &&
+      ga4State.checks.granted > ga4State.checks.defaultDenied &&
+      ga4State.checks.config > ga4State.checks.granted)) {
+      failures.push('GA4 positive test: denied/granted/config commands not correctly ordered: ' + JSON.stringify(ga4State.checks));
+    }
+    if (ga4State.savedConsent !== 'accepted' || !ga4State.bannerHidden) {
+      failures.push('GA4 positive test: visitor acceptance not saved or banner still open');
+    }
+    await consentPage.reload({ waitUntil: 'domcontentloaded' });
+    await consentPage.waitForFunction(() => !!document.querySelector('script[data-prunus-ga4]'), { timeout: 5000 });
+    if (ga4Requests !== 2) failures.push('GA4 positive test: saved acceptance did not load one tag after reload');
+    await consentContext.close();
+    console.log('Positive GA4 consent test completed: tag request, ordered commands and persisted preference');
+  }
+
   const visualMetrics = [];
   const cases = [
     { route: '/', label: 'homepage-desktop', width: 1440, height: 900 },
